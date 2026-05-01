@@ -31,4 +31,7 @@ public class AgentResponse implements Serializable {
 
     /** Agent 创建时间 */
     private LocalDateTime createdAt;
+
+    /** 系统提示词 */
+    private String systemPrompt;
 }

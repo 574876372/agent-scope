@@ -15,6 +15,7 @@ public class AgentInfo {
     private String status;
     private String userId;
     private LocalDateTime createdAt;
+    private String systemPrompt;
 
     /** 实际的 Agent 实例 */
     private transient Agent agent;
@@ -41,6 +42,9 @@ public class AgentInfo {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public String getSystemPrompt() { return systemPrompt; }
+    public void setSystemPrompt(String systemPrompt) { this.systemPrompt = systemPrompt; }
 
     public Agent getAgent() { return agent; }
     public void setAgent(Agent agent) { this.agent = agent; }

@@ -20,4 +20,7 @@ public class CreateAgentRequest implements Serializable {
 
     /** 模型名称，如 qwen-max / deepseek-chat 等 */
     private String modelName;
+
+    /** 系统提示词 */
+    private String systemPrompt;
 }

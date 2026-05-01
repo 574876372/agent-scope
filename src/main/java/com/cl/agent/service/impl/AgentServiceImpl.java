@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.AgentResponse;
 import com.cl.agent.dto.ChatRequest;
@@ -29,6 +31,7 @@ import io.agentscope.core.model.OpenAIChatModel;
  * 负责 Agent 的创建、查询、删除及对话，使用内存 ConcurrentHashMap 缓存 Agent 实例
  */
 @Service
+@Slf4j
 public class AgentServiceImpl implements IAgentService {
 
     /** 内存缓存：Agent ID -> AgentInfo，支持并发访问 */
@@ -41,6 +44,7 @@ public class AgentServiceImpl implements IAgentService {
         Agent agent = ReActAgent.builder()
                 .name(request.getName())
                 .model(model)
+                .sysPrompt(request.getSystemPrompt())
                 .build();
 
         AgentInfo info = new AgentInfo();
@@ -48,12 +52,14 @@ public class AgentServiceImpl implements IAgentService {
         info.setName(request.getName());
         info.setModelType(request.getModelType());
         info.setModelName(model.getModelName());
+        info.setSystemPrompt(request.getSystemPrompt());
         info.setStatus("active");
         info.setUserId(UserContext.getUserId());
         info.setCreatedAt(LocalDateTime.now());
         info.setAgent(agent);
 
         agentCache.put(info.getId(), info);
+        log.info("成功创建 Agent: ID={}, 名称={}, 模型={}", info.getId(), info.getName(), info.getModelName());
         return toResponse(info);
     }
 
@@ -130,6 +136,7 @@ public class AgentServiceImpl implements IAgentService {
         resp.setModelName(info.getModelName());
         resp.setStatus(info.getStatus());
         resp.setCreatedAt(info.getCreatedAt());
+        resp.setSystemPrompt(info.getSystemPrompt());
         return resp;
     }
 }
