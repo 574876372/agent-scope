@@ -108,7 +108,7 @@ public class AgentServiceImpl implements IAgentService {
     /**
      * 根据厂商类型和模型名称动态构建 OpenAIChatModel
      *
-     * @param modelType 模型厂商类型，如 qwen / deepseek
+     * @param modelType 模型厂商类型，如 Qwen / DeepSeek
      * @param modelName 模型名称，如 Qwen3.5-27B / deepseek-chat
      * @return 配置好的 OpenAIChatModel 实例
      * @throws BizException 当厂商类型不支持时抛出

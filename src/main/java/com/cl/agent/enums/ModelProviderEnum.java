@@ -9,10 +9,16 @@ import com.cl.agent.exception.BizException;
 public enum ModelProviderEnum {
 
     /** 通义千问（阿里云） */
-    QWEN("Qwen", "https://aiapi.oldbird.tech/v1", "sk-c95e548188d16bed66cc5e5880969f056a3ffeea9dc976b4"),
+    QWEN("Qwen", "https://aiapi.oldbird.tech/v1", "sk-c95e548188d16bed66cc5e5880969f056a3ffeea9dc976b4",
+            new String[] { "qwen-turbo", "qwen-plus", "qwen-max", "qwen-long", "Qwen3.5-27B" }),
 
     /** DeepSeek */
-    DEEPSEEK("DeepSeek", "https://api.deepseek.com/v1", "sk-3133ef74c49c44ddbfc230343f38d4f0");
+    DEEPSEEK("DeepSeek", "https://api.deepseek.com/v1", "sk-3133ef74c49c44ddbfc230343f38d4f0",
+            new String[] { "deepseek-chat", "deepseek-reasoner" }),
+
+    /** OpenAI */
+    OPENAI("OpenAI", "https://api.openai.com/v1", "YOUR_OPENAI_API_KEY",
+            new String[] { "gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o" });
 
     /** 厂商标识，与请求参数 modelType 对应，不区分大小写 */
     private final String type;
@@ -23,17 +29,22 @@ public enum ModelProviderEnum {
     /** 接口鉴权 API Key */
     private final String apiKey;
 
+    /** 该厂商支持的常用模型列表 */
+    private final String[] models;
+
     /**
      * 枚举构造方法
      *
      * @param type    厂商标识
      * @param baseUrl 接口基础地址
      * @param apiKey  鉴权 API Key
+     * @param models  常用模型列表
      */
-    ModelProviderEnum(String type, String baseUrl, String apiKey) {
+    ModelProviderEnum(String type, String baseUrl, String apiKey, String[] models) {
         this.type = type;
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
+        this.models = models;
     }
 
     /**
@@ -77,5 +88,14 @@ public enum ModelProviderEnum {
      */
     public String getApiKey() {
         return apiKey;
+    }
+
+    /**
+     * 获取常用模型列表
+     *
+     * @return 模型名称数组
+     */
+    public String[] getModels() {
+        return models;
     }
 }

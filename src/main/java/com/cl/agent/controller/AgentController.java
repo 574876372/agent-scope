@@ -5,11 +5,16 @@ import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
 import com.cl.agent.dto.CreateAgentRequest;
 import com.cl.agent.service.IAgentService;
+import com.cl.agent.enums.ModelProviderEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/agents")
@@ -18,6 +23,21 @@ public class AgentController {
 
     @Autowired
     private IAgentService agentService;
+
+    /** 获取支持的模型厂商及其模型列表 */
+    @GetMapping("/models")
+    public ResponseEntity<List<Map<String, Object>>> getModelProviders() {
+        List<Map<String, Object>> providers = Arrays.stream(ModelProviderEnum.values())
+                .map(p -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("type", p.getType());
+                    map.put("models", p.getModels());
+                    return map;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(providers);
+    }
+
 
     /** 创建 Agent */
     @PostMapping
