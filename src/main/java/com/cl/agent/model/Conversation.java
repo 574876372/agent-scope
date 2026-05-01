@@ -10,6 +10,7 @@ public class Conversation {
 
     private String id;
     private String title;
+    private String agentId;
     private String userId;
     private List<ChatMessage> messages;
     private LocalDateTime createdAt;
@@ -32,4 +33,7 @@ public class Conversation {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getAgentId() { return agentId; }
+    public void setAgentId(String agentId) { this.agentId = agentId; }
 }

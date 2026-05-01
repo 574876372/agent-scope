@@ -4,13 +4,9 @@ import com.cl.agent.dto.*;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.ChatMessage;
 import com.cl.agent.model.Conversation;
-import com.cl.agent.service.DemoServe;
+import com.cl.agent.service.IAgentService;
 import com.cl.agent.service.IChatService;
-import io.agentscope.core.ReActAgent;
-import io.agentscope.core.agent.Agent;
-import io.agentscope.core.message.Msg;
-import io.agentscope.core.message.MsgRole;
-import io.agentscope.core.model.OpenAIChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.cl.agent.commons.UserContext;
 
@@ -27,22 +23,15 @@ public class ChatServiceImpl implements IChatService {
     /** 内存缓存：conversationId -> Conversation */
     private final ConcurrentHashMap<String, Conversation> conversationCache = new ConcurrentHashMap<>();
 
-    /** AgentScope Agent，复用同一个实例 */
-    private final Agent agent;
-
-    public ChatServiceImpl() {
-        OpenAIChatModel model = DemoServe.createMyModel();
-        this.agent = ReActAgent.builder()
-                .name("chat_agent")
-                .model(model)
-                .build();
-    }
+    @Autowired
+    private IAgentService agentService;
 
     @Override
     public ConversationResponse createConversation(CreateConversationRequest request) {
         Conversation conv = new Conversation();
         conv.setId(UUID.randomUUID().toString());
         conv.setTitle(request.getTitle() != null ? request.getTitle() : "新对话");
+        conv.setAgentId(request.getAgentId()); // 保存关联的 AgentId
         conv.setMessages(new ArrayList<>());
         conv.setCreatedAt(LocalDateTime.now());
         conv.setUpdatedAt(LocalDateTime.now());
@@ -96,8 +85,15 @@ public class ChatServiceImpl implements IChatService {
         userMsg.setTimestamp(now);
         conv.getMessages().add(userMsg);
 
-        // 调用 AI（通过 AgentScope Agent 真实调用模型）
-        String aiContent = callAgent(request.getContent());
+        // 调用关联的 Agent（通过 agentService 获取对应的实例并对话）
+        String aiContent = "AI 暂时无法响应，请关联 Agent。";
+        if (conv.getAgentId() != null) {
+            ChatRequest chatRequest = new ChatRequest();
+            chatRequest.setContent(request.getContent());
+            ChatResponse chatResponse = agentService.chat(conv.getAgentId(), chatRequest);
+            aiContent = chatResponse.getContent();
+        }
+
         if (aiContent != null) {
             aiContent = aiContent.trim();
         }
@@ -134,19 +130,6 @@ public class ChatServiceImpl implements IChatService {
     }
 
     // ---------- 私有方法 ----------
-
-    /**
-     * 调用 AgentScope Agent 获取 AI 回复
-     */
-    private String callAgent(String message) {
-        Msg response = agent.call(
-                Msg.builder()
-                        .textContent(message)
-                        .role(MsgRole.USER)
-                        .build()
-        ).block();
-        return response != null ? response.getTextContent() : "AI 暂时无法响应，请稍后重试。";
-    }
 
     private String generateTitle(String message) {
         return message.length() > 20 ? message.substring(0, 20) + "..." : message;

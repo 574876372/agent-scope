@@ -9,10 +9,10 @@ import com.cl.agent.exception.BizException;
 public enum ModelProviderEnum {
 
     /** 通义千问（阿里云） */
-    QWEN("qwen", "https://aiapi.oldbird.tech/v1", "sk-c95e548188d16bed66cc5e5880969f056a3ffeea9dc976b4"),
+    QWEN("Qwen", "https://aiapi.oldbird.tech/v1", "sk-c95e548188d16bed66cc5e5880969f056a3ffeea9dc976b4"),
 
     /** DeepSeek */
-    DEEPSEEK("deepseek", "https://api.deepseek.com/v1", "sk-3133ef74c49c44ddbfc230343f38d4f0");
+    DEEPSEEK("DeepSeek", "https://api.deepseek.com/v1", "sk-3133ef74c49c44ddbfc230343f38d4f0");
 
     /** 厂商标识，与请求参数 modelType 对应，不区分大小写 */
     private final String type;

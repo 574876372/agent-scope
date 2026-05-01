@@ -14,4 +14,7 @@ public class CreateConversationRequest implements Serializable {
 
     /** 会话标题，用于标识本次对话的主题 */
     private String title;
+
+    /** 关联的 Agent ID */
+    private String agentId;
 }
