@@ -13,6 +13,7 @@ public class AgentInfo {
     private String modelType;   // qwen / deepseek
     private String modelName;
     private String status;
+    private String userId;
     private LocalDateTime createdAt;
 
     /** 实际的 Agent 实例 */
@@ -34,6 +35,9 @@ public class AgentInfo {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

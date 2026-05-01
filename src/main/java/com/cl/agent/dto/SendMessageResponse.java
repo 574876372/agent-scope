@@ -21,7 +21,7 @@ public class SendMessageResponse implements Serializable {
     private String userMessage;
 
     /** AI 回复的消息内容 */
-    private String aiMessage;
+    private String content;
 
     /** 消息发送时间戳 */
     private LocalDateTime timestamp;

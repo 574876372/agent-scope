@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.AgentResponse;
 import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
@@ -48,6 +49,7 @@ public class AgentServiceImpl implements IAgentService {
         info.setModelType(request.getModelType());
         info.setModelName(model.getModelName());
         info.setStatus("active");
+        info.setUserId(UserContext.getUserId());
         info.setCreatedAt(LocalDateTime.now());
         info.setAgent(agent);
 
@@ -57,7 +59,9 @@ public class AgentServiceImpl implements IAgentService {
 
     @Override
     public List<AgentResponse> listAgents() {
+        String userId = UserContext.getUserId();
         return agentCache.values().stream()
+                .filter(info -> userId == null || userId.equals(info.getUserId()))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }

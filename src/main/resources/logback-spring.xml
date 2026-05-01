@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
 
     <!-- 日志存放目录 -->
     <property name="LOG_PATH" value="logs"/>
     <!-- 应用名称 -->
     <property name="APP_NAME" value="agent-scope"/>
-    <!-- 控制台日志格式 -->
+    <!-- 控制台日志格式 (带颜色) -->
     <property name="CONSOLE_PATTERN"
-              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr(%logger{50}){cyan} %clr(:){faint} %msg%n"/>
     <!-- 文件日志格式 -->
     <property name="FILE_PATTERN"
               value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n"/>

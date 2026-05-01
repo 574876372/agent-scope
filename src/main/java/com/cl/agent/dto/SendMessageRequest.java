@@ -16,5 +16,5 @@ public class SendMessageRequest implements Serializable {
     private String conversationId;
 
     /** 用户发送的消息内容 */
-    private String message;
+    private String content;
 }

@@ -12,6 +12,7 @@ import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.OpenAIChatModel;
 import org.springframework.stereotype.Service;
+import com.cl.agent.commons.UserContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ public class ChatServiceImpl implements IChatService {
         conv.setMessages(new ArrayList<>());
         conv.setCreatedAt(LocalDateTime.now());
         conv.setUpdatedAt(LocalDateTime.now());
+        conv.setUserId(UserContext.getUserId());
 
         conversationCache.put(conv.getId(), conv);
         return toConversationResponse(conv);
@@ -52,7 +54,9 @@ public class ChatServiceImpl implements IChatService {
 
     @Override
     public List<ConversationResponse> listConversations() {
+        String userId = UserContext.getUserId();
         return conversationCache.values().stream()
+                .filter(conv -> userId == null || userId.equals(conv.getUserId()))
                 .map(this::toConversationResponse)
                 .collect(Collectors.toList());
     }
@@ -66,15 +70,15 @@ public class ChatServiceImpl implements IChatService {
 
     @Override
     public SendMessageResponse sendMessage(SendMessageRequest request) {
-        if (request.getMessage() == null || request.getMessage().trim().isEmpty()) {
+        if (request.getContent() == null || request.getContent().trim().isEmpty()) {
             throw new BizException(400, "消息内容不能为空");
         }
 
         // 没有 conversationId 时自动创建新会话
         String conversationId = request.getConversationId();
-        if (conversationId == null || conversationId.trim().isEmpty()) {
+        if (conversationId == null || conversationId.trim().isEmpty() || "undefined".equals(conversationId)) {
             CreateConversationRequest createReq = new CreateConversationRequest();
-            createReq.setTitle(generateTitle(request.getMessage()));
+            createReq.setTitle(generateTitle(request.getContent()));
             conversationId = createConversation(createReq).getId();
         }
 
@@ -88,12 +92,15 @@ public class ChatServiceImpl implements IChatService {
         // 记录用户消息
         ChatMessage userMsg = new ChatMessage();
         userMsg.setRole("user");
-        userMsg.setContent(request.getMessage());
+        userMsg.setContent(request.getContent());
         userMsg.setTimestamp(now);
         conv.getMessages().add(userMsg);
 
         // 调用 AI（通过 AgentScope Agent 真实调用模型）
-        String aiContent = callAgent(request.getMessage());
+        String aiContent = callAgent(request.getContent());
+        if (aiContent != null) {
+            aiContent = aiContent.trim();
+        }
 
         // 记录 AI 消息
         ChatMessage aiMsg = new ChatMessage();
@@ -106,14 +113,17 @@ public class ChatServiceImpl implements IChatService {
 
         SendMessageResponse resp = new SendMessageResponse();
         resp.setConversationId(conversationId);
-        resp.setUserMessage(request.getMessage());
-        resp.setAiMessage(aiContent);
+        resp.setUserMessage(request.getContent());
+        resp.setContent(aiContent);
         resp.setTimestamp(now);
         return resp;
     }
 
     @Override
     public List<ChatMessageResponse> getHistory(String conversationId) {
+        if (conversationId == null || "undefined".equals(conversationId)) {
+            return new ArrayList<>();
+        }
         Conversation conv = conversationCache.get(conversationId);
         if (conv == null) {
             throw new BizException(404, "会话不存在: " + conversationId);
