@@ -33,8 +33,7 @@ public class ChatBizImpl implements IChatBiz {
         conv.setTitle(request.getTitle() != null ? request.getTitle() : "新对话");
         conv.setAgentId(request.getAgentId());
         conv.setMessages(new ArrayList<>());
-        conv.setCreatedAt(LocalDateTime.now());
-        conv.setUpdatedAt(LocalDateTime.now());
+        conv.setMessages(new ArrayList<>());
         conv.setUserId(UserContext.getUserId());
 
         chatService.save(conv);
@@ -44,8 +43,7 @@ public class ChatBizImpl implements IChatBiz {
     @Override
     public List<ConversationResponse> listConversations() {
         String userId = UserContext.getUserId();
-        return chatService.listAll().stream()
-                .filter(conv -> userId == null || userId.equals(conv.getUserId()))
+        return chatService.listByUserId(userId).stream()
                 .map(this::toConversationResponse)
                 .collect(Collectors.toList());
     }
@@ -89,7 +87,7 @@ public class ChatBizImpl implements IChatBiz {
         aiMsg.setContent(aiContent);
         aiMsg.setTimestamp(LocalDateTime.now());
         conv.getMessages().add(aiMsg);
-        conv.setUpdatedAt(LocalDateTime.now());
+        conv.setUpdateTime(LocalDateTime.now());
         
         chatService.save(conv); // 更新存储
 
@@ -120,8 +118,8 @@ public class ChatBizImpl implements IChatBiz {
         ConversationResponse resp = new ConversationResponse();
         resp.setId(conv.getId());
         resp.setTitle(conv.getTitle());
-        resp.setCreatedAt(conv.getCreatedAt());
-        resp.setUpdatedAt(conv.getUpdatedAt());
+        resp.setCreateTime(conv.getCreateTime());
+        resp.setUpdateTime(conv.getUpdateTime());
         return resp;
     }
 

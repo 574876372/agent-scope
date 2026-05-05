@@ -32,6 +32,14 @@ public interface IChatService {
     List<Conversation> listAll();
 
     /**
+     * 根据用户 ID 获取会话列表
+     * 
+     * @param userId 用户 ID
+     * @return 该用户的会话列表
+     */
+    List<Conversation> listByUserId(String userId);
+
+    /**
      * 根据 ID 删除会话记录
      * 
      * @param id 会话 ID

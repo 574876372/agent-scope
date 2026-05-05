@@ -53,7 +53,6 @@ public class AgentBizImpl implements IAgentBiz {
         info.setSystemPrompt(request.getSystemPrompt());
         info.setStatus("active");
         info.setUserId(UserContext.getUserId());
-        info.setCreatedAt(LocalDateTime.now());
 
         // 保存到 Service 层
         agentService.save(info);
@@ -136,7 +135,7 @@ public class AgentBizImpl implements IAgentBiz {
         resp.setModelType(info.getModelType());
         resp.setModelName(info.getModelName());
         resp.setStatus(info.getStatus());
-        resp.setCreatedAt(info.getCreatedAt());
+        resp.setCreateTime(info.getCreateTime());
         resp.setSystemPrompt(info.getSystemPrompt());
         return resp;
     }

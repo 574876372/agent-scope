@@ -21,8 +21,8 @@ public class ConversationResponse implements Serializable {
     private String title;
 
     /** 会话创建时间 */
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
     /** 会话最后更新时间 */
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 }

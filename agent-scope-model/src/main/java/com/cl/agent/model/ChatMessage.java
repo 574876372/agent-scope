@@ -1,22 +1,40 @@
 package com.cl.agent.model;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import lombok.*;
 import java.time.LocalDateTime;
 
 /**
  * 单条聊天消息实体
  */
-public class ChatMessage {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@TableName("t_chat_message")
+public class ChatMessage extends BaseEntity {
 
-    private String role;       // user / assistant
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
+    /** 角色: user / assistant */
+    @TableField("role")
+    private String role;
+
+    /** 消息内容 */
+    @TableField("content")
     private String content;
+
+    /** 消息时间 */
+    @TableField("timestamp")
     private LocalDateTime timestamp;
-
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+    
+    /** 所属会话 ID (用于关联) */
+    @TableField("conversation_id")
+    private String conversationId;
 }
