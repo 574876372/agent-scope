@@ -21,6 +21,7 @@
         <module>agent-scope-dao</module>
         <module>agent-scope-service</module>
         <module>agent-scope-biz</module>
+        <module>agent-scope-config</module>
         <module>agent-scope-web</module>
     </modules>
 
@@ -57,6 +58,11 @@
             <dependency>
                 <groupId>com.cl.agent</groupId>
                 <artifactId>agent-scope-biz</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cl.agent</groupId>
+                <artifactId>agent-scope-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
             

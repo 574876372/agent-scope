@@ -1,44 +1,41 @@
 package com.cl.agent.model;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import java.time.LocalDateTime;
 
 /**
- * Agent 实体，缓存在内存中
+ * Agent 基础信息实体类
  */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AgentInfo {
 
+    /** 唯一标识符 */
     private String id;
+    
+    /** Agent 名称 */
     private String name;
-    private String modelType;   // qwen / deepseek
+    
+    /** 模型厂商类型 (如: qwen, deepseek) */
+    private String modelType;
+    
+    /** 具体模型名称 */
     private String modelName;
+    
+    /** 状态 (如: active, deleted) */
     private String status;
+    
+    /** 所属用户 ID */
     private String userId;
+    
+    /** 创建时间 */
     private LocalDateTime createdAt;
+    
+    /** 系统提示词 (System Prompt) */
     private String systemPrompt;
-
-    public AgentInfo() {}
-
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getModelType() { return modelType; }
-    public void setModelType(String modelType) { this.modelType = modelType; }
-
-    public String getModelName() { return modelName; }
-    public void setModelName(String modelName) { this.modelName = modelName; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public String getSystemPrompt() { return systemPrompt; }
-    public void setSystemPrompt(String systemPrompt) { this.systemPrompt = systemPrompt; }
 }

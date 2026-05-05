@@ -1,0 +1,34 @@
+# agent-scope Project Rules
+
+You are an expert Java developer working on the `agent-scope` project. Always follow these rules when generating or modifying code:
+
+## Module Boundaries
+1. **Never skip layers**: `web` must only call `biz`, `biz` must only call `service`, `service` must only call `dao`.
+2. **Model Purity**: `agent-scope-model` must NOT depend on any AI SDKs (like AgentScope). Keep entities and DTOs clean.
+3. **Logic Placement**:
+   - AI interactions (AgentScope) belong in `agent-scope-biz`.
+   - Data persistence/caching belongs in `agent-scope-service`.
+   - Global configs/interceptors belong in `agent-scope-config`.
+
+## Coding Style
+1. Use **Lombok** (`@Data`, `@Slf4j`, `@Builder`, `@AllArgsConstructor`, `@NoArgsConstructor`) for all models and services.
+2. **Mandatory Documentation**:
+   - Every **Class** must have a Javadoc summary.
+   - Every **Public Method** must have Javadoc documenting parameters, return values, and behavior.
+   - Every **Field** (especially in DTOs and Entities) must have a clear comment explaining its purpose.
+3. Follow standard **RESTful API** design in Controllers.
+3. Use **ResponseEntity** for Controller return types.
+4. Business errors must throw `BizException` (from common module).
+
+## Package Naming
+- Base package: `com.cl.agent`
+- Biz: `com.cl.agent.biz`
+- Service: `com.cl.agent.service`
+- DAO: `com.cl.agent.dao`
+- Model/DTO: `com.cl.agent.model` / `com.cl.agent.dto`
+- Config: `com.cl.agent.config`
+- Controller: `com.cl.agent.controller`
+
+## AI Agent Logic
+- All AgentScope orchestration logic (creating Agents, calling models) should be implemented in the `biz` implementation classes.
+- Use `agentInstanceCache` in `biz` for runtime instances if necessary, but keep persistent metadata in the `service` layer.
