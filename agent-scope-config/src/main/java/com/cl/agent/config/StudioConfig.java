@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * AgentScope Studio 可视化面板集成配置。
  * <p>
  * 当配置项 {@code agentscope.studio.enabled=true} 时，自动初始化并连接 Studio Server。
- * Studio Server 需提前启动（运行 {@code as_studio}），默认监听 {@code http://localhost:5173}。
+ * Studio Server 需提前启动（运行 {@code as_studio}），默认监听 {@code http://localhost:3000}。
  * </p>
  *
  * <p>application.yml 示例：</p>
@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
  *   agentscope:
  *     studio:
  *       enabled: true
- *       url: http://localhost:5173
+ *       url: http://localhost:3000
  *       project: my-project
  * </pre>
  *
@@ -31,8 +31,8 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = "agentscope.studio", name = "enabled", havingValue = "true")
 public class StudioConfig {
 
-    /** Studio Server 地址，默认 http://localhost:5173 */
-    @Value("${agentscope.studio.url:http://localhost:5173}")
+    /** Studio Server 地址，默认 http://localhost:3000 */
+    @Value("${agentscope.studio.url:http://localhost:3000}")
     private String studioUrl;
 
     /** Studio 项目名称，用于在面板中区分不同项目 */

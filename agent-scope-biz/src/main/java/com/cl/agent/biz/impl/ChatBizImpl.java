@@ -8,8 +8,11 @@ import com.cl.agent.exception.BizException;
 import com.cl.agent.model.ChatMessage;
 import com.cl.agent.model.Conversation;
 import com.cl.agent.service.IChatService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,6 +21,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ChatBizImpl implements IChatBiz {
 
     @Autowired
@@ -97,6 +101,79 @@ public class ChatBizImpl implements IChatBiz {
         resp.setContent(aiContent);
         resp.setTimestamp(now);
         return resp;
+    }
+
+    @Override
+    public Flux<String> sendMessageStream(SendMessageRequest request) {
+        // 提前在调用线程（含 UserContext）中解析会话 ID
+        final String resolvedConversationId;
+        String rawConvId = request.getConversationId();
+        if (rawConvId == null || rawConvId.trim().isEmpty() || "undefined".equals(rawConvId)) {
+            CreateConversationRequest createReq = new CreateConversationRequest();
+            createReq.setTitle(generateTitle(request.getContent()));
+            resolvedConversationId = createConversation(createReq).getId();
+        } else {
+            resolvedConversationId = rawConvId;
+        }
+
+        return Flux.<String>create(sink -> {
+            try {
+                Conversation conv = chatService.getById(resolvedConversationId);
+                if (conv == null) {
+                    sink.error(new BizException(404, "会话不存在: " + resolvedConversationId));
+                    return;
+                }
+
+                // 保存用户消息
+                LocalDateTime now = LocalDateTime.now();
+                ChatMessage userMsg = new ChatMessage();
+                userMsg.setRole("user");
+                userMsg.setContent(request.getContent());
+                userMsg.setTimestamp(now);
+                conv.getMessages().add(userMsg);
+
+                // 先向前端推送 conversationId，新会话场景下前端可立即绑定
+                sink.next("[CONV_ID]" + resolvedConversationId);
+
+                // 获取 AI 完整响应（当前 AgentScope SDK 不支持原生 Token 流，采用分块模拟）
+                String aiContent = "AI 暂时无法响应，请关联 Agent。";
+                if (conv.getAgentId() != null) {
+                    ChatRequest chatRequest = new ChatRequest();
+                    chatRequest.setContent(request.getContent());
+                    ChatResponse chatResponse = agentBiz.chat(conv.getAgentId(), chatRequest);
+                    aiContent = chatResponse.getContent();
+                }
+
+                // 按固定块大小逐块 emit，模拟流式输出打字效果
+                final int chunkSize = 4;
+                for (int i = 0; i < aiContent.length() && !sink.isCancelled(); i += chunkSize) {
+                    String chunk = aiContent.substring(i, Math.min(i + chunkSize, aiContent.length()));
+                    sink.next(chunk);
+                    Thread.sleep(30);
+                }
+
+                // 持久化 AI 消息
+                ChatMessage aiMsg = new ChatMessage();
+                aiMsg.setRole("assistant");
+                aiMsg.setContent(aiContent);
+                aiMsg.setTimestamp(LocalDateTime.now());
+                conv.getMessages().add(aiMsg);
+                conv.setUpdateTime(LocalDateTime.now());
+                chatService.save(conv);
+
+                // 推送结束标识
+                sink.next("[DONE]");
+                sink.complete();
+
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                sink.error(e);
+            } catch (Exception e) {
+                log.error("[Flux] 流式消息推送异常", e);
+                sink.error(e);
+            }
+        // subscribeOn 切换到弹性线程池，避免阻塞 Tomcat 请求线程
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override

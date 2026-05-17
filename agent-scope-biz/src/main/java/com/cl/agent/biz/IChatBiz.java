@@ -5,6 +5,7 @@ import com.cl.agent.dto.ConversationResponse;
 import com.cl.agent.dto.CreateConversationRequest;
 import com.cl.agent.dto.SendMessageRequest;
 import com.cl.agent.dto.SendMessageResponse;
+import reactor.core.publisher.Flux;
 import java.util.List;
 
 /**
@@ -42,6 +43,14 @@ public interface IChatBiz {
      * @return 包含用户消息和 AI 响应的结果
      */
     SendMessageResponse sendMessage(SendMessageRequest request);
+
+    /**
+     * 以响应式流（Flux）方式发送消息，AI 响应内容将逐块推送给客户端
+     *
+     * @param request 发送消息请求参数
+     * @return Flux&lt;String&gt;，每个元素为一段 AI 回复文本
+     */
+    Flux<String> sendMessageStream(SendMessageRequest request);
 
     /**
      * 获取指定会话的历史消息记录

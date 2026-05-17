@@ -3,8 +3,10 @@ package com.cl.agent.controller;
 import com.cl.agent.dto.*;
 import com.cl.agent.biz.IChatBiz;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -39,6 +41,12 @@ public class ChatController {
     @PostMapping("/message")
     public ResponseEntity<SendMessageResponse> sendMessage(@RequestBody SendMessageRequest request) {
         return ResponseEntity.ok(chatBiz.sendMessage(request));
+    }
+
+    /** 流式发送消息（Flux SSE），AI 响应内容逐块推送至客户端 */
+    @PostMapping(value = "/message/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> sendMessageStream(@RequestBody SendMessageRequest request) {
+        return chatBiz.sendMessageStream(request);
     }
 
     /** 获取会话历史 */

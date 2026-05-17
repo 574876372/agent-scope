@@ -26,5 +26,5 @@ logging:
 agentscope:
   studio:
     enabled: true
-    url: http://localhost:5173
+    url: http://localhost:3000
     project: agent-scope-project
