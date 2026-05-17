@@ -17,3 +17,14 @@ mybatis-plus:
 logging:
   level:
     com.cl.agent: debug
+
+# ========================
+# AgentScope Studio 可视化面板
+# enabled: true  -> 启用（需先运行 as_studio）
+# enabled: false -> 关闭（生产环境建议关闭）
+# ========================
+agentscope:
+  studio:
+    enabled: true
+    url: http://localhost:5173
+    project: agent-scope-project

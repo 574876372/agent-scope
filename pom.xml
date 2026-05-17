@@ -113,6 +113,33 @@
                 <artifactId>aspectjweaver</artifactId>
                 <version>1.9.22</version>
             </dependency>
+
+            <!-- AgentScope Studio 官方要求的可视化扩展依赖 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>4.12.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.socket</groupId>
+                <artifactId>socket.io-client</artifactId>
+                <version>2.1.2</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-api</artifactId>
+                <version>1.43.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-exporter-otlp</artifactId>
+                <version>1.43.0</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-reactor-3.1</artifactId>
+                <version>2.26.0-alpha</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

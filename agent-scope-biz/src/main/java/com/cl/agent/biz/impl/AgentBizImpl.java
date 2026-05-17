@@ -15,11 +15,12 @@ import io.agentscope.core.agent.Agent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.OpenAIChatModel;
+import io.agentscope.core.studio.StudioManager;
+import io.agentscope.core.studio.StudioMessageHook;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,24 +33,24 @@ public class AgentBizImpl implements IAgentBiz {
     @Autowired
     private IAgentService agentService;
 
+
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
 
     @Override
     public AgentResponse createAgent(CreateAgentRequest request) {
-        OpenAIChatModel model = buildModel(request.getModelType(), request.getModelName());
-
-        Agent agent = ReActAgent.builder()
-                .name(request.getName())
-                .model(model)
-                .sysPrompt(request.getSystemPrompt())
-                .build();
+        Agent agent = buildAgent(
+                request.getName(),
+                request.getModelType(),
+                request.getModelName(),
+                request.getSystemPrompt()
+        );
 
         AgentInfo info = new AgentInfo();
         info.setId(UUID.randomUUID().toString());
         info.setName(request.getName());
         info.setModelType(request.getModelType());
-        info.setModelName(model.getModelName());
+        info.setModelName(request.getModelName());
         info.setSystemPrompt(request.getSystemPrompt());
         info.setStatus("active");
         info.setUserId(UserContext.getUserId());
@@ -97,12 +98,13 @@ public class AgentBizImpl implements IAgentBiz {
         // 获取或重新构建 Agent 实例
         Agent agent = agentInstanceCache.get(id);
         if (agent == null) {
-            // 如果缓存中没有，则根据 info 重新构建 (这里简化处理)
-            agent = ReActAgent.builder()
-                    .name(info.getName())
-                    .model(buildModel(info.getModelType(), info.getModelName()))
-                    .sysPrompt(info.getSystemPrompt())
-                    .build();
+            // 若缓存中没有，则根据持久化信息重新构建（含 Studio Hook）
+            agent = buildAgent(
+                    info.getName(),
+                    info.getModelType(),
+                    info.getModelName(),
+                    info.getSystemPrompt()
+            );
             agentInstanceCache.put(id, agent);
         }
 
@@ -119,6 +121,40 @@ public class AgentBizImpl implements IAgentBiz {
         return response;
     }
 
+    /**
+     * 统一构建 ReActAgent 实例。
+     * <p>若 Studio 已启用（studioManager 不为 null），则自动注入 StudioMessageHook，
+     * 使 Agent 的完整推理链路（Thought / Action / Observation）同步至可视化面板。</p>
+     *
+     * @param name       Agent 名称
+     * @param modelType  模型厂商类型
+     * @param modelName  具体模型名称
+     * @param sysPrompt  系统提示词
+     * @return 构建完成的 Agent 实例
+     */
+    private Agent buildAgent(String name, String modelType, String modelName, String sysPrompt) {
+        OpenAIChatModel model = buildModel(modelType, modelName);
+        ReActAgent.Builder builder = ReActAgent.builder()
+                .name(name)
+                .model(model)
+                .sysPrompt(sysPrompt);
+
+        // 若 Studio 集成已启用且连接成功，注入可视化 Hook
+        if (StudioManager.isInitialized()) {
+            builder.hook(new StudioMessageHook(StudioManager.getClient()));
+            log.info("[Studio] Agent [{}] 已注册 StudioMessageHook，推理过程将同步至可视化面板", name);
+        }
+
+        return builder.build();
+    }
+
+    /**
+     * 构建 OpenAI 兼容协议的聊天模型实例。
+     *
+     * @param modelType 模型厂商枚举 key
+     * @param modelName 模型名称
+     * @return 配置完毕的 {@link OpenAIChatModel}
+     */
     private OpenAIChatModel buildModel(String modelType, String modelName) {
         ModelProviderEnum provider = ModelProviderEnum.of(modelType);
         return OpenAIChatModel.builder()
