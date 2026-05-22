@@ -15,6 +15,10 @@ import io.agentscope.core.agent.Agent;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.OpenAIChatModel;
+import io.agentscope.core.model.transport.HttpTransport;
+import io.agentscope.core.model.transport.HttpTransportConfig;
+import io.agentscope.core.model.transport.HttpVersion;
+import io.agentscope.core.model.transport.JdkHttpTransport;
 import io.agentscope.core.studio.StudioManager;
 import io.agentscope.core.studio.StudioMessageHook;
 import lombok.extern.slf4j.Slf4j;
@@ -157,10 +161,25 @@ public class AgentBizImpl implements IAgentBiz {
      */
     private OpenAIChatModel buildModel(String modelType, String modelName) {
         ModelProviderEnum provider = ModelProviderEnum.of(modelType);
+        
+        // 强制在客户端使用 HTTP/1.1 协议
+        // 目的：防止 JDK HttpClient 用默认 HTTP/2 协议请求 DeepSeek/通义等接口时，
+        // 在 SSE（流式）结束或连接复用时由于代理或网关发送的 RST_STREAM / 提前断开，
+        // 导致抛出 "java.io.IOException: closed" 或 "EOFReachedException" 异常。
+        HttpTransportConfig config = HttpTransportConfig.builder()
+                .httpVersion(HttpVersion.HTTP_1_1)
+                .build();
+                
+        // 使用自定义配置构建 JDK 传输层实例
+        HttpTransport transport = JdkHttpTransport.builder()
+                .config(config)
+                .build();
+                
         return OpenAIChatModel.builder()
                 .baseUrl(provider.getBaseUrl())
                 .apiKey(provider.getApiKey())
                 .modelName(modelName)
+                .httpTransport(transport)
                 .build();
     }
 

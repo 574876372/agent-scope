@@ -1,6 +1,7 @@
 package com.cl.agent.exception;
 
 import com.cl.agent.exception.BizException;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -19,7 +20,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("code", e.getCode());
         body.put("message", e.getMessage());
-        return ResponseEntity.badRequest().body(body);
+        return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_JSON).body(body);
     }
 
     @ExceptionHandler(Exception.class)
@@ -27,6 +28,6 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("code", 500);
         body.put("message", "服务器内部错误");
-        return ResponseEntity.internalServerError().body(body);
+        return ResponseEntity.internalServerError().contentType(MediaType.APPLICATION_JSON).body(body);
     }
 }

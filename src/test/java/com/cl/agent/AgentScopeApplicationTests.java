@@ -21,6 +21,18 @@ class AgentScopeApplicationTests {
     }
 
     @Test
+    void testInspectClasses() {
+        System.out.println("=== OpenAIChatModel.Builder Methods ===");
+        for (java.lang.reflect.Method method : io.agentscope.core.model.OpenAIChatModel.Builder.class.getDeclaredMethods()) {
+            System.out.println(method.toString());
+        }
+        System.out.println("=== OpenAIChatModel Methods ===");
+        for (java.lang.reflect.Method method : io.agentscope.core.model.OpenAIChatModel.class.getDeclaredMethods()) {
+            System.out.println(method.toString());
+        }
+    }
+
+    @Test
     void testLesson01_DemoServeDefaultCall() {
         // 1. 创建你的自定义模型 (复用 DemoServe 中的方法)
         OpenAIChatModel model = DemoServe.createMyModel();
