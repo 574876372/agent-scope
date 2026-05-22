@@ -32,6 +32,14 @@
         <agentscope.version>1.0.11</agentscope.version>
         <fastjson2.version>2.0.57</fastjson2.version>
         <mybatis-plus.version>3.5.10.1</mybatis-plus.version>
+        
+        <!-- 依赖冲突解决统一版本管理 -->
+        <error-prone-annotations.version>2.36.0</error-prone-annotations.version>
+        <grpc-context.version>1.70.0</grpc-context.version>
+        <json-schema-validator.version>3.0.1</json-schema-validator.version>
+        <okio.version>3.16.4</okio.version>
+        <opentelemetry-api-incubator.version>1.43.0-alpha</opentelemetry-api-incubator.version>
+        <protobuf-java.version>3.25.5</protobuf-java.version>
     </properties>
 
     <dependencyManagement>
@@ -139,6 +147,43 @@
                 <groupId>io.opentelemetry.instrumentation</groupId>
                 <artifactId>opentelemetry-reactor-3.1</artifactId>
                 <version>2.26.0-alpha</version>
+            </dependency>
+
+            <!-- 统一版本以解决依赖冲突 -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>${error-prone-annotations.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-context</artifactId>
+                <version>${grpc-context.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.networknt</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>${json-schema-validator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio</artifactId>
+                <version>${okio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okio</groupId>
+                <artifactId>okio-jvm</artifactId>
+                <version>${okio.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-api-incubator</artifactId>
+                <version>${opentelemetry-api-incubator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>${protobuf-java.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

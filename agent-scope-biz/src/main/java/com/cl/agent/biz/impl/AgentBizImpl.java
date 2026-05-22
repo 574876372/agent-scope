@@ -18,7 +18,7 @@ import io.agentscope.core.model.OpenAIChatModel;
 import io.agentscope.core.model.transport.HttpTransport;
 import io.agentscope.core.model.transport.HttpTransportConfig;
 import io.agentscope.core.model.transport.HttpVersion;
-import io.agentscope.core.model.transport.JdkHttpTransport;
+import io.agentscope.core.model.transport.OkHttpTransport;
 import io.agentscope.core.studio.StudioManager;
 import io.agentscope.core.studio.StudioMessageHook;
 import lombok.extern.slf4j.Slf4j;
@@ -170,8 +170,8 @@ public class AgentBizImpl implements IAgentBiz {
                 .httpVersion(HttpVersion.HTTP_1_1)
                 .build();
                 
-        // 使用自定义配置构建 JDK 传输层实例
-        HttpTransport transport = JdkHttpTransport.builder()
+        // 使用 OkHttp 传输层实例替代 JDK HttpClient，以提升复杂网络代理和高并发下 SSE/NDJSON 流式传输的健壮性
+        HttpTransport transport = OkHttpTransport.builder()
                 .config(config)
                 .build();
                 
