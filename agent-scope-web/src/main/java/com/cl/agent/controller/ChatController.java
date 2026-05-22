@@ -5,6 +5,7 @@ import com.cl.agent.biz.IChatBiz;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
@@ -43,10 +44,21 @@ public class ChatController {
         return ResponseEntity.ok(chatBiz.sendMessage(request));
     }
 
-    /** 流式发送消息（Flux SSE），AI 响应内容逐块推送至客户端 */
+    /**
+     * 流式发送消息（SSE）。
+     * <p>事件类型：{@code reasoning} 思考过程、{@code tool_result} 工具结果、{@code message} 最终回复；
+     * 无 event 的控制帧：{@code [CONV_ID]}、{@code [DONE]}。</p>
+     */
     @PostMapping(value = "/message/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> sendMessageStream(@RequestBody SendMessageRequest request) {
-        return chatBiz.sendMessageStream(request);
+    public Flux<ServerSentEvent<String>> sendMessageStream(@RequestBody SendMessageRequest request) {
+        return chatBiz.sendMessageStream(request)
+                .map(evt -> {
+                    ServerSentEvent.Builder<String> builder = ServerSentEvent.builder(evt.getData());
+                    if (evt.getEvent() != null && !evt.getEvent().isBlank()) {
+                        builder.event(evt.getEvent());
+                    }
+                    return builder.build();
+                });
     }
 
     /** 获取会话历史 */

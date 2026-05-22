@@ -4,6 +4,8 @@ import com.cl.agent.dto.AgentResponse;
 import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
 import com.cl.agent.dto.CreateAgentRequest;
+import io.agentscope.core.agent.Event;
+import reactor.core.publisher.Flux;
 import java.util.List;
 
 /**
@@ -50,4 +52,13 @@ public interface IAgentBiz {
      * @return AI 的响应结果
      */
     ChatResponse chat(String id, ChatRequest request);
+
+    /**
+     * 以流式方式与指定 Agent 对话，推送推理、工具结果与最终回复等事件。
+     *
+     * @param id      Agent ID
+     * @param request 对话请求内容
+     * @return AgentScope {@link Event} 流
+     */
+    Flux<Event> chatStream(String id, ChatRequest request);
 }

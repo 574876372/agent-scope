@@ -5,6 +5,7 @@ import com.cl.agent.dto.ConversationResponse;
 import com.cl.agent.dto.CreateConversationRequest;
 import com.cl.agent.dto.SendMessageRequest;
 import com.cl.agent.dto.SendMessageResponse;
+import com.cl.agent.dto.ChatStreamEvent;
 import reactor.core.publisher.Flux;
 import java.util.List;
 
@@ -45,12 +46,15 @@ public interface IChatBiz {
     SendMessageResponse sendMessage(SendMessageRequest request);
 
     /**
-     * 以响应式流（Flux）方式发送消息，AI 响应内容将逐块推送给客户端
+     * 以 SSE 流式方式发送消息，推送推理、工具结果与最终回复。
+     *
+     * <p>SSE {@code event} 类型：{@code reasoning}、{@code tool_result}、{@code message}；
+     * 控制数据：{@code [CONV_ID]}、{@code [DONE]}（无 event 或默认）。</p>
      *
      * @param request 发送消息请求参数
-     * @return Flux&lt;String&gt;，每个元素为一段 AI 回复文本
+     * @return {@link ChatStreamEvent} 流
      */
-    Flux<String> sendMessageStream(SendMessageRequest request);
+    Flux<ChatStreamEvent> sendMessageStream(SendMessageRequest request);
 
     /**
      * 获取指定会话的历史消息记录

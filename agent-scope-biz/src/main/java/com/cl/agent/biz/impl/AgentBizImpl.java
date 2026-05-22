@@ -12,6 +12,9 @@ import com.cl.agent.model.AgentInfo;
 import com.cl.agent.service.IAgentService;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.agent.Agent;
+import io.agentscope.core.agent.Event;
+import io.agentscope.core.agent.EventType;
+import io.agentscope.core.agent.StreamOptions;
 import io.agentscope.core.message.Msg;
 import io.agentscope.core.message.MsgRole;
 import io.agentscope.core.model.OpenAIChatModel;
@@ -24,6 +27,7 @@ import io.agentscope.core.studio.StudioMessageHook;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.UUID;
@@ -99,18 +103,7 @@ public class AgentBizImpl implements IAgentBiz {
             throw new BizException(404, "Agent 不存在: " + id);
         }
 
-        // 获取或重新构建 Agent 实例
-        Agent agent = agentInstanceCache.get(id);
-        if (agent == null) {
-            // 若缓存中没有，则根据持久化信息重新构建（含 Studio Hook）
-            agent = buildAgent(
-                    info.getName(),
-                    info.getModelType(),
-                    info.getModelName(),
-                    info.getSystemPrompt()
-            );
-            agentInstanceCache.put(id, agent);
-        }
+        Agent agent = resolveAgent(id, info);
 
         Msg reply = agent.call(Msg.builder()
                         .textContent(request.getContent())
@@ -123,6 +116,50 @@ public class AgentBizImpl implements IAgentBiz {
         response.setAgentName(info.getName());
         response.setContent(reply != null ? reply.getTextContent() : "");
         return response;
+    }
+
+    @Override
+    public Flux<Event> chatStream(String id, ChatRequest request) {
+        AgentInfo info = agentService.getById(id);
+        if (info == null) {
+            return Flux.error(new BizException(404, "Agent 不存在: " + id));
+        }
+
+        Agent agent = resolveAgent(id, info);
+        Msg userMsg = Msg.builder()
+                .textContent(request.getContent())
+                .role(MsgRole.USER)
+                .build();
+
+        StreamOptions options = StreamOptions.builder()
+                .eventTypes(EventType.REASONING, EventType.TOOL_RESULT, EventType.AGENT_RESULT)
+                .incremental(true)
+                .includeReasoningChunk(true)
+                .includeReasoningResult(false)
+                .build();
+
+        return agent.stream(List.of(userMsg), options)
+                .onErrorResume(e -> {
+                    log.error("[chatStream] Agent [{}] 流式对话异常", id, e);
+                    return Flux.error(e);
+                });
+    }
+
+    /**
+     * 从缓存获取或重建 Agent 实例。
+     */
+    private Agent resolveAgent(String id, AgentInfo info) {
+        Agent agent = agentInstanceCache.get(id);
+        if (agent == null) {
+            agent = buildAgent(
+                    info.getName(),
+                    info.getModelType(),
+                    info.getModelName(),
+                    info.getSystemPrompt()
+            );
+            agentInstanceCache.put(id, agent);
+        }
+        return agent;
     }
 
     /**
@@ -179,6 +216,7 @@ public class AgentBizImpl implements IAgentBiz {
                 .baseUrl(provider.getBaseUrl())
                 .apiKey(provider.getApiKey())
                 .modelName(modelName)
+                .stream(true)
                 .httpTransport(transport)
                 .build();
     }
