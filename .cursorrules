@@ -12,13 +12,51 @@ You are an expert Java developer working on the `agent-scope` project. Always fo
 
 ## Coding Style
 1. Use **Lombok** (`@Data`, `@Slf4j`, `@Builder`, `@AllArgsConstructor`, `@NoArgsConstructor`) for all models and services.
-2. **Mandatory Documentation**:
-   - Every **Class** must have a Javadoc summary.
-   - Every **Public Method** must have Javadoc documenting parameters, return values, and behavior.
-   - Every **Field** (especially in DTOs and Entities) must have a clear comment explaining its purpose.
+2. **Mandatory Documentation（注释强制规范）**：
+   - 每个 **类（Class）** 必须有 Javadoc 类注释，说明其职责、使用场景及所属分层。
+   - 每个 **方法（Method）**（含 `public` / `protected` / `private`，含接口默认方法）必须使用 **Javadoc**，且按下列结构逐项写明，不得缺项（无该项时写「无」或省略对应标签）：
+
+     **（1）功能说明**  
+     - 用 1～3 句说明方法做什么、在业务流程中的位置。  
+     - 必须包含 **使用说明**：何时调用、前置条件、副作用（如是否写库、是否发 SSE）、与同类方法的区别。
+
+     **（2）请求 / 入参（`@param`）**  
+     - 每个参数单独一行 `@param`，格式：`@param 参数名 类型语义 - 含义、是否必填、格式/取值约束、为空时的行为`。  
+     - Controller 方法：对应 HTTP 路径、请求体/路径变量/查询参数、请求头（如 `X-User-Id`）须在参数或方法说明中体现。  
+     - Service/Biz 方法：说明参数来源（上层传入 / 从上下文读取）及业务约束。
+
+     **（3）返回参数（`@return`）**  
+     - 说明返回值的业务含义、数据结构要点；集合需说明是否可能为空列表。  
+     - `void`：用 `@return` 写「无返回值」，并说明调用方应依赖的副作用（如已持久化）。  
+     - 包装类型（`ResponseEntity`、`Flux`、`Optional` 等）：说明 HTTP 状态/流结束条件/空值语义。  
+     - 流式方法（`Flux`/`Mono`）：说明元素类型、事件名（如 `reasoning` / `message`）、结束标记（如 `[DONE]`）。
+
+     **（4）异常（`@throws`，如有）**  
+     - 列出业务异常类型、触发条件及建议调用方处理方式。
+
+     **方法注释示例（须接近此粒度）：**
+     ```java
+     /**
+      * 以 SSE 流式方式处理用户消息，将 Agent 推理过程与最终回复推送给前端。
+      * <p>使用说明：由 {@code ChatController#sendMessageStream} 调用；调用前会话须已存在或可由本方法创建；
+      * 流结束后会将完整助手消息写入会话历史。</p>
+      *
+      * @param request 发送消息请求，{@code conversationId} 可为空（将自动建会话），{@code content} 必填且非空
+      * @return {@link ChatStreamEvent} 流；{@code event} 为 reasoning/tool_result/message 时表示内容块，
+      *         无 event 且 data 为 {@code [CONV_ID]} / {@code [DONE]} 时为控制帧
+      * @throws BizException 会话不存在时抛出，code=404
+      */
+     ```
+
+   - 每个 **字段 / 变量（Field / Variable）** 必须有行内注释或 Javadoc，说明其含义、单位或取值范围：
+     - 类成员字段：使用 `/** … */` 写在字段上方
+     - 方法内的局部变量：若含义不能从变量名直接推断，必须加行内注释
+     - 常量（`static final`）：必须注释其用途及格式约定
+   - **禁止无意义注释**：注释必须解释「为什么」或「是什么」，不得仅重复变量名或代码本身（如 `// i++` 无效）。
+   - **新增或修改方法时**：若缺少上述 Javadoc，视为未完成，须补全后再提交。
 3. Follow standard **RESTful API** design in Controllers.
-3. Use **ResponseEntity** for Controller return types.
-4. Business errors must throw `BizException` (from common module).
+4. Use **ResponseEntity** for Controller return types.
+5. Business errors must throw `BizException` (from common module).
 
 ## Package Naming
 - Base package: `com.cl.agent`
@@ -28,7 +66,15 @@ You are an expert Java developer working on the `agent-scope` project. Always fo
 - Model/DTO: `com.cl.agent.model` / `com.cl.agent.dto`
 - Config: `com.cl.agent.config`
 - Controller: `com.cl.agent.controller`
+- Stream helpers: `com.cl.agent.stream`
+
+## Package Grouping Rules
+- **`com.cl.agent.dto`**: Request/Response DTOs only — classes that carry data across layer boundaries (e.g., `SendMessageRequest`, `ChatStreamEvent`). Do **not** put business-process helpers here.
+- **`com.cl.agent.stream`**: All stream/SSE processing helper classes (e.g., `StreamContext`, `StreamAccumulator`). Any class exclusively serving the reactive/streaming pipeline belongs here.
+- **General principle**: Group classes by **functional cohesion**, not by technical type. When a group of classes serves a single unified feature, extract them into a dedicated sub-package rather than mixing them into a generic package.
+- **Inner classes**: Do **not** define non-trivial helper classes as inner/nested classes inside a `@Service` or `@Component`. Extract them into the appropriate package in `agent-scope-model`.
 
 ## AI Agent Logic
 - All AgentScope orchestration logic (creating Agents, calling models) should be implemented in the `biz` implementation classes.
 - Use `agentInstanceCache` in `biz` for runtime instances if necessary, but keep persistent metadata in the `service` layer.
+

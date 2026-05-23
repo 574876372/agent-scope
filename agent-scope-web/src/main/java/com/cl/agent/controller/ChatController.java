@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.function.Function;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -46,18 +47,23 @@ public class ChatController {
 
     /**
      * 流式发送消息（SSE）。
-     * <p>事件类型：{@code reasoning} 思考过程、{@code tool_result} 工具结果、{@code message} 最终回复；
-     * 无 event 的控制帧：{@code [CONV_ID]}、{@code [DONE]}。</p>
+     * <p>
+     * 事件类型：{@code reasoning} 思考过程、{@code tool_result} 工具结果、{@code message} 最终回复；
+     * 无 event 的控制帧：{@code [CONV_ID]}、{@code [DONE]}。
+     * </p>
      */
     @PostMapping(value = "/message/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<ServerSentEvent<String>> sendMessageStream(@RequestBody SendMessageRequest request) {
         return chatBiz.sendMessageStream(request)
-                .map(evt -> {
-                    ServerSentEvent.Builder<String> builder = ServerSentEvent.builder(evt.getData());
-                    if (evt.getEvent() != null && !evt.getEvent().isBlank()) {
-                        builder.event(evt.getEvent());
+                .map(new Function<ChatStreamEvent, ServerSentEvent<String>>() {
+                    @Override
+                    public ServerSentEvent<String> apply(ChatStreamEvent evt) {
+                        ServerSentEvent.Builder<String> builder = ServerSentEvent.builder(evt.getData());
+                        if (evt.getEvent() != null && !evt.getEvent().isBlank()) {
+                            builder.event(evt.getEvent());
+                        }
+                        return builder.build();
                     }
-                    return builder.build();
                 });
     }
 
