@@ -224,7 +224,8 @@ public class ChatBizImpl implements IChatBiz {
                         // 回调 B（onError）：Agent 流中途出错时执行。
                         // 记录日志后推送错误事件通知前端，再关闭流。
                         error -> {
-                            log.error("[Flux] Agent 流式推送异常", error);
+                            log.error("[Flux] Agent 流式推送异常, conversationId={}, agentId={}",
+                                    ctx.getConversationId(), ctx.getConversation().getAgentId(), error);
                             String msg = error.getMessage() != null ? error.getMessage() : "流式对话失败";
                             sink.next(new ChatStreamEvent("error", msg));
                             sink.complete(); // 出错也必须关闭流，否则连接泄漏

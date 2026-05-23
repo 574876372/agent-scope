@@ -32,6 +32,8 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
@@ -105,11 +107,23 @@ public class AgentBizImpl implements IAgentBiz {
 
         Agent agent = resolveAgent(id, info);
 
-        Msg reply = agent.call(Msg.builder()
-                        .textContent(request.getContent())
-                        .role(MsgRole.USER)
-                        .build())
-                .block();
+        long startMs = System.currentTimeMillis();
+        log.info("[Model] 开始调用模型(同步), agentId={}, agentName={}, model={}",
+                id, info.getName(), info.getModelName());
+        Msg reply;
+        try {
+            reply = agent.call(Msg.builder()
+                            .textContent(request.getContent())
+                            .role(MsgRole.USER)
+                            .build())
+                    .block();
+            log.info("[Model] 模型同步调用完成, agentId={}, agentName={}, model={}, costMs={}",
+                    id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs);
+        } catch (Exception e) {
+            log.error("[Model] 模型同步调用异常, agentId={}, agentName={}, model={}, costMs={}",
+                    id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs, e);
+            throw e;
+        }
 
         ChatResponse response = new ChatResponse();
         response.setAgentId(id);
@@ -138,11 +152,25 @@ public class AgentBizImpl implements IAgentBiz {
                 .includeReasoningResult(false)
                 .build();
 
+        AtomicLong startMs = new AtomicLong();
+        AtomicBoolean firstEvent = new AtomicBoolean(true);
+
         return agent.stream(List.of(userMsg), options)
-                .onErrorResume(e -> {
-                    log.error("[chatStream] Agent [{}] 流式对话异常", id, e);
-                    return Flux.error(e);
-                });
+                .doOnSubscribe(sub -> {
+                    startMs.set(System.currentTimeMillis());
+                    log.info("[Model] 开始调用模型(流式), agentId={}, agentName={}, model={}",
+                            id, info.getName(), info.getModelName());
+                })
+                .doOnNext(event -> {
+                    if (firstEvent.compareAndSet(true, false)) {
+                        log.info("[Model] 模型流式首包返回, agentId={}, model={}, ttftMs={}",
+                                id, info.getModelName(), System.currentTimeMillis() - startMs.get());
+                    }
+                })
+                .doOnComplete(() -> log.info("[Model] 模型流式调用完成, agentId={}, agentName={}, model={}, costMs={}",
+                        id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get()))
+                .doOnError(e -> log.error("[Model] 模型流式调用异常, agentId={}, agentName={}, model={}, costMs={}",
+                        id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get(), e));
     }
 
     /**
