@@ -3,6 +3,7 @@ package com.cl.agent.tool.autoconfigure;
 import com.cl.agent.tool.core.AgentToolProperties;
 import com.cl.agent.tool.core.AgentToolRegistry;
 import com.cl.agent.tool.core.AgentToolkitFactory;
+import com.cl.agent.tool.core.ToolRegistrySyncCallback;
 import io.agentscope.core.tool.Toolkit;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -12,6 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+
+import java.util.Optional;
 
 /**
  * Agent 工具框架自动配置：注册工具扫描器与 Toolkit 工厂。
@@ -26,13 +29,15 @@ public class AgentToolAutoConfiguration {
     /**
      * 注册工具扫描器 Bean。
      *
-     * @param beanFactory Spring Bean 工厂
+     * @param beanFactory  Spring Bean 工厂
+     * @param syncCallback 可选的同步回调（由 biz 层提供实现）
      * @return 工具注册表
      */
     @Bean
     @ConditionalOnMissingBean
-    public AgentToolRegistry agentToolRegistry(ListableBeanFactory beanFactory) {
-        return new AgentToolRegistry(beanFactory);
+    public AgentToolRegistry agentToolRegistry(ListableBeanFactory beanFactory,
+                                               Optional<ToolRegistrySyncCallback> syncCallback) {
+        return new AgentToolRegistry(beanFactory, syncCallback);
     }
 
     /**

@@ -54,9 +54,9 @@ public class ControllerLogAspect {
             requestInfo = String.format("[%s %s] ", request.getMethod(), request.getRequestURI());
         }
 
-        // 将入参数组序列化为 JSON 后打印
+        // ═══ 请求开始：打印 HTTP 信息和入参 ═══
         Object[] args = joinPoint.getArgs();
-        log.info("{}请求 {}.{} 入参: {}", requestInfo, className, methodName, toJson(args));
+        log.info("═══ 请求开始 ═══ {}{}.{} 入参: {}", requestInfo, className, methodName, toJson(args));
 
         // 记录方法开始执行时间，用于计算耗时
         long startTime = System.currentTimeMillis();
@@ -64,14 +64,15 @@ public class ControllerLogAspect {
         try {
             result = joinPoint.proceed();
         } catch (Throwable e) {
-            log.error("{}请求 {}.{} 异常: {}", requestInfo, className, methodName, e.getMessage(), e);
+            long elapsed = System.currentTimeMillis() - startTime;
+            log.error("═══ 请求异常 ═══ {}{}.{} 异常: {} (耗时 {}ms)", requestInfo, className, methodName, e.getMessage(), elapsed, e);
             throw e;
         }
         // 计算方法执行耗时（毫秒）
         long elapsed = System.currentTimeMillis() - startTime;
 
-        // 将返回值序列化为 JSON 后打印
-        log.info("{}请求 {}.{} 返回: {} (耗时 {}ms)", requestInfo, className, methodName, toJson(result), elapsed);
+        // ═══ 请求结束：打印返回值和耗时 ═══
+        log.info("═══ 请求结束 ═══ {}{}.{} 返回: {} (耗时 {}ms)", requestInfo, className, methodName, toJson(result), elapsed);
 
         return result;
     }

@@ -1,20 +1,45 @@
 # ========================
-# 数据源配置
+# 数据源配置（Druid 连接池）
 # ========================
 spring:
   datasource:
+    type: com.alibaba.druid.pool.DruidDataSource          # 使用 Druid 连接池
     url: jdbc:mysql://127.0.0.1:3306/agent_scope?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     # MySQL 连接地址；useUnicode+characterEncoding 保证中文不乱码；serverTimezone 指定时区；useSSL=false 关闭 SSL 验证
-    username: root                                      # 数据库用户名
-    password: chenlei@2025                             # 数据库密码
-    driver-class-name: com.mysql.cj.jdbc.Driver        # MySQL 8.x JDBC 驱动类
+    username: root                                         # 数据库用户名
+    password: chenlei@2025                                 # 数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver            # MySQL 8.x JDBC 驱动类
+    druid:
+      initial-size: 5                                      # 初始化连接数
+      min-idle: 5                                          # 最小空闲连接数
+      max-active: 20                                       # 最大活跃连接数
+      max-wait: 60000                                      # 获取连接最大等待时间（毫秒）
+      time-between-eviction-runs-millis: 60000             # 空闲连接检测间隔（毫秒）
+      min-evictable-idle-time-millis: 300000               # 连接最小空闲时间（毫秒），超过后可被回收
+      validation-query: SELECT 1                           # 连接有效性检测 SQL
+      test-while-idle: true                                # 空闲时检测连接有效性
+      test-on-borrow: false                                # 借出连接时不检测（提升性能）
+      test-on-return: false                                # 归还连接时不检测（提升性能）
+      pool-prepared-statements: true                       # 开启 PSCache（MySQL 建议开启）
+      max-pool-prepared-statement-per-connection-size: 20  # 每个连接的 PSCache 大小
+      filters: stat,wall                                   # 开启监控统计（stat）和防 SQL 注入（wall）
+      stat-view-servlet:
+        enabled: true                                      # 启用 Druid 监控页面
+        url-pattern: /druid/*                              # 监控页面访问路径
+        login-username: admin                              # 监控页面登录用户名
+        login-password: admin123                           # 监控页面登录密码
+        allow:                                             # 允许访问的 IP（空表示不限制）
+      web-stat-filter:
+        enabled: true                                      # 启用 Web 关联监控
+        url-pattern: /*                                    # 过滤所有请求
+        exclusions: "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*"  # 排除静态资源和 Druid 自身路径
 
 # ========================
 # MyBatis-Plus 配置
 # ========================
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # SQL 日志输出到控制台（生产环境建议关闭）
+    # SQL 日志由自定义 SqlLogInterceptor 拦截器打印完整 SQL，无需 StdOutImpl
     map-underscore-to-camel-case: true                     # 开启下划线字段自动映射为驼峰命名（如 user_name -> userName）
   global-config:
     db-config:
@@ -23,11 +48,15 @@ mybatis-plus:
       logic-not-delete-value: 0     # 未删除的标志值
 
 # ========================
-# 日志配置
+# 日志配置（企业级）
+# 详细规则见 logback-spring.xml：
+#   - 异步 Appender 提升吞吐
+#   - 按天 + 按大小滚动，归档 gzip 压缩
+#   - ERROR / WARN 独立日志文件
+#   - dev / prod 环境差异化级别
 # ========================
 logging:
-  level:
-    com.cl.agent: debug   # 将 com.cl.agent 包下所有类的日志级别设置为 DEBUG（便于开发调试）
+  config: classpath:logback-spring.xml                    # 指定 Logback 配置文件
 
 # ========================
 # AgentScope Studio 可视化面板

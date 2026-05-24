@@ -64,6 +64,13 @@ public class AgentController {
         return ResponseEntity.noContent().build();
     }
 
+    /** 更新 Agent（含工具绑定） */
+    @PutMapping("/{id}")
+    public ResponseEntity<AgentResponse> updateAgent(@PathVariable String id,
+                                                     @RequestBody CreateAgentRequest request) {
+        return ResponseEntity.ok(agentBiz.updateAgent(id, request));
+    }
+
     /** 向 Agent 发送消息 */
     @PostMapping("/{id}/chat")
     public ResponseEntity<ChatResponse> chat(@PathVariable String id, @RequestBody ChatRequest request) {

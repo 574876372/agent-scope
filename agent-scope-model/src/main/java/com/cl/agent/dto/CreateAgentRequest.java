@@ -1,6 +1,7 @@
 package com.cl.agent.dto;
 
 import java.io.Serializable;
+import java.util.List;
 
 import lombok.Data;
 
@@ -23,4 +24,7 @@ public class CreateAgentRequest implements Serializable {
 
     /** 系统提示词 */
     private String systemPrompt;
+
+    /** 该 Agent 授权使用的工具名称列表（如 ["get_weather", "calculate"]） */
+    private List<String> toolNames;
 }

@@ -45,6 +45,15 @@ public interface IAgentBiz {
     void deleteAgent(String id);
 
     /**
+     * 更新 Agent 基本信息及工具绑定关系
+     *
+     * @param id      Agent ID
+     * @param request 更新请求参数（复用 CreateAgentRequest）
+     * @return 更新后的 Agent 信息
+     */
+    AgentResponse updateAgent(String id, CreateAgentRequest request);
+
+    /**
      * 与指定的 Agent 进行对话
      * 
      * @param id Agent ID

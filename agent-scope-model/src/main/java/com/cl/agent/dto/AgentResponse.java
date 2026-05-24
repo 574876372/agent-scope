@@ -2,6 +2,7 @@ package com.cl.agent.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Data;
 
@@ -34,4 +35,7 @@ public class AgentResponse implements Serializable {
 
     /** 系统提示词 */
     private String systemPrompt;
+
+    /** 该 Agent 关联的工具名称列表 */
+    private List<String> toolNames;
 }

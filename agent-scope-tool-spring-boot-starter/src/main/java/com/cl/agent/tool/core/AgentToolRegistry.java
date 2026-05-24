@@ -12,6 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -26,13 +28,19 @@ public class AgentToolRegistry implements SmartInitializingSingleton {
     /** 工具名称 -> 反射包装器 */
     private final Map<String, ReflectiveAgentTool> registeredTools = new LinkedHashMap<>();
 
+    /** 工具注册完成后的可选同步回调（用于将元数据同步到数据库等外部存储） */
+    private final Optional<ToolRegistrySyncCallback> syncCallback;
+
     /**
      * 构造注册表。
      *
-     * @param beanFactory Spring Bean 工厂
+     * @param beanFactory  Spring Bean 工厂
+     * @param syncCallback 可选的同步回调
      */
-    public AgentToolRegistry(ListableBeanFactory beanFactory) {
+    public AgentToolRegistry(ListableBeanFactory beanFactory,
+                             Optional<ToolRegistrySyncCallback> syncCallback) {
         this.beanFactory = beanFactory;
+        this.syncCallback = syncCallback;
     }
 
     /**
@@ -58,6 +66,15 @@ public class AgentToolRegistry implements SmartInitializingSingleton {
             registerBeanMethods(bean);
         }
         log.info("[Tool] 已注册 {} 个 Agent 工具: {}", registeredTools.size(), registeredTools.keySet());
+
+        // 通知同步回调（如将工具元数据持久化到数据库）
+        syncCallback.ifPresent(callback -> {
+            try {
+                callback.onToolsRegistered(getAllTools());
+            } catch (Exception e) {
+                log.warn("[Tool] 工具注册同步回调执行失败", e);
+            }
+        });
     }
 
     /**
@@ -89,6 +106,15 @@ public class AgentToolRegistry implements SmartInitializingSingleton {
      */
     public Collection<ReflectiveAgentTool> getAllTools() {
         return Collections.unmodifiableCollection(registeredTools.values());
+    }
+
+    /**
+     * 获取所有已注册的工具名称集合。
+     *
+     * @return 不可变工具名称集合
+     */
+    public Set<String> getRegisteredToolNames() {
+        return Collections.unmodifiableSet(registeredTools.keySet());
     }
 
     /**

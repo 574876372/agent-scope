@@ -50,6 +50,33 @@ public class ReflectiveAgentTool implements AgentTool {
     }
 
     /**
+     * 获取工具方法所属 Bean 实例。
+     *
+     * @return Spring Bean
+     */
+    public Object getBean() {
+        return bean;
+    }
+
+    /**
+     * 获取工具注解元数据。
+     *
+     * @return AgentToolDef 注解
+     */
+    public AgentToolDef getMetadata() {
+        return metadata;
+    }
+
+    /**
+     * 获取被注解标记的方法。
+     *
+     * @return 工具方法
+     */
+    public Method getToolMethod() {
+        return method;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -85,8 +112,15 @@ public class ReflectiveAgentTool implements AgentTool {
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(this::toResultBlock)
                 .onErrorResume(error -> {
-                    log.warn("[Tool] 工具 {} 执行失败: {}", metadata.name(), error.getMessage());
-                    return Mono.just(ToolResultBlock.error("Tool execution failed: " + error.getMessage()));
+                    log.warn("[Tool] 工具 {} 执行失败: {}", metadata.name(), error.getMessage(), error);
+                    // 构建结构化的错误 Observation，帮助 LLM 理解问题并尝试修正
+                    String observation = String.format(
+                            "工具 [%s] 执行失败。错误类型: %s，错误信息: %s。请检查输入参数后重试或换用其他方式回答。",
+                            metadata.name(),
+                            error.getClass().getSimpleName(),
+                            error.getMessage() != null ? error.getMessage() : "未知错误"
+                    );
+                    return Mono.just(ToolResultBlock.error(observation));
                 });
     }
 

@@ -11,6 +11,7 @@ import com.cl.agent.enums.ModelProviderEnum;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.AgentInfo;
 import com.cl.agent.service.IAgentService;
+import com.cl.agent.service.IAgentToolRelService;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.agent.Agent;
 import io.agentscope.core.agent.Event;
@@ -48,35 +49,47 @@ public class AgentBizImpl implements IAgentBiz {
     @Autowired
     private AgentToolkitFactory agentToolkitFactory;
 
+    @Autowired
+    private IAgentToolRelService agentToolRelService;
+
 
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
 
     @Override
     public AgentResponse createAgent(CreateAgentRequest request) {
+        // 生成 Agent ID
+        String agentId = UUID.randomUUID().toString();
+
+        // 构建 Agent 实例（使用请求中指定的工具列表）
         Agent agent = buildAgent(
                 request.getName(),
                 request.getModelType(),
                 request.getModelName(),
                 request.getSystemPrompt(),
-                null
+                request.getToolNames()
         );
 
+        // 持久化 Agent 基本信息
         AgentInfo info = new AgentInfo();
-        info.setId(UUID.randomUUID().toString());
+        info.setId(agentId);
         info.setName(request.getName());
         info.setModelType(request.getModelType());
         info.setModelName(request.getModelName());
         info.setSystemPrompt(request.getSystemPrompt());
         info.setStatus("active");
         info.setUserId(UserContext.getUserId());
-
-        // 保存到 Service 层
         agentService.save(info);
-        // 保存运行时实例
-        agentInstanceCache.put(info.getId(), agent);
 
-        log.info("成功创建 Agent: ID={}, 名称={}", info.getId(), info.getName());
+        // 保存 Agent-工具关联关系
+        if (request.getToolNames() != null && !request.getToolNames().isEmpty()) {
+            agentToolRelService.replaceToolsForAgent(agentId, request.getToolNames());
+        }
+
+        // 缓存运行时实例
+        agentInstanceCache.put(agentId, agent);
+
+        log.info("成功创建 Agent: ID={}, 名称={}, 工具={}", agentId, info.getName(), request.getToolNames());
         return toResponse(info);
     }
 
@@ -101,7 +114,43 @@ public class AgentBizImpl implements IAgentBiz {
     @Override
     public void deleteAgent(String id) {
         agentService.deleteById(id);
+        agentToolRelService.deleteByAgentId(id);
         agentInstanceCache.remove(id);
+        log.info("删除 Agent: ID={}，已级联清理工具关联", id);
+    }
+
+    @Override
+    public AgentResponse updateAgent(String id, CreateAgentRequest request) {
+        AgentInfo info = agentService.getById(id);
+        if (info == null) {
+            throw new BizException(404, "Agent 不存在: " + id);
+        }
+
+        // 更新基本信息
+        if (request.getName() != null) {
+            info.setName(request.getName());
+        }
+        if (request.getModelType() != null) {
+            info.setModelType(request.getModelType());
+        }
+        if (request.getModelName() != null) {
+            info.setModelName(request.getModelName());
+        }
+        if (request.getSystemPrompt() != null) {
+            info.setSystemPrompt(request.getSystemPrompt());
+        }
+        agentService.save(info);
+
+        // 更新工具关联
+        if (request.getToolNames() != null) {
+            agentToolRelService.replaceToolsForAgent(id, request.getToolNames());
+        }
+
+        // 清除缓存，下次对话时会重建 Agent 实例（使用新的工具集）
+        agentInstanceCache.remove(id);
+
+        log.info("更新 Agent: ID={}, 名称={}, 工具={}", id, info.getName(), request.getToolNames());
+        return toResponse(info);
     }
 
     @Override
@@ -181,16 +230,19 @@ public class AgentBizImpl implements IAgentBiz {
 
     /**
      * 从缓存获取或重建 Agent 实例。
+     * <p>重建时会查询数据库获取工具关联列表，确保 Agent 使用正确的工具集。</p>
      */
     private Agent resolveAgent(String id, AgentInfo info) {
         Agent agent = agentInstanceCache.get(id);
         if (agent == null) {
+            // 从数据库查询该 Agent 关联的工具列表
+            List<String> toolNames = agentToolRelService.getToolNamesByAgentId(id);
             agent = buildAgent(
                     info.getName(),
                     info.getModelType(),
                     info.getModelName(),
                     info.getSystemPrompt(),
-                    null
+                    toolNames
             );
             agentInstanceCache.put(id, agent);
         }
@@ -273,6 +325,7 @@ public class AgentBizImpl implements IAgentBiz {
         resp.setStatus(info.getStatus());
         resp.setCreateTime(info.getCreateTime());
         resp.setSystemPrompt(info.getSystemPrompt());
+        resp.setToolNames(agentToolRelService.getToolNamesByAgentId(info.getId()));
         return resp;
     }
 }
