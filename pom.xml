@@ -18,6 +18,7 @@
     <modules>
         <module>agent-scope-common</module>
         <module>agent-scope-model</module>
+        <module>agent-scope-tool-spring-boot-starter</module>
         <module>agent-scope-dao</module>
         <module>agent-scope-service</module>
         <module>agent-scope-biz</module>
@@ -74,6 +75,11 @@
                 <artifactId>agent-scope-config</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.cl.agent</groupId>
+                <artifactId>agent-scope-tool-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             
             <!-- External Dependencies -->
             <dependency>
@@ -89,7 +95,7 @@
             <dependency>
                 <groupId>io.agentscope</groupId>
                 <artifactId>agentscope-core</artifactId>
-                <version>1.0.9</version>
+                <version>${agentscope.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.baomidou</groupId>
@@ -164,6 +170,14 @@
                 <groupId>com.networknt</groupId>
                 <artifactId>json-schema-validator</artifactId>
                 <version>${json-schema-validator.version}</version>
+            </dependency>
+            <!-- Jackson annotations 版本覆盖：jackson-databind 3.1.0 (被 json-schema-validator 3.x 引入)
+                 需要 jackson-annotations:2.21，但 Spring Boot 3.4.0 将其固定为 2.18.1，导致
+                 JsonMapperFactory$Holder 静态初始化失败。此处覆盖 Spring Boot 管理的版本。 -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>2.21</version>
             </dependency>
             <dependency>
                 <groupId>com.squareup.okio</groupId>

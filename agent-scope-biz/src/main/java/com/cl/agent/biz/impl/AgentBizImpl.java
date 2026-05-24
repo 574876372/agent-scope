@@ -1,5 +1,6 @@
 package com.cl.agent.biz.impl;
 
+import com.cl.agent.tool.core.AgentToolkitFactory;
 import com.cl.agent.biz.IAgentBiz;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.AgentResponse;
@@ -24,6 +25,7 @@ import io.agentscope.core.model.transport.HttpVersion;
 import io.agentscope.core.model.transport.OkHttpTransport;
 import io.agentscope.core.studio.StudioManager;
 import io.agentscope.core.studio.StudioMessageHook;
+import io.agentscope.core.tool.Toolkit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,9 @@ public class AgentBizImpl implements IAgentBiz {
     @Autowired
     private IAgentService agentService;
 
+    @Autowired
+    private AgentToolkitFactory agentToolkitFactory;
+
 
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
@@ -53,7 +58,8 @@ public class AgentBizImpl implements IAgentBiz {
                 request.getName(),
                 request.getModelType(),
                 request.getModelName(),
-                request.getSystemPrompt()
+                request.getSystemPrompt(),
+                null
         );
 
         AgentInfo info = new AgentInfo();
@@ -183,7 +189,8 @@ public class AgentBizImpl implements IAgentBiz {
                     info.getName(),
                     info.getModelType(),
                     info.getModelName(),
-                    info.getSystemPrompt()
+                    info.getSystemPrompt(),
+                    null
             );
             agentInstanceCache.put(id, agent);
         }
@@ -199,14 +206,22 @@ public class AgentBizImpl implements IAgentBiz {
      * @param modelType  模型厂商类型
      * @param modelName  具体模型名称
      * @param sysPrompt  系统提示词
+     * @param toolNames  Agent 授权使用的工具名称列表，null 时使用默认内置工具
      * @return 构建完成的 Agent 实例
      */
-    private Agent buildAgent(String name, String modelType, String modelName, String sysPrompt) {
+    private Agent buildAgent(String name, String modelType, String modelName, String sysPrompt,
+                             List<String> toolNames) {
         OpenAIChatModel model = buildModel(modelType, modelName);
         ReActAgent.Builder builder = ReActAgent.builder()
                 .name(name)
                 .model(model)
                 .sysPrompt(sysPrompt);
+
+        Toolkit toolkit = agentToolkitFactory.createToolkit(toolNames);
+        if (toolkit != null) {
+            builder.toolkit(toolkit);
+            log.info("[Tool] Agent [{}] 已注入 {} 个工具", name, toolkit.getToolNames().size());
+        }
 
         // 若 Studio 集成已启用且连接成功，注入可视化 Hook
         if (StudioManager.isInitialized()) {

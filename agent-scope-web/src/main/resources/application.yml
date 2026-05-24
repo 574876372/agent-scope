@@ -1,22 +1,33 @@
+# ========================
+# 数据源配置
+# ========================
 spring:
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/agent_scope?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
-    username: root
-    password: chenlei@2025
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    # MySQL 连接地址；useUnicode+characterEncoding 保证中文不乱码；serverTimezone 指定时区；useSSL=false 关闭 SSL 验证
+    username: root                                      # 数据库用户名
+    password: chenlei@2025                             # 数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver        # MySQL 8.x JDBC 驱动类
+
+# ========================
+# MyBatis-Plus 配置
+# ========================
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # SQL 日志输出到控制台（生产环境建议关闭）
+    map-underscore-to-camel-case: true                     # 开启下划线字段自动映射为驼峰命名（如 user_name -> userName）
   global-config:
     db-config:
-      logic-delete-field: delFlag
-      logic-delete-value: 1
-      logic-not-delete-value: 0
+      logic-delete-field: delFlag   # 逻辑删除标志字段名
+      logic-delete-value: 1         # 已删除的标志值
+      logic-not-delete-value: 0     # 未删除的标志值
 
+# ========================
+# 日志配置
+# ========================
 logging:
   level:
-    com.cl.agent: debug
+    com.cl.agent: debug   # 将 com.cl.agent 包下所有类的日志级别设置为 DEBUG（便于开发调试）
 
 # ========================
 # AgentScope Studio 可视化面板
@@ -25,6 +36,18 @@ logging:
 # ========================
 agentscope:
   studio:
-    enabled: true
-    url: http://localhost:3000
-    project: agent-scope-project
+    enabled: true                        # 是否启用 AgentScope Studio 可视化面板（启用前需先运行 as_studio）
+    url: http://localhost:3000           # AgentScope Studio 服务地址
+    project: agent-scope-project        # 当前项目在 Studio 中注册的项目名称
+
+# Agent 工具配置（由 agent-scope-tool-spring-boot-starter 自动装配）
+agent:
+  tool:
+    enabled: true                   # 是否启用 Agent 工具模块（true=开启，false=关闭）
+    execution-timeout-seconds: 10   # 单次工具调用的最大执行超时时间（单位：秒）
+    default-enabled:                # 默认启用的内置工具列表（工具名需与 @AgentToolDef 中 name 一致）
+      - get_weather                 # 天气查询工具
+      - calculate                   # 数学计算工具
+      - web_search                  # 网页搜索工具
+    builtin:                        # 内置工具全局开关
+      enabled: true                 # true=加载所有内置工具；false=禁用内置工具（可仅使用自定义工具）
