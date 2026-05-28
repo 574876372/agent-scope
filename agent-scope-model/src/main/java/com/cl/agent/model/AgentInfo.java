@@ -45,4 +45,18 @@ public class AgentInfo extends BaseEntity {
     /** 系统提示词 (System Prompt) */
     @TableField("system_prompt")
     private String systemPrompt;
+
+    /**
+     * 记忆模式：FULL=全量不压缩 / WINDOW=纯滑动丢弃 / SUMMARY=摘要+滑动（默认）。
+     * 对应枚举 {@link com.cl.agent.enums.MemoryMode}，以字符串形式存储。
+     */
+    @TableField("memory_mode")
+    private String memoryMode;
+
+    /**
+     * 记忆窗口上限（轮数）。
+     * null 时使用全局默认值（由 AgentMemoryProperties 配置）；FULL 模式下忽略此字段。
+     */
+    @TableField("max_turns")
+    private Integer maxTurns;
 }

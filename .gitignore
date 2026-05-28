@@ -29,6 +29,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 /logs/*.log
+agent-client.code-workspace
 
 ### VS Code ###
 .vscode/

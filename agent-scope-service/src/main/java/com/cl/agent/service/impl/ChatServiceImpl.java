@@ -19,7 +19,7 @@ import java.util.List;
 @Service
 @Slf4j
 public class ChatServiceImpl implements IChatService {
-    
+
     @Autowired
     private ConversationMapper conversationMapper;
 
@@ -36,16 +36,15 @@ public class ChatServiceImpl implements IChatService {
         } else {
             conversationMapper.insert(conversation);
         }
-        
+
         // 2. 手动保存消息列表 (如果有)
         if (conversation.getMessages() != null && !conversation.getMessages().isEmpty()) {
             for (ChatMessage msg : conversation.getMessages()) {
                 msg.setConversationId(conversation.getId());
-                if (msg.getId() != null && chatMessageMapper.selectById(msg.getId()) != null) {
-                    chatMessageMapper.updateById(msg);
-                } else {
-                    chatMessageMapper.insert(msg);
+                if (msg.getId() != null) {
+                    continue;
                 }
+                chatMessageMapper.insert(msg);
             }
         }
     }
@@ -54,14 +53,13 @@ public class ChatServiceImpl implements IChatService {
     public Conversation getById(String id) {
         log.debug("Getting conversation by id: {}", id);
         Conversation conv = conversationMapper.selectById(id);
-        
+
         // 手动组装消息列表
         if (conv != null) {
             List<ChatMessage> messages = chatMessageMapper.selectList(
                     new LambdaQueryWrapper<ChatMessage>()
                             .eq(ChatMessage::getConversationId, id)
-                            .orderByAsc(ChatMessage::getTimestamp)
-            );
+                            .orderByAsc(ChatMessage::getTimestamp));
             conv.setMessages(messages);
         }
         return conv;
@@ -79,8 +77,7 @@ public class ChatServiceImpl implements IChatService {
         return conversationMapper.selectList(
                 new LambdaQueryWrapper<Conversation>()
                         .eq(Conversation::getUserId, userId)
-                        .orderByDesc(Conversation::getUpdateTime)
-        );
+                        .orderByDesc(Conversation::getUpdateTime));
     }
 
     @Override

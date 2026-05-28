@@ -1,4 +1,4 @@
-package com.cl.agent.config;
+package com.cl.agent.config.agent;
 
 import io.agentscope.core.studio.StudioManager;
 import jakarta.annotation.PostConstruct;

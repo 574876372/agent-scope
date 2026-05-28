@@ -1,4 +1,4 @@
-package com.cl.agent.config;
+package com.cl.agent.config.web;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;

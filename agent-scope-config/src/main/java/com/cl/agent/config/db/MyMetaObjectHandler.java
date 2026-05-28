@@ -1,4 +1,4 @@
-package com.cl.agent.config;
+package com.cl.agent.config.db;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.cl.agent.commons.UserContext;

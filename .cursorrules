@@ -3,12 +3,14 @@
 You are an expert Java developer working on the `agent-scope` project. Always follow these rules when generating or modifying code:
 
 ## Module Boundaries
-1. **Never skip layers**: `web` must only call `biz`, `biz` must only call `service`, `service` must only call `dao`.
+1. **Strict Dependency Order & No Cyclic Dependencies**:
+   - Business Flow: `web` -> `biz` -> `service` -> `dao` -> `model` -> `common` (Never skip layers: `web` must only call `biz`, `biz` must only call `service`, `service` must only call `dao`).
+   - Config Dependency Flow: `web` / `biz` -> `config` -> `model` -> `common` (low-level configs are imported into `biz` and `web`, and must NOT depend on `biz` or `web`).
 2. **Model Purity**: `agent-scope-model` must NOT depend on any AI SDKs (like AgentScope). Keep entities and DTOs clean.
 3. **Logic Placement**:
    - AI interactions (AgentScope) belong in `agent-scope-biz`.
    - Data persistence/caching belongs in `agent-scope-service`.
-   - Global configs/interceptors belong in `agent-scope-config`.
+   - Global configs/interceptors/AOP aspects belong in `agent-scope-config`.
 
 ## Coding Style
 1. Use **Lombok** (`@Data`, `@Slf4j`, `@Builder`, `@AllArgsConstructor`, `@NoArgsConstructor`) for all models and services.
@@ -77,4 +79,15 @@ You are an expert Java developer working on the `agent-scope` project. Always fo
 ## AI Agent Logic
 - All AgentScope orchestration logic (creating Agents, calling models) should be implemented in the `biz` implementation classes.
 - Use `agentInstanceCache` in `biz` for runtime instances if necessary, but keep persistent metadata in the `service` layer.
+
+## SQL & Database Rules (数据库变更规范)
+1. **File Location & Naming**: Save all SQL/database migration scripts in the `docx/` directory. Use the naming pattern: `YYYY-MM-DD_brief_description.sql` (e.g., `2026-05-28_init_memory_tables.sql`).
+2. **Formatting & Structure (按 init_memory_tables.sql 格式保存)**:
+   - **Header Comment**: Every SQL script must begin with a boxed header comment specifying the module, purpose, and target database.
+   - **Section Comments**: Prefix each statement block with numbered section comments (e.g., `-- 1. ...`, `-- 2. ...`).
+   - **Case Convention**: SQL keywords must be in **UPPERCASE** (e.g., `CREATE TABLE`, `ALTER TABLE`, `VARCHAR`, `INT`, `DEFAULT`, `COMMENT`), while table names, column names, and index names must be in **lowercase** and enclosed in backticks `` ` ``.
+   - **Field Layout**: Inside `CREATE TABLE`, align column names, types, constraints, and comments using spaces for high readability.
+   - **Mandatory Comments**: All tables and columns must have clear, explicit `COMMENT` definitions.
+   - **Audit Fields**: Every new table must include standard auditing columns: `` `create_by` ``, `` `create_time` ``, `` `update_by` ``, `` `update_time` ``, and `` `del_flag` ``.
+   - **Table Settings**: Append `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='...'` to the end of table creation statements.
 

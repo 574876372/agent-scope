@@ -2,8 +2,11 @@ package com.cl.agent.biz.impl;
 
 import com.cl.agent.biz.IAgentBiz;
 import com.cl.agent.biz.IChatBiz;
+import com.cl.agent.biz.memory.MemoryManager;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.*;
+import com.cl.agent.model.AgentInfo;
+import com.cl.agent.service.IAgentService;
 import com.cl.agent.stream.StreamAccumulator;
 import com.cl.agent.stream.StreamContext;
 import com.cl.agent.exception.BizException;
@@ -51,6 +54,14 @@ public class ChatBizImpl implements IChatBiz {
     /** Agent 业务接口，用于向指定 Agent 发送消息（同步/流式） */
     @Autowired
     private IAgentBiz agentBiz;
+
+    /** Agent 数据访问服务，用于查询 Agent 配置（含 memoryMode / maxTurns） */
+    @Autowired
+    private IAgentService agentService;
+
+    /** 记忆管理器，根据 Agent 配置处理上下文（FULL / WINDOW / SUMMARY） */
+    @Autowired
+    private MemoryManager memoryManager;
 
     @Override
     public ConversationResponse createConversation(CreateConversationRequest request) {
@@ -101,8 +112,14 @@ public class ChatBizImpl implements IChatBiz {
 
         String aiContent = PLACEHOLDER_NO_AGENT;
         if (conv.getAgentId() != null) {
+            AgentInfo agentInfo = agentService.getById(conv.getAgentId());
+            List<ChatMessage> contextMessages = memoryManager.resolveContext(conv, agentInfo);
+            log.debug("[Memory] 同步上下文已处理, conversationId={}, contextSize={}",
+                    conversationId, contextMessages.size());
+
             ChatRequest chatRequest = new ChatRequest();
             chatRequest.setContent(request.getContent());
+            chatRequest.setHistory(contextMessages);
             ChatResponse chatResponse = agentBiz.chat(conv.getAgentId(), chatRequest);
             aiContent = chatResponse.getContent();
         }
@@ -151,13 +168,12 @@ public class ChatBizImpl implements IChatBiz {
     }
 
     /**
-     * 加载会话并追加用户消息。
+     * 加载会话并追加用户消息，同时通过 {@link MemoryManager} 处理历史上下文。
      */
     private StreamContext prepareStreamContext(String conversationId, SendMessageRequest request) {
         // 根据会话 ID 从数据库加载完整的会话对象（含历史消息）
         Conversation conv = chatService.getById(conversationId);
         if (conv == null) {
-            // 会话不存在时抛出业务异常，让上层统一处理错误响应
             throw new BizException(404, "会话不存在: " + conversationId);
         }
 
@@ -166,16 +182,24 @@ public class ChatBizImpl implements IChatBiz {
 
         // 构建用户消息实体并写入会话的消息列表
         ChatMessage userMsg = new ChatMessage();
-        userMsg.setRole("user"); // 标明消息来源是用户
-        userMsg.setContent(request.getContent()); // 设置用户输入的文本内容
-        userMsg.setTimestamp(now); // 设置消息时间戳
-        conv.getMessages().add(userMsg); // 追加到会话历史列表
+        userMsg.setRole("user");
+        userMsg.setContent(request.getContent());
+        userMsg.setTimestamp(now);
+        conv.getMessages().add(userMsg);
 
         // 提前持久化用户消息：即使后续 Agent 调用失败，用户的提问也不会丢失
         chatService.save(conv);
 
-        // 将会话对象、会话 ID、用户输入打包成上下文对象，贯穿整个流式流程
-        return new StreamContext(conv, conversationId, request.getContent());
+        // 通过 MemoryManager 处理历史上下文（FULL / WINDOW / SUMMARY 三路分支）
+        List<ChatMessage> contextMessages = null;
+        if (conv.getAgentId() != null) {
+            AgentInfo agentInfo = agentService.getById(conv.getAgentId());
+            contextMessages = memoryManager.resolveContext(conv, agentInfo);
+            log.debug("[Memory] 上下文已处理, conversationId={}, contextSize={}",
+                    conversationId, contextMessages.size());
+        }
+
+        return new StreamContext(conv, conversationId, request.getContent(), contextMessages);
     }
 
     /**
@@ -209,6 +233,7 @@ public class ChatBizImpl implements IChatBiz {
                 // ── 第 3 步：构造对 Agent 的流式请求 ─────────────────────────────
                 ChatRequest chatRequest = new ChatRequest();
                 chatRequest.setContent(ctx.getUserContent()); // 将用户本轮输入传给 Agent
+                chatRequest.setHistory(ctx.getContextMessages()); // 将历史上下文传给 Agent
 
                 // 创建累积器：边接收 Agent 的碎片事件，边拼装完整文本，
                 // 最终在流结束后一次性存入数据库，避免存到一半数据不完整

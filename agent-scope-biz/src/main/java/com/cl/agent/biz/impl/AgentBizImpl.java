@@ -10,6 +10,7 @@ import com.cl.agent.dto.CreateAgentRequest;
 import com.cl.agent.enums.ModelProviderEnum;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.AgentInfo;
+import com.cl.agent.model.ChatMessage;
 import com.cl.agent.service.IAgentService;
 import com.cl.agent.service.IAgentToolRelService;
 import io.agentscope.core.ReActAgent;
@@ -56,6 +57,13 @@ public class AgentBizImpl implements IAgentBiz {
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
 
+    /**
+     * 创建并持久化一个新的 Agent 实例。
+     * <p>根据配置动态构建对应的 `ReActAgent`，并将其缓存至内存，同时把基本配置和关联工具记录到数据库中。</p>
+     *
+     * @param request 创建 Agent 的请求参数体，包含名称、模型厂商、具体模型、人设 Prompt、授权工具以及记忆模式和限制轮数等信息
+     * @return AgentResponse 创建成功的 Agent 详细配置信息响应对象
+     */
     @Override
     public AgentResponse createAgent(CreateAgentRequest request) {
         // 生成 Agent ID
@@ -79,6 +87,9 @@ public class AgentBizImpl implements IAgentBiz {
         info.setSystemPrompt(request.getSystemPrompt());
         info.setStatus("active");
         info.setUserId(UserContext.getUserId());
+        // 记忆管理配置：memoryMode / maxTurns（null 表示使用全局默认）
+        info.setMemoryMode(request.getMemoryMode());
+        info.setMaxTurns(request.getMaxTurns());
         agentService.save(info);
 
         // 保存 Agent-工具关联关系
@@ -93,6 +104,12 @@ public class AgentBizImpl implements IAgentBiz {
         return toResponse(info);
     }
 
+    /**
+     * 列出当前登录用户名下的所有活跃 Agent。
+     * <p>根据用户上下文中的当前用户 ID 进行数据隔离筛选。</p>
+     *
+     * @return List&lt;AgentResponse&gt; 属于当前用户的 Agent 详细配置信息列表
+     */
     @Override
     public List<AgentResponse> listAgents() {
         String userId = UserContext.getUserId();
@@ -102,6 +119,13 @@ public class AgentBizImpl implements IAgentBiz {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 获取指定 ID 的 Agent 详细配置信息。
+     *
+     * @param id Agent 唯一标识符 ID
+     * @return AgentResponse 获取到的 Agent 详细信息对象
+     * @throws BizException 当对应的 Agent 不存在时抛出 404 错误
+     */
     @Override
     public AgentResponse getAgent(String id) {
         AgentInfo info = agentService.getById(id);
@@ -111,6 +135,11 @@ public class AgentBizImpl implements IAgentBiz {
         return toResponse(info);
     }
 
+    /**
+     * 删除指定 ID 的 Agent，并自动级联清理该 Agent 的工具关联和内存缓存。
+     *
+     * @param id 待删除 of Agent 唯一标识符 ID
+     */
     @Override
     public void deleteAgent(String id) {
         agentService.deleteById(id);
@@ -119,6 +148,15 @@ public class AgentBizImpl implements IAgentBiz {
         log.info("删除 Agent: ID={}，已级联清理工具关联", id);
     }
 
+    /**
+     * 更新指定 ID 的 Agent 配置。
+     * <p>对基本字段（名称、模型、Prompt等）进行增量更新并写回数据库，同时清理该 Agent 的运行时实例缓存以使配置在下次对话时生效。</p>
+     *
+     * @param id      待更新的 Agent 唯一标识符 ID
+     * @param request 包含新配置项的请求体
+     * @return AgentResponse 更新后的 Agent 详细配置响应对象
+     * @throws BizException 当对应的 Agent 不存在时抛出 404 错误
+     */
     @Override
     public AgentResponse updateAgent(String id, CreateAgentRequest request) {
         AgentInfo info = agentService.getById(id);
@@ -139,6 +177,13 @@ public class AgentBizImpl implements IAgentBiz {
         if (request.getSystemPrompt() != null) {
             info.setSystemPrompt(request.getSystemPrompt());
         }
+        // 允许更新记忆模式和窗口配置
+        if (request.getMemoryMode() != null) {
+            info.setMemoryMode(request.getMemoryMode());
+        }
+        if (request.getMaxTurns() != null) {
+            info.setMaxTurns(request.getMaxTurns());
+        }
         agentService.save(info);
 
         // 更新工具关联
@@ -153,6 +198,15 @@ public class AgentBizImpl implements IAgentBiz {
         return toResponse(info);
     }
 
+    /**
+     * 向指定的 Agent 发送同步对话请求。
+     * <p>在执行对话前会首先刷新并重新注入通过 MemoryManager 处理好的历史记忆上下文。</p>
+     *
+     * @param id      Agent 唯一标识符 ID
+     * @param request 包含用户当前提问及历史上下文的请求体
+     * @return ChatResponse Agent 同步响应的结果对象
+     * @throws BizException 当对应的 Agent 不存在时抛出 404 错误
+     */
     @Override
     public ChatResponse chat(String id, ChatRequest request) {
         AgentInfo info = agentService.getById(id);
@@ -161,6 +215,7 @@ public class AgentBizImpl implements IAgentBiz {
         }
 
         Agent agent = resolveAgent(id, info);
+        prepareAgentMemory(agent, request.getHistory());
 
         long startMs = System.currentTimeMillis();
         log.info("[Model] 开始调用模型(同步), agentId={}, agentName={}, model={}",
@@ -187,6 +242,14 @@ public class AgentBizImpl implements IAgentBiz {
         return response;
     }
 
+    /**
+     * 向指定的 Agent 发送流式对话请求。
+     * <p>在发起流式请求前先刷新注入历史上下文记忆，最后返回包含推理过程、工具结果和正式消息的响应式事件流。</p>
+     *
+     * @param id      Agent 唯一标识符 ID
+     * @param request 包含用户当前提问及历史上下文的请求体
+     * @return Flux&lt;Event&gt; 响应式事件流，包含智能体在交互过程中吐出的各种事件片段
+     */
     @Override
     public Flux<Event> chatStream(String id, ChatRequest request) {
         AgentInfo info = agentService.getById(id);
@@ -195,6 +258,8 @@ public class AgentBizImpl implements IAgentBiz {
         }
 
         Agent agent = resolveAgent(id, info);
+        prepareAgentMemory(agent, request.getHistory());
+
         Msg userMsg = Msg.builder()
                 .textContent(request.getContent())
                 .role(MsgRole.USER)
@@ -229,8 +294,11 @@ public class AgentBizImpl implements IAgentBiz {
     }
 
     /**
-     * 从缓存获取或重建 Agent 实例。
-     * <p>重建时会查询数据库获取工具关联列表，确保 Agent 使用正确的工具集。</p>
+     * 获取指定 Agent 的缓存实例，如果缓存中不存在，则查询数据库的元配置重建 Agent 并将其加入缓存中。
+     *
+     * @param id   Agent 唯一标识符 ID
+     * @param info 数据库中缓存的 Agent 基础配置实体
+     * @return Agent 缓存或重建后的运行时智能体实例对象
      */
     private Agent resolveAgent(String id, AgentInfo info) {
         Agent agent = agentInstanceCache.get(id);
@@ -250,16 +318,15 @@ public class AgentBizImpl implements IAgentBiz {
     }
 
     /**
-     * 统一构建 ReActAgent 实例。
-     * <p>若 Studio 已启用（studioManager 不为 null），则自动注入 StudioMessageHook，
-     * 使 Agent 的完整推理链路（Thought / Action / Observation）同步至可视化面板。</p>
+     * 统一构建 ReActAgent 运行时对象。
+     * <p>根据模型和 Prompt 信息创建模型实例，并绑定授权的工具包。若 Studio 可视化已开启，还会自动挂载 Studio 推理过程追踪 Hook。</p>
      *
-     * @param name       Agent 名称
-     * @param modelType  模型厂商类型
-     * @param modelName  具体模型名称
-     * @param sysPrompt  系统提示词
-     * @param toolNames  Agent 授权使用的工具名称列表，null 时使用默认内置工具
-     * @return 构建完成的 Agent 实例
+     * @param name       Agent 的友好显示名称
+     * @param modelType  模型提供商标识
+     * @param modelName  目标调用的模型名称
+     * @param sysPrompt  系统提示词（人设设定）
+     * @param toolNames  授权关联的工具名称列表
+     * @return Agent 构建好的运行时 ReActAgent 实例
      */
     private Agent buildAgent(String name, String modelType, String modelName, String sysPrompt,
                              List<String> toolNames) {
@@ -285,11 +352,12 @@ public class AgentBizImpl implements IAgentBiz {
     }
 
     /**
-     * 构建 OpenAI 兼容协议的聊天模型实例。
+     * 根据模型厂商和名称构建 OpenAI 兼容协议大模型客户端。
+     * <p>此处强制底层使用 HTTP/1.1 以规避 HTTP/2 在 SSE 长连接断开或复用时的部分不稳定问题，同时使用更具弹性的 OkHttp 传输层。</p>
      *
-     * @param modelType 模型厂商枚举 key
-     * @param modelName 模型名称
-     * @return 配置完毕的 {@link OpenAIChatModel}
+     * @param modelType 模型厂商名称
+     * @param modelName 具体的模型名称
+     * @return OpenAIChatModel 实例化完成的 LLM 客户端
      */
     private OpenAIChatModel buildModel(String modelType, String modelName) {
         ModelProviderEnum provider = ModelProviderEnum.of(modelType);
@@ -302,7 +370,7 @@ public class AgentBizImpl implements IAgentBiz {
                 .httpVersion(HttpVersion.HTTP_1_1)
                 .build();
                 
-        // 使用 OkHttp 传输层实例替代 JDK HttpClient，以提升复杂网络代理和高并发下 SSE/NDJSON 流式传输的健壮性
+        // 使用 OkHttp 传输层实例替代 JDK HttpClient，以提升复杂网络代理 and 高并发下 SSE/NDJSON 流式传输的健壮性
         HttpTransport transport = OkHttpTransport.builder()
                 .config(config)
                 .build();
@@ -316,6 +384,12 @@ public class AgentBizImpl implements IAgentBiz {
                 .build();
     }
 
+    /**
+     * 将数据库持久化实体 AgentInfo 转换为对外数据传输 DTO 响应对象，并补全关联工具信息。
+     *
+     * @param info 数据库存储的 Agent 实体对象
+     * @return AgentResponse 包含完整信息的 DTO 对象
+     */
     private AgentResponse toResponse(AgentInfo info) {
         AgentResponse resp = new AgentResponse();
         resp.setId(info.getId());
@@ -326,6 +400,54 @@ public class AgentBizImpl implements IAgentBiz {
         resp.setCreateTime(info.getCreateTime());
         resp.setSystemPrompt(info.getSystemPrompt());
         resp.setToolNames(agentToolRelService.getToolNamesByAgentId(info.getId()));
+        // 回填记忆配置供前端展示和编辑时回显
+        resp.setMemoryMode(info.getMemoryMode());
+        resp.setMaxTurns(info.getMaxTurns());
         return resp;
+    }
+
+    /**
+     * 将字符串类型的 Role 安全转换为 AgentScope 原生的角色 MsgRole 枚举。
+     *
+     * @param role 角色名称（如 "user"、"assistant"、"system"）
+     * @return MsgRole 转换后的对应枚举对象，默认为 MsgRole.USER
+     */
+    private MsgRole parseRole(String role) {
+        if (role == null) {
+            return MsgRole.USER;
+        }
+        switch (role.toLowerCase()) {
+            case "system":
+                return MsgRole.SYSTEM;
+            case "assistant":
+                return MsgRole.ASSISTANT;
+            case "user":
+            default:
+                return MsgRole.USER;
+        }
+    }
+
+    /**
+     * 重置缓存中共享 Agent 的短期上下文记忆，并填充从数据库计算出来、经过裁剪的最新会话历史上下文。
+     * <p>以此规避由于缓存驻留和多会话共享导致的历史交叉污染，并使滑窗与摘要的记忆裁剪完全生效。</p>
+     *
+     * @param agent   目标加载的运行中 Agent 实例
+     * @param history 从数据库读取并经过 MemoryManager 处理过的对话上下文历史列表
+     */
+    private void prepareAgentMemory(Agent agent, List<ChatMessage> history) {
+        if (agent instanceof ReActAgent) {
+            ReActAgent reactAgent = (ReActAgent) agent;
+            if (reactAgent.getMemory() != null) {
+                reactAgent.getMemory().clear();
+                if (history != null) {
+                    for (ChatMessage m : history) {
+                        reactAgent.getMemory().addMessage(Msg.builder()
+                                .role(parseRole(m.getRole()))
+                                .textContent(m.getContent())
+                                .build());
+                    }
+                }
+            }
+        }
     }
 }

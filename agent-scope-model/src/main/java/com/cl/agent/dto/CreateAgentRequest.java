@@ -27,4 +27,16 @@ public class CreateAgentRequest implements Serializable {
 
     /** 该 Agent 授权使用的工具名称列表（如 ["get_weather", "calculate"]） */
     private List<String> toolNames;
+
+    /**
+     * 记忆模式：FULL / WINDOW / SUMMARY。
+     * null 时使用全局默认配置（SUMMARY）。
+     */
+    private String memoryMode;
+
+    /**
+     * 单 Agent 记忆窗口上限（轮数）。
+     * null 时使用全局默认值；FULL 模式下忽略。
+     */
+    private Integer maxTurns;
 }

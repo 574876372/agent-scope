@@ -80,3 +80,10 @@ agent:
       - web_search                  # 网页搜索工具
     builtin:                        # 内置工具全局开关
       enabled: true                 # true=加载所有内置工具；false=禁用内置工具（可仅使用自定义工具）
+
+# ========================
+# Agent 记忆管理配置
+# ========================
+  memory:
+    default-mode: SUMMARY  # 全局默认记忆模式（FULL=全量不压缩 / WINDOW=纯滑动丢弃 / SUMMARY=摘要+滑动）
+    max-turns: 5          # 全局默认记忆窗口上限（轮数），FULL 模式下忽略此项

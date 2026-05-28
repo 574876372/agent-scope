@@ -38,4 +38,15 @@ public class AgentResponse implements Serializable {
 
     /** 该 Agent 关联的工具名称列表 */
     private List<String> toolNames;
+
+    /**
+     * 记忆模式：FULL / WINDOW / SUMMARY，供前端展示和编辑时回显。
+     */
+    private String memoryMode;
+
+    /**
+     * 记忆窗口上限（轮数），供前端展示和编辑时回显。
+     * null 表示使用全局默认值。
+     */
+    private Integer maxTurns;
 }
