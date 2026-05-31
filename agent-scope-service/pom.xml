@@ -20,6 +20,11 @@
             <groupId>com.cl.agent</groupId>
             <artifactId>agent-scope-common</artifactId>
         </dependency>
+        <!-- SQL starter: 拿 CryptoService（AES-GCM）以及 HikariCP 传递依赖；service 层据此构造业务库连接池 -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>

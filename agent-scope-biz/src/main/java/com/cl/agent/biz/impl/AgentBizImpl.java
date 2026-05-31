@@ -222,10 +222,12 @@ public class AgentBizImpl implements IAgentBiz {
                 id, info.getName(), info.getModelName());
         Msg reply;
         try {
+            String userId = UserContext.getUserId();
             reply = agent.call(Msg.builder()
                             .textContent(request.getContent())
                             .role(MsgRole.USER)
                             .build())
+                    .contextWrite(context -> context.put("userId", userId))
                     .block();
             log.info("[Model] 模型同步调用完成, agentId={}, agentName={}, model={}, costMs={}",
                     id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs);
@@ -275,6 +277,7 @@ public class AgentBizImpl implements IAgentBiz {
         AtomicLong startMs = new AtomicLong();
         AtomicBoolean firstEvent = new AtomicBoolean(true);
 
+        String userId = UserContext.getUserId();
         return agent.stream(List.of(userMsg), options)
                 .doOnSubscribe(sub -> {
                     startMs.set(System.currentTimeMillis());
@@ -290,7 +293,8 @@ public class AgentBizImpl implements IAgentBiz {
                 .doOnComplete(() -> log.info("[Model] 模型流式调用完成, agentId={}, agentName={}, model={}, costMs={}",
                         id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get()))
                 .doOnError(e -> log.error("[Model] 模型流式调用异常, agentId={}, agentName={}, model={}, costMs={}",
-                        id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get(), e));
+                        id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get(), e))
+                .contextWrite(context -> context.put("userId", userId));
     }
 
     /**

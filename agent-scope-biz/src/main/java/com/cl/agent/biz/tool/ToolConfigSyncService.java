@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 工具元数据同步服务：应用启动时自动将 {@code @AgentToolDef} 注解的工具信息同步到 {@code t_tool_config} 表。
@@ -24,8 +25,15 @@ public class ToolConfigSyncService implements ToolRegistrySyncCallback {
     private static final Map<String, String[]> BUILTIN_DISPLAY_MAP = Map.of(
             "get_weather", new String[]{"天气查询", "🌤️"},
             "calculate", new String[]{"数学计算", "🔢"},
-            "web_search", new String[]{"网页搜索", "🔍"}
+            "web_search", new String[]{"网页搜索", "🔍"},
+            "list_datasources", new String[]{"列出数据源", "🗄️"},
+            "get_table_schema", new String[]{"获取表结构", "📋"},
+            "query_database", new String[]{"SQL 查询审批", "🔍"}
     );
+
+    /** SQL Agent 工具名集合，同步时 category 标记为 sql */
+    private static final Set<String> SQL_TOOL_NAMES = Set.of(
+            "list_datasources", "get_table_schema", "query_database");
 
     @Autowired
     private IToolConfigService toolConfigService;
@@ -60,9 +68,25 @@ public class ToolConfigSyncService implements ToolRegistrySyncCallback {
                 .beanClass(tool.getBean().getClass().getName())
                 .methodName(tool.getToolMethod().getName())
                 .parametersSchema(tool.getMetadata().parametersSchema())
-                .category(BUILTIN_DISPLAY_MAP.containsKey(toolName) ? "builtin" : "custom")
+                .category(resolveCategory(toolName))
                 .icon(displayInfo != null ? displayInfo[1] : "🔧")
                 .enabled(true)
                 .build();
+    }
+
+    /**
+     * 根据工具名解析分类标签。
+     *
+     * @param toolName 工具唯一名称
+     * @return {@code sql} / {@code builtin} / {@code custom}
+     */
+    private String resolveCategory(String toolName) {
+        if (SQL_TOOL_NAMES.contains(toolName)) {
+            return "sql";
+        }
+        if (BUILTIN_DISPLAY_MAP.containsKey(toolName)) {
+            return "builtin";
+        }
+        return "custom";
     }
 }

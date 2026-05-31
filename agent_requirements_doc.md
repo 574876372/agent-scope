@@ -11,9 +11,10 @@
 *   **[🟢 已完成] 3.2 工具集成与能力扩展 (Tool Calling)**: 后端工具开发规范、内置工具（天气、计算、网页搜索）、执行超时配置、数据库设计（t_tool_config/t_agent_tool_rel）、前端工具选择授权、工具调用实时反馈及异常Observation均已全链路完成。
 *   **[🟢 已完成] 3.3 智能记忆管理 (Memory Management)**: 滑动窗口、摘要持久化机制、单 Agent 容量独立配置均已完成。
 *   **[🟢 已完成] 3.4 推理过程可视化 (Reasoning Display)**: 后端已集成 AgentScope Studio 可视化面板，且前端 `agent-client` 已完美支持推理流式解析、打字机队列动效与 UI 折叠展示，并在异常情况下支持降级展示。
+*   **[🟢 已完成] 3.5 SQL Agent（多数据源 Text-to-SQL + HITL）**: 新增 `agent-scope-sql-spring-boot-starter` 插件模块；支持用户注册多业务数据源、LLM 生成 SELECT、SqlGuardEngine 守卫、Caffeine 审批 token、前端 SqlApprovalCard 人工确认后执行并回流表格 + LLM 二次总结；复用 `/api/chat/message/stream` 零新增 endpoint。
 *   **[🟢 已完成] 6. 实施路线图 (Milestones) - T1~T3**: 基础角色定制、核心工具（天气、计算等）闭环调用、推理可视化前端适配已全部交付。
-*   **[🔴 未完成] 6. 实施路线图 (Milestones) - T4~T6**: 知识库 (RAG)、人机协同 (HITL)、多智能体协作等里程碑未开始。
-*   **[🔴 未完成] 7. 进阶与高级需求 (Advanced Features)**: 包含 RAG、多智能体协作、规划与反思、人机协同审批、工作流引擎均未实现。
+*   **[🟡 部分完成] 6. 实施路线图 (Milestones) - T4~T6**: T5 中 SQL 查询类 HITL 审批已交付；知识库 (RAG)、通用 HITL（邮件/写操作等）、多智能体协作等里程碑未开始。
+*   **[🟡 部分完成] 7. 进阶与高级需求 (Advanced Features)**: §7.4 SQL HITL 已完成；RAG、多智能体协作、规划与反思、通用工作流引擎未实现。
 *   **[🟡 部分完成] 8. 开源工程化与快速启动 (Open Source & Quick Start)**: 本地配置模板（`application.yml`）已完善，但一键 Docker 部署和预检机制未完成。
 *   **[🟡 部分完成] 9. 资源库与内置插件 (Asset Library & Built-in Plugins)**: 前端已预置 3 个常用 Agent 模板（翻译官、代码专家、心理医生），但 10+ 模板市场及 SerpApi、Python 解释器等常用工具集未内置。
 *   **[🟡 部分完成] 10. 交互体验深度优化 (UX Deep Optimization)**: 前端 Markdown、代码高亮、暗黑模式均已支持；LaTeX、Mermaid、Token 成本监控、对话导出未实现。
@@ -74,6 +75,16 @@
     *   `[x]` **异常与错误降级展示**：错误与连接断开时，打字机自动终止并降级以红色警示框/提示直接显式展示，不发生白屏或死锁。
     *   `[x]` **后端集成**：后端已集成官方的 AgentScope Studio，并在 `agentscope.studio.enabled=true` 时自动初始化 `StudioMessageHook` 实时同步推理过程。*(已完成)*
 
+### 3.5 SQL Agent（多数据源 Text-to-SQL + HITL 确认） 【🟢 已完成】
+*   **背景**：用户希望 Agent 能根据自然语言查询外部业务库，但 SELECT 执行必须经过人工确认，防止 LLM 直接访问生产数据。
+*   **需求点**：
+    *   `[x]` **SPI 瘦 Starter**：新增 `agent-scope-sql-spring-boot-starter`，提供 SqlGuardEngine / SchemaRetriever / SqlApprovalTokenStore / CryptoService 及三个 `@AgentToolDef` 工具；宿主实现 `DatasourceProvider` + `SqlAuditPublisher` 两个 SPI。*(已完成)*
+    *   `[x]` **多数据源注册**：`t_datasource` 表 + `/api/datasources` CRUD + 前端数据源管理页；密码 AES-GCM 加密落库。*(已完成)*
+    *   `[x]` **仅 SELECT + 强制 LIMIT**：JSqlParser 守卫拦截 DML/DDL/多语句/危险函数；EXPLAIN 估算扫描行数。*(已完成)*
+    *   `[x]` **HITL 审批卡片**：`query_database` 返回 `PENDING_APPROVAL` + token；前端 SqlApprovalCard 支持执行/编辑/取消；复用 `/api/chat/message/stream` 携带 `sqlAction/confirmToken/editedSql`。*(已完成)*
+    *   `[x]` **执行回流**：SqlConfirmExecutor 消费 token 后执行 SELECT → SSE 推送表格结果 → LLM 二次自然语言总结。*(已完成)*
+    *   `[x]` **审计留痕**：`t_sql_audit` 记录 PENDING/APPROVED/REJECTED/EXECUTED/FAILED 五种状态。*(已完成)*
+
 ## 4. 技术栈要求
 *   **后端**：Java 17+, Spring Boot 3.x, AgentScope SDK
 *   **前端**：Vue 3 (Vite), TypeScript, CSS3
@@ -90,8 +101,8 @@
 *   **[🟢 T1 (Phase 1)]**: 完成基础角色定制与持久化。*(已完成)*
 *   **[🟢 T2 (Phase 2)]**: 实现第一个核心工具（如 Weather Tool）的闭环调用。*(已完成)*
 *   **[🟢 T3 (Phase 3)]**: 优化前端 UI，支持推理链路展示。*(已完成)*
-*   **[🔴 T4 (Phase 4)]**: 引入私有知识库 (RAG)，赋予 Agent 检索本地文档的能力。*(未完成)*
-*   **[🔴 T5 (Phase 5)]**: 实现人机协同 (Human-in-the-loop)，为高敏感工具（如数据库修改）增加人工审批流程。*(未完成)*
+*   **[🟡 T4 (Phase 4)]**: 引入私有知识库 (RAG)，赋予 Agent 检索本地文档的能力。*(未完成)*
+*   **[🟡 T5 (Phase 5)]**: 实现人机协同 (Human-in-the-loop)。**SQL 查询类 HITL 审批已交付**（见 §3.5）；邮件发送、系统写操作等通用 HITL 未实现。*(部分完成)*
 *   **[🔴 T6 (Phase 6)]**: 探索多智能体 (Multi-Agent) 协作与工作流编排，解决复杂多步任务。*(未完成)*
 
 ---
@@ -116,10 +127,11 @@
     *   `[ ]` **任务拆解 (Plan-and-Solve)**：Agent 在行动前必须先输出一份 Step-by-step 的计划书。
     *   `[ ]` **自我纠错 (Self-Correction)**：在工具调用失败或结果不符合预期时，Agent 能够根据错误信息反思，并尝试采用替代方案而不是直接报错。
 
-### 7.4 人机协同与安全审批 (Human-in-the-loop, HITL) 【🔴 未完成】
+### 7.4 人机协同与安全审批 (Human-in-the-loop, HITL) 【🟡 部分完成】
 *   **背景**：Agent 操作外部系统的权限过大存在安全隐患，某些操作必须由人类确认。
 *   **需求点**：
-    *   `[ ]` **执行挂起**：当检测到敏感工具调用（如发送邮件、系统写操作）时，后端将状态机挂起，并推送审批卡片到前端。
+    *   `[x]` **SQL 查询 HITL（首期）**：`query_database` 工具 dry-run + Caffeine token；前端 SqlApprovalCard 支持执行/编辑/取消；复用 `/api/chat/message/stream` 携带 `sqlAction/confirmToken/editedSql`。*(已完成，见 §3.5)*
+    *   `[ ]` **通用执行挂起**：当检测到其它敏感工具调用（如发送邮件、系统写操作）时，后端将状态机挂起，并推送审批卡片到前端。
     *   `[ ]` **人工干预**：人类点击“同意”、“拒绝”或“修改参数”后，唤醒后端状态机继续后续逻辑。
 
 ### 7.5 可控工作流引擎 (Workflow Engine) 【🔴 未完成】
@@ -158,7 +170,8 @@
 ## 11. 开发者生态与安全 (Developer Ecosystem & Security) 【🟡 部分完成】
 *   **目标**：吸引二次开发，确保私有化部署安全。
 *   **需求点**：
-    *   `[ ]` **插件 SDK**：定义标准 Java 接口与注解，开发者只需编写单一类即可自动在前端注册新工具。
+    *   `[x]` **插件 SDK（首期）**：`agent-scope-tool-spring-boot-starter` 与 `agent-scope-sql-spring-boot-starter` 并列；开发者编写 `@AgentToolDef` 方法即可被 AgentToolRegistry 自动扫描注册；SQL starter 通过 SPI 解耦宿主持久化。*(已完成)*
+    *   `[ ]` **插件 SDK（完整版）**：统一文档与脚手架，支持第三方 jar 一键引入。
     *   `[x]` **模型聚合接入**：原生支持 OpenAI、DeepSeek、Qwen 阿里云等多种大模型一键配置与统一调用.*(已完成)*
     *   `[ ]` **调试监控面板**：内置轻量级链路追踪 (Tracing)，展示 LLM 的原始 Prompt、调用耗时及命中上下文。
     *   `[ ]` **数据脱敏与安全**：支持 API Key 前端 LocalStorage 隔离存储，日志自动遮蔽敏感信息。

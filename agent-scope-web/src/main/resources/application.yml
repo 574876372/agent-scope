@@ -9,6 +9,12 @@ spring:
     username: root                                         # 数据库用户名
     password: chenlei@2025                                 # 数据库密码
     driver-class-name: com.mysql.cj.jdbc.Driver            # MySQL 8.x JDBC 驱动类
+    readonly:
+      type: com.alibaba.druid.pool.DruidDataSource
+      url: jdbc:mysql://127.0.0.1:3306/upay_server_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      username: root
+      password: chenlei@2025
+      driver-class-name: com.mysql.cj.jdbc.Driver
     druid:
       initial-size: 5                                      # 初始化连接数
       min-idle: 5                                          # 最小空闲连接数
@@ -87,3 +93,16 @@ agent:
   memory:
     default-mode: SUMMARY  # 全局默认记忆模式（FULL=全量不压缩 / WINDOW=纯滑动丢弃 / SUMMARY=摘要+滑动）
     max-turns: 5          # 全局默认记忆窗口上限（轮数），FULL 模式下忽略此项
+
+# ========================
+# SQL Agent 配置（由 agent-scope-sql-spring-boot-starter 自动装配）
+# 启用后注册 list_datasources / get_table_schema / query_database 三个工具，
+# 走 HITL 审批 + SqlGuardEngine + Caffeine token 链路。
+# ========================
+  sql:
+    enabled: true                                            # 是否启用 SQL Agent（false 时本 starter 完全惰性，零额外 Bean）
+    default-row-limit: 500                                   # 强制 LIMIT 上限：未指定或超过该值的查询会被 SqlGuardEngine 自动改写
+    explain-row-threshold: 100000                            # EXPLAIN 估算行数告警阈值；超出会在 warnings 中提示用户
+    execution-timeout-seconds: 15                            # 单次 SELECT/EXPLAIN 的最大执行时长（秒）
+    token-ttl-seconds: 300                                   # 审批 token 有效期；超时未确认会被 Caffeine 自动驱逐
+    crypto-key: ${SQL_DS_CRYPTO_KEY:change-me-32-bytes}      # AES-GCM 主密钥；建议通过环境变量注入，禁止以明文写入生产配置

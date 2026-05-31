@@ -8,8 +8,10 @@
 | `agent-scope-model` | **领域模型层**：定义数据载体。不允许包含业务逻辑。 | POJO, Entity, DTO, VO |
 | `agent-scope-dao` | **数据访问层**：负责与数据库直接交互。 | Mapper 接口, SQL 定义, MyBatis/JPA 配置 |
 | `agent-scope-service` | **基础服务层**：封装对 DAO 的原子操作，提供基础的 CRUD。 | Service 接口及实现 (数据导向) |
-| `agent-scope-biz` | **业务逻辑层**：核心层。负责业务流程编排、多服务组合、AI SDK (AgentScope) 交互。 | Biz 接口及实现 (业务导向) |
+| `agent-scope-biz` | **业务逻辑层**：核心层。负责业务流程编排、多服务组合、AI SDK (AgentScope) 交互。 | Biz 接口及实现 (业务导向)；`biz/sql/` 宿主 SPI 实现 |
 | `agent-scope-config` | **通用配置层**：存放全局配置、AOP 切面、拦截器、全局异常处理器。 | WebMvcConfig, LogAspect, GlobalExceptionHandler |
+| `agent-scope-tool-spring-boot-starter` | **工具插件 Starter**：Agent 工具注册、反射调用、内置工具自动装配。 | `@AgentToolDef`, AgentToolRegistry, AutoConfiguration |
+| `agent-scope-sql-spring-boot-starter` | **SQL Agent Starter（SPI 瘦 starter）**：多数据源 Text-to-SQL + HITL 审批工具包。框架/守卫/令牌/加密/三个 `@AgentToolDef` 工具全部下沉；宿主仅实现 `DatasourceProvider` + `SqlAuditPublisher` 两个 SPI。 | `SqlGuardEngine`, `SqlConfirmExecutor`, `list_datasources` / `get_table_schema` / `query_database` |
 | `agent-scope-web` | **接入层/启动层**：API 路由定义，项目启动入口。 | Controller, Application Starter |
 
 ## 2. 依赖关系规范 (Dependency Rules)
@@ -17,10 +19,12 @@
 遵循单向依赖原则，严禁循环依赖：
 *   **业务调用链**：**`web` -> `biz` -> `service` -> `dao` -> `model` -> `common`**
 *   **配置依赖链**：**`web` / `biz` -> `config` -> `model` -> `common`**
+*   **Starter 插件链**：**`web` / `biz` -> `agent-scope-tool-spring-boot-starter` / `agent-scope-sql-spring-boot-starter` -> `common`**（starter 之间互不依赖）
 
 *   **原则 1**：禁止跨层调用（例如：Controller 禁止直接调用 Service 或 DAO，必须经过 Biz 层）。
 *   **原则 2**：`common` 和 `model` 应保持轻量，严禁依赖业务模块。
 *   **原则 3**：所有第三方库（如 AgentScope SDK）应尽量在 `biz` 层封装，不要渗透到 `model` 或 `common`。
+*   **原则 4（SQL Starter SPI）**：`agent-scope-sql-spring-boot-starter` **不依赖** model/dao/service/biz/web；宿主在 `biz/sql/` 实现 `DatasourceProvider` 与 `SqlAuditPublisher`，在 `service` 层管理 `t_datasource` / `t_sql_audit` 持久化。
 
 ## 3. 编码准则与设计规范 (Coding & Design Standards)
 
@@ -40,6 +44,7 @@
     - **`com.cl.agent.dto`**：仅存放用于跨层数据传输的 DTO（如 `SendMessageRequest`、`ChatStreamEvent`）。禁止存放任何带有业务逻辑的处理工具类。
     - **`com.cl.agent.stream`**：存放所有流式/SSE 推送的处理助手类（如 `StreamContext`、`StreamAccumulator`）。
     - **按功能内聚分组**：应当按照**功能凝聚性**对类进行分组，而不是仅按技术类型划分。如果一组类共同服务于某项特定特性，应将它们抽离到专门的子包中，避免混杂在通用包中。
+    - **`com.cl.agent.biz.sql`**：SQL Agent 宿主侧 SPI 实现（`HostDatasourceProvider`、`HostSqlAuditPublisher`）及 HITL SSE 编排（`SqlAgentBizImpl`）所在子包。
     - **禁止滥用内部类**：禁止在 `@Service` 或 `@Component` 中定义复杂的非微型辅助内部类。所有非平凡辅助类均需抽取为独立文件并放在 `agent-scope-model` 或相应包中。
 
 ### 3.2 模块职责与逻辑定位

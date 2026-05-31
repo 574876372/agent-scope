@@ -19,6 +19,7 @@
         <module>agent-scope-common</module>
         <module>agent-scope-model</module>
         <module>agent-scope-tool-spring-boot-starter</module>
+        <module>agent-scope-sql-spring-boot-starter</module>
         <module>agent-scope-dao</module>
         <module>agent-scope-service</module>
         <module>agent-scope-biz</module>
@@ -34,6 +35,8 @@
         <fastjson2.version>2.0.57</fastjson2.version>
         <mybatis-plus.version>3.5.10.1</mybatis-plus.version>
         <druid.version>1.2.23</druid.version>
+        <!-- SQL Agent starter 专用依赖版本：Caffeine / HikariCP / spring-jdbc 由 Spring Boot BOM 管理，无需在此声明 -->
+        <jsqlparser.version>5.0</jsqlparser.version>
         
         <!-- 依赖冲突解决统一版本管理 -->
         <error-prone-annotations.version>2.36.0</error-prone-annotations.version>
@@ -81,7 +84,19 @@
                 <artifactId>agent-scope-tool-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>com.cl.agent</groupId>
+                <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- SQL Agent starter 专用：JSqlParser 用于 SELECT 语法/危险函数校验 -->
+            <dependency>
+                <groupId>com.github.jsqlparser</groupId>
+                <artifactId>jsqlparser</artifactId>
+                <version>${jsqlparser.version}</version>
+            </dependency>
+
             <!-- External Dependencies -->
             <dependency>
                 <groupId>io.agentscope</groupId>

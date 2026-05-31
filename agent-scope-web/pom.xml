@@ -20,6 +20,11 @@
             <groupId>com.cl.agent</groupId>
             <artifactId>agent-scope-biz</artifactId>
         </dependency>
+        <!-- SQL Agent 工具包：通过 agent.sql.enabled=true 启用，宿主在 biz 层提供 DatasourceProvider / SqlAuditPublisher 实现 -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

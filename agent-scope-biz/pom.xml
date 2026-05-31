@@ -26,7 +26,12 @@
             <groupId>com.cl.agent</groupId>
             <artifactId>agent-scope-tool-spring-boot-starter</artifactId>
         </dependency>
-        
+        <!-- SQL starter：拿 SPI 接口 + SqlConfirmExecutor，biz/sql 包内实现 SPI -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>io.agentscope</groupId>
             <artifactId>agentscope</artifactId>
@@ -60,6 +65,11 @@
         <dependency>
             <groupId>io.opentelemetry.instrumentation</groupId>
             <artifactId>opentelemetry-reactor-3.1</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

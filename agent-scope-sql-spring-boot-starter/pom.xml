@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <groupId>com.cl.agent</groupId>
+        <artifactId>agent-scope</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
+    <description>
+        SQL Agent starter: 多数据源 Text-to-SQL + HITL 审批工具包。
+        提供 SqlGuardEngine / SchemaRetriever / SqlApprovalTokenStore / CryptoService 等核心组件，
+        以及 list_datasources / get_table_schema / query_database 三个 @AgentToolDef 工具。
+        通过 DatasourceProvider / SqlAuditPublisher 两个 SPI 接入宿主项目，
+        不依赖 model / dao / service / biz / web 任何一层。
+    </description>
+
+    <dependencies>
+        <!-- 依赖 common 拿 @AgentToolDef / @AgentToolParam / BizException / UserContext / SqlAction 等核心定义 -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-common</artifactId>
+        </dependency>
+
+        <!-- AgentScope SDK：声明 @AgentToolDef 工具需配合的运行时依赖（已存在于 common 上层使用） -->
+        <dependency>
+            <groupId>io.agentscope</groupId>
+            <artifactId>agentscope</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JSON 序列化（工具返回 JSON 文本，沿用项目统一的 fastjson2） -->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+
+        <!-- Spring Boot AutoConfiguration 支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- JdbcTemplate：版本由 Spring Boot BOM 管理 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+
+        <!-- HikariCP：宿主已传入 DataSource 时不会自建池，starter 仅提供兜底能力 -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
+
+        <!-- Caffeine：approval token 与 schema 缓存（版本由 Spring Boot BOM 管理） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
+        <!-- JSqlParser：SQL 语法校验（SELECT-only / 危险函数拒绝 / LIMIT 改写） -->
+        <dependency>
+            <groupId>com.github.jsqlparser</groupId>
+            <artifactId>jsqlparser</artifactId>
+        </dependency>
+
+        <!-- Reactor：与现有 SSE 框架对齐（部分接口可能返回 Mono/Flux） -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -2,6 +2,7 @@ package com.cl.agent.tool.core;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.cl.agent.commons.UserContext;
 import com.cl.agent.tool.annotation.AgentToolDef;
 import io.agentscope.core.tool.AgentTool;
 import com.cl.agent.tool.annotation.AgentToolParam;
@@ -108,20 +109,37 @@ public class ReflectiveAgentTool implements AgentTool {
      */
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
-        return Mono.fromCallable(() -> invokeMethod(param.getInput()))
-                .subscribeOn(Schedulers.boundedElastic())
-                .map(this::toResultBlock)
-                .onErrorResume(error -> {
-                    log.warn("[Tool] 工具 {} 执行失败: {}", metadata.name(), error.getMessage(), error);
-                    // 构建结构化的错误 Observation，帮助 LLM 理解问题并尝试修正
-                    String observation = String.format(
-                            "工具 [%s] 执行失败。错误类型: %s，错误信息: %s。请检查输入参数后重试或换用其他方式回答。",
-                            metadata.name(),
-                            error.getClass().getSimpleName(),
-                            error.getMessage() != null ? error.getMessage() : "未知错误"
-                    );
-                    return Mono.just(ToolResultBlock.error(observation));
-                });
+        return Mono.deferContextual(ctx -> {
+            String userId = ctx.getOrDefault("userId", null);
+            return Mono.fromCallable(() -> {
+                String oldUserId = UserContext.getUserId();
+                try {
+                    if (userId != null) {
+                        UserContext.setUserId(userId);
+                    }
+                    return invokeMethod(param.getInput());
+                } finally {
+                    if (oldUserId != null) {
+                        UserContext.setUserId(oldUserId);
+                    } else {
+                        UserContext.clear();
+                    }
+                }
+            });
+        })
+        .subscribeOn(Schedulers.boundedElastic())
+        .map(this::toResultBlock)
+        .onErrorResume(error -> {
+            log.warn("[Tool] 工具 {} 执行失败: {}", metadata.name(), error.getMessage(), error);
+            // 构建结构化的错误 Observation，帮助 LLM 理解问题并尝试修正
+            String observation = String.format(
+                    "工具 [%s] 执行失败。错误类型: %s，错误信息: %s。请检查输入参数后重试或换用其他方式回答。",
+                    metadata.name(),
+                    error.getClass().getSimpleName(),
+                    error.getMessage() != null ? error.getMessage() : "未知错误"
+            );
+            return Mono.just(ToolResultBlock.error(observation));
+        });
     }
 
     /**

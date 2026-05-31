@@ -2,6 +2,7 @@ package com.cl.agent.biz.impl;
 
 import com.cl.agent.biz.IAgentBiz;
 import com.cl.agent.biz.IChatBiz;
+import com.cl.agent.biz.ISqlAgentBiz;
 import com.cl.agent.biz.memory.MemoryManager;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.*;
@@ -62,6 +63,10 @@ public class ChatBizImpl implements IChatBiz {
     /** 记忆管理器，根据 Agent 配置处理上下文（FULL / WINDOW / SUMMARY） */
     @Autowired
     private MemoryManager memoryManager;
+
+    /** SQL Agent HITL 业务，仅在 sqlAction 非空的请求中被入口短路调用 */
+    @Autowired
+    private ISqlAgentBiz sqlAgentBiz;
 
     @Override
     public ConversationResponse createConversation(CreateConversationRequest request) {
@@ -143,6 +148,10 @@ public class ChatBizImpl implements IChatBiz {
 
     @Override
     public Flux<ChatStreamEvent> sendMessageStream(SendMessageRequest request) {
+        if (request.getSqlAction() != null) {
+            return sqlAgentBiz.confirmSqlExecution(request);
+        }
+        //处理会话id  如果会话不存在则创建新的会话
         String resolvedConversationId = resolveConversationId(request);
         try {
             StreamContext ctx = prepareStreamContext(resolvedConversationId, request);
@@ -345,6 +354,15 @@ public class ChatBizImpl implements IChatBiz {
             ToolResultBlock block = blocks.get(0);
             if (block.getName() != null && !block.getName().isBlank()) {
                 tool = block.getName();
+            }
+            if (block.getOutput() != null) {
+                StringBuilder sb = new StringBuilder();
+                for (Object cb : block.getOutput()) {
+                    if (cb != null) {
+                        sb.append(cb.toString());
+                    }
+                }
+                output = sb.toString();
             }
         }
         return "{\"tool\":\"" + jsonEscape(tool) + "\",\"output\":\"" + jsonEscape(output) + "\"}";
