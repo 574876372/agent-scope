@@ -49,4 +49,24 @@ public class AgentResponse implements Serializable {
      * null 表示使用全局默认值。
      */
     private Integer maxTurns;
+
+    /**
+     * RAG 检索配置模式：DISABLED=禁用 / GENERIC=通用前置 / AGENTIC=智能体自主。
+     */
+    private String ragMode;
+
+    /**
+     * 单 Agent 专属检索最大召回数量（分片数）。
+     */
+    private Integer recallLimit;
+
+    /**
+     * 单 Agent 专属检索最低相似度得分过滤阈值。
+     */
+    private Double scoreThreshold;
+
+    /**
+     * 该 Agent 绑定的关联知识库唯一标识符 ID 列表。
+     */
+    private List<String> kbIds;
 }

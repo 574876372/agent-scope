@@ -20,6 +20,7 @@
         <module>agent-scope-model</module>
         <module>agent-scope-tool-spring-boot-starter</module>
         <module>agent-scope-sql-spring-boot-starter</module>
+        <module>agent-scope-rag-spring-boot-starter</module>
         <module>agent-scope-dao</module>
         <module>agent-scope-service</module>
         <module>agent-scope-biz</module>
@@ -37,6 +38,7 @@
         <druid.version>1.2.23</druid.version>
         <!-- SQL Agent starter 专用依赖版本：Caffeine / HikariCP / spring-jdbc 由 Spring Boot BOM 管理，无需在此声明 -->
         <jsqlparser.version>5.0</jsqlparser.version>
+        <elasticsearch.version>9.3.3</elasticsearch.version>
         
         <!-- 依赖冲突解决统一版本管理 -->
         <error-prone-annotations.version>2.36.0</error-prone-annotations.version>
@@ -45,10 +47,48 @@
         <okio.version>3.16.4</okio.version>
         <opentelemetry-api-incubator.version>1.43.0-alpha</opentelemetry-api-incubator.version>
         <protobuf-java.version>3.25.5</protobuf-java.version>
+        <openai-java.version>4.39.1</openai-java.version>
+        <jackson.version>2.18.2</jackson.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- 强制升级 Jackson 相关依赖以解决 OpenAI 兼容性问题 -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jdk8</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-kotlin</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-parameter-names</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.openai</groupId>
+                <artifactId>openai-java</artifactId>
+                <version>${openai-java.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.cl.agent</groupId>
                 <artifactId>agent-scope-common</artifactId>
@@ -87,6 +127,11 @@
             <dependency>
                 <groupId>com.cl.agent</groupId>
                 <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cl.agent</groupId>
+                <artifactId>agent-scope-rag-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -219,6 +264,11 @@
                 <groupId>com.google.protobuf</groupId>
                 <artifactId>protobuf-java</artifactId>
                 <version>${protobuf-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>co.elastic.clients</groupId>
+                <artifactId>elasticsearch-java</artifactId>
+                <version>${elasticsearch.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

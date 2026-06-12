@@ -46,6 +46,7 @@
     - **按功能内聚分组**：应当按照**功能凝聚性**对类进行分组，而不是仅按技术类型划分。如果一组类共同服务于某项特定特性，应将它们抽离到专门的子包中，避免混杂在通用包中。
     - **`com.cl.agent.biz.sql`**：SQL Agent 宿主侧 SPI 实现（`HostDatasourceProvider`、`HostSqlAuditPublisher`）及 HITL SSE 编排（`SqlAgentBizImpl`）所在子包。
     - **禁止滥用内部类**：禁止在 `@Service` 或 `@Component` 中定义复杂的非微型辅助内部类。所有非平凡辅助类均需抽取为独立文件并放在 `agent-scope-model` 或相应包中。
+    - **配置属性类独立化规范**：在定义以 `@ConfigurationProperties` 标注的根属性配置类时，**严禁在其中定义静态嵌套内部类（Inner Class）**作为子配置。每个子配置类都必须是**单独的顶级类**（定义在单独的文件中，并放置于相同的 `properties` 包下）。Spring Boot 的属性绑定器（Binder）支持对非根配置类的顶级类进行自动递归绑定，因此这些独立的子类**不需要且不应**添加独立的 `@ConfigurationProperties` 注解。
 
 ### 3.2 模块职责与逻辑定位
 

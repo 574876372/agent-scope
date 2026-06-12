@@ -9,7 +9,13 @@ import com.cl.agent.exception.BizException;
 public enum ModelProviderEnum {
 
     /** 通义千问（阿里云） */
-    QWEN("Qwen", "https://aiapi.oldbird.tech/v1", "sk-c95e548188d16bed66cc5e5880969f056a3ffeea9dc976b4",
+    // QWEN("Qwen", "https://aiapi.oldbird.tech/v1",
+    // "sk-c95e548188d16bed66cc5e5880969f056a3ffeea9dc976b4",
+    // new String[] { "qwen-turbo", "qwen-plus", "qwen-max", "qwen-long",
+    // "Qwen3.5-27B" }),
+
+    /** 通义千问（阿里云） */
+    QWEN("Qwen", "https://dashscope.aliyuncs.com/compatible-mode/v1", "sk-997566ec99f84d01add92a14c1c5a9a6",
             new String[] { "qwen-turbo", "qwen-plus", "qwen-max", "qwen-long", "Qwen3.5-27B" }),
 
     /** DeepSeek */

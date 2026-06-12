@@ -59,4 +59,25 @@ public class AgentInfo extends BaseEntity {
      */
     @TableField("max_turns")
     private Integer maxTurns;
+
+    /**
+     * RAG 检索驱动模式：DISABLED=禁用 / GENERIC=通用前置 / AGENTIC=智能体自主。
+     * <p>对应枚举 RAGMode，以字符串形式存储。</p>
+     */
+    @TableField("rag_mode")
+    private String ragMode;
+
+    /**
+     * 单 Agent 专属检索最大召回数量（分片数）。
+     * <p>null 时使用系统默认配置（在 agent.rag.defaultRowLimit 中）。</p>
+     */
+    @TableField("recall_limit")
+    private Integer recallLimit;
+
+    /**
+     * 单 Agent 专属检索最低相似度得分过滤阈值。
+     * <p>取值范围 0.0 ~ 1.0，null 时使用系统默认配置（在 agent.rag.defaultScoreThreshold 中）。</p>
+     */
+    @TableField("score_threshold")
+    private Double scoreThreshold;
 }

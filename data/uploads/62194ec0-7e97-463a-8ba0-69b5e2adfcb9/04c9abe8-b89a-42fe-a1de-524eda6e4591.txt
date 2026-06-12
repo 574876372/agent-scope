@@ -1,0 +1,13 @@
+测试环境：
+收付方入驻：
+alipays://platformapi/startapp?appId=2021002115660005&nbupdate=syncforce&query=mchId%3D{mchId}%26order%3D{order}%26isv%3D{ISV_ORG_ID}%26app%3Dbkclfs%26t%3DPAY%26uid%3D{uid}
+
+付方免入驻：
+alipays://platformapi/startapp?appId=2021002115660005&nbupdate=syncforce&query=order%3D{order}%26isv%3D{ISV_ORG_ID}%26app%3Dbkclfs%26t%3DPAY%26uid%3D{uid}
+
+
+alipays://platformapi/startapp?appId=2021002115660005&nbupdate=syncforce&query=order%3D202604981415105872%26isv%3D202211000000000003957%26app%3Dbkclfs%26t%3DPAY%26uid%3D{uid}
+
+
+
+alipays://platformapi/startapp?appId=2021001187624111&nbupdate=syncforce&query=order%3D202604981415105872%26isv%3D202211000000000003957%26type%3DPAY%26sign%3Df2e439dd3545dd69a0e90f28f0eee225

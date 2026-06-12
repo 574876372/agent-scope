@@ -31,6 +31,11 @@
             <groupId>com.cl.agent</groupId>
             <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
         </dependency>
+        <!-- RAG starter：拿 ReaderFactory / EmbeddingStoreFactory 及核心核心 RAG 自动装配 -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-rag-spring-boot-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.agentscope</groupId>

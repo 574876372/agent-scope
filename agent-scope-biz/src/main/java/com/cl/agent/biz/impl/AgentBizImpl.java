@@ -25,6 +25,8 @@ import io.agentscope.core.model.transport.HttpTransport;
 import io.agentscope.core.model.transport.HttpTransportConfig;
 import io.agentscope.core.model.transport.HttpVersion;
 import io.agentscope.core.model.transport.OkHttpTransport;
+import io.agentscope.core.rag.model.Document;
+import io.agentscope.core.rag.model.DocumentMetadata;
 import io.agentscope.core.studio.StudioManager;
 import io.agentscope.core.studio.StudioMessageHook;
 import io.agentscope.core.tool.Toolkit;
@@ -33,6 +35,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import com.cl.agent.service.IKnowledgeService;
+import com.cl.agent.rag.core.EmbeddingStoreFactory;
+import io.agentscope.core.embedding.EmbeddingModel;
+import io.agentscope.core.rag.knowledge.SimpleKnowledge;
+import io.agentscope.core.rag.RAGMode;
+import io.agentscope.core.rag.model.RetrieveConfig;
+import io.agentscope.core.rag.store.InMemoryStore;
+import com.cl.agent.model.KnowledgeChunk;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,6 +65,12 @@ public class AgentBizImpl implements IAgentBiz {
     @Autowired
     private IAgentToolRelService agentToolRelService;
 
+    @Autowired
+    private IKnowledgeService knowledgeService;
+
+    @Autowired(required = false)
+    private EmbeddingStoreFactory embeddingStoreFactory;
+
 
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
@@ -65,20 +83,12 @@ public class AgentBizImpl implements IAgentBiz {
      * @return AgentResponse 创建成功的 Agent 详细配置信息响应对象
      */
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AgentResponse createAgent(CreateAgentRequest request) {
         // 生成 Agent ID
         String agentId = UUID.randomUUID().toString();
 
-        // 构建 Agent 实例（使用请求中指定的工具列表）
-        Agent agent = buildAgent(
-                request.getName(),
-                request.getModelType(),
-                request.getModelName(),
-                request.getSystemPrompt(),
-                request.getToolNames()
-        );
-
-        // 持久化 Agent 基本信息
+        // 1. 持久化 Agent 基本信息（包含 RAG 与记忆参数）
         AgentInfo info = new AgentInfo();
         info.setId(agentId);
         info.setName(request.getName());
@@ -87,20 +97,41 @@ public class AgentBizImpl implements IAgentBiz {
         info.setSystemPrompt(request.getSystemPrompt());
         info.setStatus("active");
         info.setUserId(UserContext.getUserId());
-        // 记忆管理配置：memoryMode / maxTurns（null 表示使用全局默认）
+        // 记忆管理配置：memoryMode / maxTurns
         info.setMemoryMode(request.getMemoryMode());
         info.setMaxTurns(request.getMaxTurns());
+        // RAG 检索参数绑定配置
+        info.setRagMode(request.getRagMode() != null ? request.getRagMode() : "DISABLED");
+        info.setRecallLimit(request.getRecallLimit());
+        info.setScoreThreshold(request.getScoreThreshold());
         agentService.save(info);
 
-        // 保存 Agent-工具关联关系
+        // 2. 保存 Agent-工具关联关系
         if (request.getToolNames() != null && !request.getToolNames().isEmpty()) {
             agentToolRelService.replaceToolsForAgent(agentId, request.getToolNames());
         }
 
-        // 缓存运行时实例
+        // 3. 保存 Agent-知识库授权映射关联
+        if (request.getKbIds() != null && !request.getKbIds().isEmpty()) {
+            knowledgeService.replaceKbsForAgent(agentId, request.getKbIds());
+        }
+
+        // 4. 调用原生构建方法构建 Agent 实例（使用请求中指定的工具列表与 RAG 原生注入）
+        Agent agent = buildAgent(
+                request.getName(),
+                request.getModelType(),
+                request.getModelName(),
+                request.getSystemPrompt(),
+                request.getToolNames(),
+                agentId,
+                info
+        );
+
+        // 5. 缓存运行时实例到进程内存缓存中
         agentInstanceCache.put(agentId, agent);
 
-        log.info("成功创建 Agent: ID={}, 名称={}, 工具={}", agentId, info.getName(), request.getToolNames());
+        log.info("成功创建 Agent: ID={}, 名称={}, 工具={}, 绑定知识库={}", 
+                agentId, info.getName(), request.getToolNames(), request.getKbIds());
         return toResponse(info);
     }
 
@@ -158,6 +189,7 @@ public class AgentBizImpl implements IAgentBiz {
      * @throws BizException 当对应的 Agent 不存在时抛出 404 错误
      */
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public AgentResponse updateAgent(String id, CreateAgentRequest request) {
         AgentInfo info = agentService.getById(id);
         if (info == null) {
@@ -184,6 +216,16 @@ public class AgentBizImpl implements IAgentBiz {
         if (request.getMaxTurns() != null) {
             info.setMaxTurns(request.getMaxTurns());
         }
+        // 允许更新 RAG 配置
+        if (request.getRagMode() != null) {
+            info.setRagMode(request.getRagMode());
+        }
+        if (request.getRecallLimit() != null) {
+            info.setRecallLimit(request.getRecallLimit());
+        }
+        if (request.getScoreThreshold() != null) {
+            info.setScoreThreshold(request.getScoreThreshold());
+        }
         agentService.save(info);
 
         // 更新工具关联
@@ -191,10 +233,16 @@ public class AgentBizImpl implements IAgentBiz {
             agentToolRelService.replaceToolsForAgent(id, request.getToolNames());
         }
 
-        // 清除缓存，下次对话时会重建 Agent 实例（使用新的工具集）
+        // 更新知识库授权映射关联
+        if (request.getKbIds() != null) {
+            knowledgeService.replaceKbsForAgent(id, request.getKbIds());
+        }
+
+        // 清除缓存，下次对话时会重建 Agent 实例（使用新的工具与知识库集）
         agentInstanceCache.remove(id);
 
-        log.info("更新 Agent: ID={}, 名称={}, 工具={}", id, info.getName(), request.getToolNames());
+        log.info("更新 Agent: ID={}, 名称={}, 工具={}, 绑定知识库={}", 
+                id, info.getName(), request.getToolNames(), request.getKbIds());
         return toResponse(info);
     }
 
@@ -304,6 +352,14 @@ public class AgentBizImpl implements IAgentBiz {
      * @param info 数据库中缓存的 Agent 基础配置实体
      * @return Agent 缓存或重建后的运行时智能体实例对象
      */
+    /**
+     * 获取指定 Agent 的缓存实例，如果缓存中不存在，则查询数据库的元配置重建 Agent 并将其加入缓存中。
+     * <p>使用说明：由对话等核心控制流触发以解析运行时 Agent 实例。</p>
+     *
+     * @param id   Agent 唯一标识符 ID，非空
+     * @param info 数据库中缓存的 Agent 基础配置实体，非空
+     * @return {@link Agent} 缓存或重建后的运行时智能体实例对象
+     */
     private Agent resolveAgent(String id, AgentInfo info) {
         Agent agent = agentInstanceCache.get(id);
         if (agent == null) {
@@ -314,7 +370,9 @@ public class AgentBizImpl implements IAgentBiz {
                     info.getModelType(),
                     info.getModelName(),
                     info.getSystemPrompt(),
-                    toolNames
+                    toolNames,
+                    id,
+                    info
             );
             agentInstanceCache.put(id, agent);
         }
@@ -323,23 +381,31 @@ public class AgentBizImpl implements IAgentBiz {
 
     /**
      * 统一构建 ReActAgent 运行时对象。
-     * <p>根据模型和 Prompt 信息创建模型实例，并绑定授权的工具包。若 Studio 可视化已开启，还会自动挂载 Studio 推理过程追踪 Hook。</p>
+     * <p>根据模型和 Prompt 信息创建模型实例，并绑定授权的工具包。若绑定了知识库且开启了 RAG，
+     * 会自动动态在内存中重构向量索引数据库（实现多库动态预热支持），并调用官方原生 Builder 绑定 SimpleKnowledge 实例与 RAGMode。
+     * 若 Studio 可视化已开启，还会自动挂载 Studio 推理过程追踪 Hook。</p>
      *
-     * @param name       Agent 的友好显示名称
-     * @param modelType  模型提供商标识
-     * @param modelName  目标调用的模型名称
-     * @param sysPrompt  系统提示词（人设设定）
-     * @param toolNames  授权关联的工具名称列表
-     * @return Agent 构建好的运行时 ReActAgent 实例
+     * @param name       Agent 的友好显示名称，非空
+     * @param modelType  模型提供商标识，非空
+     * @param modelName  目标调用的模型名称，非空
+     * @param sysPrompt  系统提示词（人设设定），非空
+     * @param toolNames  授权关联的工具名称列表，可为空
+     * @param agentId    智能体 ID，必填
+     * @param info       智能体基础实体配置，必填
+     * @return {@link Agent} 构建好的运行时 ReActAgent 实例
      */
     private Agent buildAgent(String name, String modelType, String modelName, String sysPrompt,
-                             List<String> toolNames) {
+                             List<String> toolNames, String agentId, AgentInfo info) {
         OpenAIChatModel model = buildModel(modelType, modelName);
         ReActAgent.Builder builder = ReActAgent.builder()
                 .name(name)
                 .model(model)
                 .sysPrompt(sysPrompt);
 
+        // ==== 官方 RAG 集成规范自动注入 ====
+        loadRagKnowledge(builder, agentId, info, name);
+
+        // ==== 官方 工具 集成 ====
         Toolkit toolkit = agentToolkitFactory.createToolkit(toolNames);
         if (toolkit != null) {
             builder.toolkit(toolkit);
@@ -356,6 +422,69 @@ public class AgentBizImpl implements IAgentBiz {
     }
 
     /**
+     * 加载 RAG 知识库并注入 Agent 构建器。
+     *
+     * @param builder   ReActAgent 构建器
+     * @param agentId   智能体 ID
+     * @param info      智能体基本配置实体
+     * @param agentName 智能体友好名称
+     */
+    private void loadRagKnowledge(ReActAgent.Builder builder, String agentId, AgentInfo info, String agentName) {
+        if (knowledgeService != null && embeddingStoreFactory != null && agentId != null) {
+            List<String> kbIds = knowledgeService.getKbIdsByAgentId(agentId);
+            String modeStr = info.getRagMode() != null ? info.getRagMode() : "DISABLED";
+            
+            if (!kbIds.isEmpty() && !"DISABLED".equalsIgnoreCase(modeStr)) {
+                log.info("[RAG-Build] 检测到 Agent [{}] 开启并绑定知识库: kbIds={}, mode={}", agentName, kbIds, modeStr);
+                
+                // 1. 获取模型配置生成 Embedding Model 实例
+                ModelProviderEnum provider = ModelProviderEnum.QWEN;
+                EmbeddingModel embeddingModel = embeddingStoreFactory.createEmbeddingModel(provider.getApiKey(), provider.getBaseUrl());
+                
+                // 2. 构造一个专用于该 Agent 运行时检索的内存型向量存储实例，以支持灵活的多知识库聚合检索
+                InMemoryStore runtimeStore = InMemoryStore.builder().dimensions(1536).build();
+                SimpleKnowledge knowledge = SimpleKnowledge.builder()
+                        .embeddingModel(embeddingModel)
+                        .embeddingStore(runtimeStore)
+                        .build();
+                
+                // 3. 从 MySQL 中加载所有绑定知识库的已索引切片数据进行动态“预热注入”
+                List<Document> preheatDocs = new ArrayList<>();
+                for (String kbId : kbIds) {
+                    List<KnowledgeChunk> chunks = knowledgeService.listChunksByKbId(kbId);
+                    for (KnowledgeChunk chunk : chunks) {
+                        DocumentMetadata meta = DocumentMetadata.builder()
+                                .docId(chunk.getDocId())
+                                .chunkId(String.valueOf(chunk.getChunkIndex()))
+                                .content(io.agentscope.core.message.TextBlock.builder().text(chunk.getContent()).build())
+                                .build();
+                        preheatDocs.add(new Document(meta));
+                    }
+                }
+                
+                if (!preheatDocs.isEmpty()) {
+                    // 向量化加载入内存
+                    knowledge.addDocuments(preheatDocs).block();
+                    log.info("[RAG-Build] 成功向 Agent 运行时向量库预热加载切片数={}", preheatDocs.size());
+                }
+                
+                // 4. 配置召回限制和得分过滤阈值
+                int limit = info.getRecallLimit() != null ? info.getRecallLimit() : 3;
+                double threshold = info.getScoreThreshold() != null ? info.getScoreThreshold() : 0.3;
+                
+                // 5. 注入 AgentScope 官方原生支持的属性
+                builder.knowledge(knowledge)
+                       .ragMode(RAGMode.valueOf(modeStr))
+                       .retrieveConfig(RetrieveConfig.builder()
+                               .limit(limit)
+                               .scoreThreshold(threshold)
+                               .build());
+                log.info("[RAG-Build] RAG 配置装配完成: limit={}, threshold={}", limit, threshold);
+            }
+        }
+    }
+
+    /**
      * 根据模型厂商和名称构建 OpenAI 兼容协议大模型客户端。
      * <p>此处强制底层使用 HTTP/1.1 以规避 HTTP/2 在 SSE 长连接断开或复用时的部分不稳定问题，同时使用更具弹性的 OkHttp 传输层。</p>
      *
@@ -367,15 +496,84 @@ public class AgentBizImpl implements IAgentBiz {
         ModelProviderEnum provider = ModelProviderEnum.of(modelType);
         
         // 强制在客户端使用 HTTP/1.1 协议
-        // 目的：防止 JDK HttpClient 用默认 HTTP/2 协议请求 DeepSeek/通义等接口时，
+        // 目的：防止 JDK HttpClient/OkHttp 用默认 HTTP/2 协议请求 DeepSeek/通义等接口时，
         // 在 SSE（流式）结束或连接复用时由于代理或网关发送的 RST_STREAM / 提前断开，
-        // 导致抛出 "java.io.IOException: closed" 或 "EOFReachedException" 异常。
+        // 导致抛出 "okhttp3.internal.http2.StreamResetException: stream was reset: CANCEL"
+        // 或 "java.io.IOException: closed" / "EOFReachedException" 异常。
         HttpTransportConfig config = HttpTransportConfig.builder()
                 .httpVersion(HttpVersion.HTTP_1_1)
                 .build();
                 
-        // 使用 OkHttp 传输层实例替代 JDK HttpClient，以提升复杂网络代理 and 高并发下 SSE/NDJSON 流式传输的健壮性
+        // 显式构建 OkHttpClient 并强制设定协议为 HTTP/1.1 (因为 OkHttpTransport 默认会忽略 HttpTransportConfig.httpVersion)
+        okhttp3.OkHttpClient.Builder clientBuilder = new okhttp3.OkHttpClient.Builder()
+                .connectTimeout(config.getConnectTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                .readTimeout(config.getReadTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getWriteTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
+                .connectionPool(new okhttp3.ConnectionPool(
+                        config.getMaxIdleConnections(),
+                        config.getKeepAliveDuration().toMillis(),
+                        java.util.concurrent.TimeUnit.MILLISECONDS
+                ))
+                .protocols(java.util.List.of(okhttp3.Protocol.HTTP_1_1));
+
+        // 兼容忽略 SSL 证书校验的配置
+        if (config.isIgnoreSsl()) {
+            try {
+                javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
+                    new javax.net.ssl.X509TrustManager() {
+                        @Override
+                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+                        @Override
+                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+                        @Override
+                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                            return new java.security.cert.X509Certificate[]{};
+                        }
+                    }
+                };
+                javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
+                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                clientBuilder.sslSocketFactory(sslContext.getSocketFactory(), (javax.net.ssl.X509TrustManager) trustAllCerts[0]);
+                clientBuilder.hostnameVerifier((hostname, session) -> true);
+            } catch (Exception e) {
+                log.error("Failed to configure trust-all SSL factory", e);
+            }
+        }
+
+        // 兼容代理配置
+        io.agentscope.core.model.transport.ProxyConfig proxyConfig = config.getProxyConfig();
+        if (proxyConfig != null) {
+            if (proxyConfig.getNonProxyHosts() != null && !proxyConfig.getNonProxyHosts().isEmpty()) {
+                clientBuilder.proxySelector(new java.net.ProxySelector() {
+                    @Override
+                    public java.util.List<java.net.Proxy> select(java.net.URI uri) {
+                        if (proxyConfig.getNonProxyHosts().contains(uri.getHost())) {
+                            return java.util.List.of(java.net.Proxy.NO_PROXY);
+                        }
+                        return java.util.List.of(proxyConfig.toJavaProxy());
+                    }
+                    @Override
+                    public void connectFailed(java.net.URI uri, java.net.SocketAddress sa, java.io.IOException ioe) {}
+                });
+            } else {
+                clientBuilder.proxy(proxyConfig.toJavaProxy());
+            }
+
+            if (proxyConfig.hasAuthentication()) {
+                clientBuilder.proxyAuthenticator((route, response) -> {
+                    String credential = okhttp3.Credentials.basic(proxyConfig.getUsername(), proxyConfig.getPassword());
+                    return response.request().newBuilder()
+                            .header("Proxy-Authorization", credential)
+                            .build();
+                });
+            }
+        }
+
+        okhttp3.OkHttpClient okHttpClient = clientBuilder.build();
+
+        // 使用 OkHttp 传输层实例替代 JDK HttpClient，并注入我们自定义的 HTTP/1.1 OkHttpClient
         HttpTransport transport = OkHttpTransport.builder()
+                .client(okHttpClient)
                 .config(config)
                 .build();
                 
@@ -407,6 +605,13 @@ public class AgentBizImpl implements IAgentBiz {
         // 回填记忆配置供前端展示和编辑时回显
         resp.setMemoryMode(info.getMemoryMode());
         resp.setMaxTurns(info.getMaxTurns());
+        // 回填 RAG 配置供前端展示和编辑时回显
+        resp.setRagMode(info.getRagMode());
+        resp.setRecallLimit(info.getRecallLimit());
+        resp.setScoreThreshold(info.getScoreThreshold());
+        if (knowledgeService != null) {
+            resp.setKbIds(knowledgeService.getKbIdsByAgentId(info.getId()));
+        }
         return resp;
     }
 

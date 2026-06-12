@@ -25,6 +25,11 @@
             <groupId>com.cl.agent</groupId>
             <artifactId>agent-scope-sql-spring-boot-starter</artifactId>
         </dependency>
+        <!-- RAG Agent 知识库插件：通过 agent.rag.enabled=true 启用 -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-rag-spring-boot-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

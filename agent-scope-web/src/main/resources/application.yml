@@ -71,7 +71,7 @@ logging:
 # ========================
 agentscope:
   studio:
-    enabled: true                        # 是否启用 AgentScope Studio 可视化面板（启用前需先运行 as_studio）
+    enabled: false                        # 是否启用 AgentScope Studio 可视化面板（启用前需先运行 as_studio）
     url: http://localhost:3000           # AgentScope Studio 服务地址
     project: agent-scope-project        # 当前项目在 Studio 中注册的项目名称
 
@@ -106,3 +106,26 @@ agent:
     execution-timeout-seconds: 15                            # 单次 SELECT/EXPLAIN 的最大执行时长（秒）
     token-ttl-seconds: 300                                   # 审批 token 有效期；超时未确认会被 Caffeine 自动驱逐
     crypto-key: ${SQL_DS_CRYPTO_KEY:change-me-32-bytes}      # AES-GCM 主密钥；建议通过环境变量注入，禁止以明文写入生产配置
+
+# ========================
+# RAG 模块自动配置属性（由 agent-scope-rag-spring-boot-starter 自动装配）
+# 支持动态切换向量库类型（IN_MEMORY/MILVUS/ELASTICSEARCH）及自定义连接细节
+# ========================
+  rag:
+    enabled: true                                            # 是否启用 RAG Starter 模块。控制配置类及核心 RAG 基础设施 Bean 是否自动注入
+    store-type: ELASTICSEARCH                                    # 向量数据库介质类型。可选值：IN_MEMORY（本地内存库）、MILVUS（企业级高可用）、ELASTICSEARCH（基于 ES 索引）、QDRANT
+    default-row-limit: 3                                     # 默认单次检索召回的最大文本分片数量（Top-K）
+    default-score-threshold: 0.3                             # 默认检索相似度得分最低过滤阈值，取值范围 0.0 ~ 1.0，仅召回大于或等于该分数的片段
+    chunk-size: 512                                          # 文档切片分割的最大字数/字符尺寸
+    in-memory:
+      persist-path: ./data/vdb/local                         # 本地持久化缓存文件夹路径。为空时不进行持久化落盘，重启后内存数据丢失
+    milvus:
+      uri: http://localhost:19530                            # Milvus 服务器连接地址（格式：http://ip:port）
+      collection-name: agent_knowledge                       # 主集合名称前缀。实际的 Collection Name 会加上知识库 ID 进行隔离
+      token: ""                                              # 连接验证 Token
+    elasticsearch:
+      uris:
+        - http://localhost:9200                              # ES 服务器集群节点地址
+      index-name: agent_knowledge                            # 主索引名称前缀。实际的 Index Name 会加上知识库 ID 进行隔离
+      username: ""                                           # 连接用户名
+      password: ""                                           # 连接密码

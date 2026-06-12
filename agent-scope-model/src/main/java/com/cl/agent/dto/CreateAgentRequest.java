@@ -39,4 +39,27 @@ public class CreateAgentRequest implements Serializable {
      * null 时使用全局默认值；FULL 模式下忽略。
      */
     private Integer maxTurns;
+
+    /**
+     * RAG 检索配置模式：DISABLED=禁用 / GENERIC=通用前置 / AGENTIC=智能体自主。
+     * <p>对应 RAGMode 标识，以字符串形式传递。</p>
+     */
+    private String ragMode;
+
+    /**
+     * 单 Agent 专属检索最大召回数量（分片数）。
+     * <p>null 时使用系统默认配置。</p>
+     */
+    private Integer recallLimit;
+
+    /**
+     * 单 Agent 专属检索最低相似度得分过滤阈值。
+     * <p>取值范围 0.0 ~ 1.0，null 时使用系统默认配置。</p>
+     */
+    private Double scoreThreshold;
+
+    /**
+     * 绑定的关联知识库唯一标识符 ID 列表。
+     */
+    private List<String> kbIds;
 }
