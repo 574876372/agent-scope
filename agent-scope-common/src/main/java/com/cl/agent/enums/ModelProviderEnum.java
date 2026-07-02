@@ -15,11 +15,11 @@ public enum ModelProviderEnum {
     // "Qwen3.5-27B" }),
 
     /** 通义千问（阿里云） */
-    QWEN("Qwen", "https://dashscope.aliyuncs.com/compatible-mode/v1", "sk-997566ec99f84d01add92a14c1c5a9a6",
+    QWEN("Qwen", "https://dashscope.aliyuncs.com/compatible-mode/v1", "",
             new String[] { "qwen-turbo", "qwen-plus", "qwen-max", "qwen-long", "Qwen3.5-27B" }),
 
     /** DeepSeek */
-    DEEPSEEK("DeepSeek", "https://api.deepseek.com/v1", "sk-3133ef74c49c44ddbfc230343f38d4f0",
+    DEEPSEEK("DeepSeek", "https://api.deepseek.com/v1", "",
             new String[] { "deepseek-chat", "deepseek-reasoner" }),
 
     /** OpenAI */
