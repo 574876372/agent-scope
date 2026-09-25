@@ -6,14 +6,7 @@ import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -53,36 +46,45 @@ public class AgentToolRegistry implements SmartInitializingSingleton {
 
     /**
      * 扫描 Spring 容器中所有 {@link AgentToolDef} 注解方法并写入注册表。
+     * <p>使用说明：在 Spring 单例 Bean 初始化完成后，由 {@link #afterSingletonsInstantiated()} 自动触发调用。</p>
      */
     public void scanAndRegister() {
-        String[] beanNames = beanFactory.getBeanDefinitionNames();
-        for (String beanName : beanNames) {
-            Object bean;
-            try {
-                bean = beanFactory.getBean(beanName);
-            } catch (Exception ex) {
-                continue;
+        try {
+            List<ToolInterceptor> interceptors = new ArrayList<>();
+            Map<String, ToolInterceptor> beans = beanFactory.getBeansOfType(ToolInterceptor.class);
+            if (beans != null) {
+                interceptors.addAll(beans.values());
             }
-            registerBeanMethods(bean);
-        }
-        log.info("[Tool] 已注册 {} 个 Agent 工具: {}", registeredTools.size(), registeredTools.keySet());
+            log.info("[Tool] 扫描到 {} 个全局工具拦截器", interceptors.size());
 
-        // 通知同步回调（如将工具元数据持久化到数据库）
-        syncCallback.ifPresent(callback -> {
-            try {
-                callback.onToolsRegistered(getAllTools());
-            } catch (Exception e) {
-                log.warn("[Tool] 工具注册同步回调执行失败", e);
+            String[] beanNames = beanFactory.getBeanDefinitionNames();
+            for (String beanName : beanNames) {
+                try {
+                    Object bean = beanFactory.getBean(beanName);
+                    registerBeanMethods(bean, interceptors);
+                } catch (Exception ex) {
+                    log.debug("[Tool] 获取 Bean {} 失败，跳过", beanName, ex);
+                }
             }
-        });
+            log.info("[Tool] 已注册 {} 个 Agent 工具: {}", registeredTools.size(), registeredTools.keySet());
+
+            // 通知同步回调（如将工具元数据持久化到数据库）
+            if (syncCallback.isPresent()) {
+                syncCallback.get().onToolsRegistered(getAllTools());
+            }
+        } catch (Exception e) {
+            log.warn("[Tool] 扫描并注册工具遇到异常", e);
+        }
     }
 
     /**
-     * 扫描单个 Bean 中的 {@link AgentToolDef} 方法并注册。
+     * 扫描单个 Bean 中的 {@link AgentToolDef} 方法并注入拦截器链后注册。
+     * <p>使用说明：由 {@link #scanAndRegister()} 内部循环调用。</p>
      *
-     * @param bean Spring Bean 实例
+     * @param bean         Spring Bean 实例，非空
+     * @param interceptors 扫描到的全局拦截器列表，非空
      */
-    private void registerBeanMethods(Object bean) {
+    private void registerBeanMethods(Object bean, List<ToolInterceptor> interceptors) {
         Class<?> clazz = bean.getClass();
         for (Method method : clazz.getDeclaredMethods()) {
             AgentToolDef annotation = method.getAnnotation(AgentToolDef.class);
@@ -90,6 +92,7 @@ public class AgentToolRegistry implements SmartInitializingSingleton {
                 continue;
             }
             ReflectiveAgentTool tool = new ReflectiveAgentTool(bean, method, annotation);
+            tool.setInterceptors(interceptors);
             ReflectiveAgentTool previous = registeredTools.putIfAbsent(annotation.name(), tool);
             if (previous != null) {
                 throw new IllegalStateException("重复的工具名称: " + annotation.name());

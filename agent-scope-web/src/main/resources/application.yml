@@ -75,8 +75,27 @@ agentscope:
     url: http://localhost:3000           # AgentScope Studio 服务地址
     project: agent-scope-project        # 当前项目在 Studio 中注册的项目名称
 
-# Agent 工具配置（由 agent-scope-tool-spring-boot-starter 自动装配）
 agent:
+# ========================
+# 敏感字段加解密主密钥（AES-GCM），用于数据源密码、模型厂商 API Key 落库加密
+# 优先读 AGENT_CRYPTO_KEY，兼容旧的 SQL_DS_CRYPTO_KEY；更换后已有密文无法解密，需重新录入
+# ========================
+  crypto-key: ${AGENT_CRYPTO_KEY:${SQL_DS_CRYPTO_KEY:change-me-32-bytes}}
+
+# ========================
+# 全局跨域（CORS）配置
+# ========================
+  web:
+    cors:
+      enabled: true                 # 跨域总开关（未配置时默认关闭）；生产环境若由 Nginx 同域代理可设为 false
+      allowed-origin-patterns:      # 允许的前端来源，支持通配；部署到其他域名时需追加
+        - http://localhost:*        # 本地前端开发（Vite 5173 等端口）
+        - http://127.0.0.1:*
+      allowed-headers: "*"          # 允许的请求头，包含自定义的 X-User-Id
+      allow-credentials: false      # 身份通过请求头传递，不使用 Cookie
+      max-age: 3600                 # 预检结果缓存时长（单位：秒）
+
+# Agent 工具配置（由 agent-scope-tool-spring-boot-starter 自动装配）
   tool:
     enabled: true                   # 是否启用 Agent 工具模块（true=开启，false=关闭）
     execution-timeout-seconds: 10   # 单次工具调用的最大执行超时时间（单位：秒）
@@ -86,6 +105,9 @@ agent:
       - web_search                  # 网页搜索工具
     builtin:                        # 内置工具全局开关
       enabled: true                 # true=加载所有内置工具；false=禁用内置工具（可仅使用自定义工具）
+  hitl:
+    token-ttl-seconds: 600          # 审批 Token 在内存中的有效期时间（单位：秒），默认 600 秒
+    max-cache-size: 10000           # 内存缓存中允许存放的审批 Token 最大记录上限，默认 10000 条
 
 # ========================
 # Agent 记忆管理配置
@@ -105,7 +127,6 @@ agent:
     explain-row-threshold: 100000                            # EXPLAIN 估算行数告警阈值；超出会在 warnings 中提示用户
     execution-timeout-seconds: 15                            # 单次 SELECT/EXPLAIN 的最大执行时长（秒）
     token-ttl-seconds: 300                                   # 审批 token 有效期；超时未确认会被 Caffeine 自动驱逐
-    crypto-key: ${SQL_DS_CRYPTO_KEY:change-me-32-bytes}      # AES-GCM 主密钥；建议通过环境变量注入，禁止以明文写入生产配置
 
 # ========================
 # RAG 模块自动配置属性（由 agent-scope-rag-spring-boot-starter 自动装配）
@@ -117,6 +138,8 @@ agent:
     default-row-limit: 3                                     # 默认单次检索召回的最大文本分片数量（Top-K）
     default-score-threshold: 0.3                             # 默认检索相似度得分最低过滤阈值，取值范围 0.0 ~ 1.0，仅召回大于或等于该分数的片段
     chunk-size: 512                                          # 文档切片分割的最大字数/字符尺寸
+    upload-dir: ./data/uploads                               # 上传文档存储根目录，实际路径为 {upload-dir}/{知识库ID}/年/月/日/；相对路径以启动目录为基准，生产环境建议配置绝对路径
+    # 向量模型不在此配置：由「模型管理」页面维护（t_model_provider / t_model），每个知识库创建时绑定一个向量模型
     in-memory:
       persist-path: ./data/vdb/local                         # 本地持久化缓存文件夹路径。为空时不进行持久化落盘，重启后内存数据丢失
     milvus:

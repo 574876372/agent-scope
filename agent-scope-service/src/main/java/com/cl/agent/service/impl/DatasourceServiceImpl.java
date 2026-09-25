@@ -7,7 +7,7 @@ import com.cl.agent.dto.sql.DatasourceRequest;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.Datasource;
 import com.cl.agent.service.IDatasourceService;
-import com.cl.agent.sql.core.CryptoService;
+import com.cl.agent.commons.crypto.CryptoService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class DatasourceServiceImpl implements IDatasourceService, DisposableBean
     @Autowired
     private DatasourceMapper datasourceMapper;
 
-    /** AES-GCM 加解密服务，来自 starter */
+    /** AES-GCM 加解密服务，由 agent-scope-config 统一注册 */
     @Autowired
     private CryptoService cryptoService;
 

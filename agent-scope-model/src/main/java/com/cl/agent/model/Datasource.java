@@ -16,7 +16,7 @@ import lombok.ToString;
  *
  * <p>由 {@code IDatasourceService} 负责 CRUD，{@code HostDatasourceProvider} 通过该实体的
  * {@link #jdbcUrl} / {@link #username} / {@link #passwordCipher} 构造 HikariDataSource。
- * 密码字段始终以 AES-GCM 加密形式持久化，由 starter 提供的 {@code CryptoService} 加解密。</p>
+ * 密码字段始终以 AES-GCM 加密形式持久化，由公共组件 {@code CryptoService} 加解密。</p>
  */
 @Data
 @Builder

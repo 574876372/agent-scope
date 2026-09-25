@@ -2,24 +2,21 @@ package com.cl.agent.biz.impl;
 
 import com.cl.agent.biz.IKnowledgeBiz;
 import com.cl.agent.biz.event.DocumentIndexEvent;
+import com.cl.agent.biz.rag.RagKnowledgeProvider;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.*;
-import com.cl.agent.enums.ModelProviderEnum;
+import com.cl.agent.enums.DocumentStatusEnum;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.KnowledgeBase;
-import com.cl.agent.model.KnowledgeChunk;
 import com.cl.agent.model.KnowledgeDocument;
+import com.cl.agent.model.ModelInfo;
 import com.cl.agent.rag.core.DocumentReaderFactory;
-import com.cl.agent.rag.core.EmbeddingStoreFactory;
+import com.cl.agent.biz.rag.KnowledgeFileStorage;
 import com.cl.agent.service.IKnowledgeService;
-import io.agentscope.core.embedding.EmbeddingModel;
-import io.agentscope.core.message.TextBlock;
+import com.cl.agent.service.IModelConfigService;
 import io.agentscope.core.rag.knowledge.SimpleKnowledge;
 import io.agentscope.core.rag.model.Document;
-import io.agentscope.core.rag.model.DocumentMetadata;
 import io.agentscope.core.rag.model.RetrieveConfig;
-import io.agentscope.core.rag.store.VDBStoreBase;
-import io.agentscope.core.rag.store.InMemoryStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,9 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -50,15 +44,24 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
     @Autowired(required = false)
     private DocumentReaderFactory documentReaderFactory;
 
-    @Autowired(required = false)
-    private EmbeddingStoreFactory embeddingStoreFactory;
+    /** 知识库运行时 Knowledge 统一提供者；RAG 未启用时 isEnabled() 返回 false */
+    @Autowired
+    private RagKnowledgeProvider ragKnowledgeProvider;
+
+    /** 模型配置服务，用于校验与展示知识库绑定的向量模型 */
+    @Autowired
+    private IModelConfigService modelConfigService;
 
     /** Spring 应用事件发布器，用于发布 {@link DocumentIndexEvent} 触发异步向量化流水线 */
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
-    /** 上传文件本地落盘的基准主文件夹路径，保存在当前项目 workspace 数据区内，完全受控且安全 */
-    private static final String UPLOAD_BASE_DIR = "./data/uploads";
+    /** 上传文档的本地文件存储（根目录 agent.rag.upload-dir，数据库保存相对路径） */
+    @Autowired
+    private KnowledgeFileStorage fileStorage;
+
+    /** 无法识别扩展名时的默认值 */
+    private static final String DEFAULT_EXTENSION = "txt";
 
     /**
      * 创建并持久化一个全新的私有知识库。
@@ -74,6 +77,9 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
             throw new BizException(400, "知识库名称不能为空");
         }
 
+        // 绑定向量模型：未指定时取默认向量模型；创建后不可更换
+        ModelInfo embeddingModel = modelConfigService.requireUsableEmbeddingModel(request.getEmbeddingModelId());
+
         String kbId = UUID.randomUUID().toString();
         String userId = UserContext.getUserId();
 
@@ -83,12 +89,13 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
                 .description(request.getDescription())
                 .avatar(request.getAvatar())
                 .userId(userId != null ? userId : "admin")
+                .embeddingModelId(embeddingModel.getId())
                 .build();
         kb.setCreateBy(userId);
         kb.setCreateTime(LocalDateTime.now());
 
         knowledgeService.saveBase(kb);
-        log.info("[Biz-KB] 知识库创建成功: id={}, name={}", kbId, kb.getName());
+        log.info("[Biz-KB] 知识库创建成功: id={}, name={}, embeddingModel={}", kbId, kb.getName(), embeddingModel.getModelName());
         return toKbResponse(kb);
     }
 
@@ -154,7 +161,10 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
             deleteDocument(doc.getId());
         }
 
-        // 3. 逻辑删除知识库主表
+        // 3. 释放该知识库的向量存储实例（连接或内存缓存）
+        ragKnowledgeProvider.releaseKnowledgeBase(id);
+
+        // 4. 逻辑删除知识库主表
         knowledgeService.deleteBaseById(id);
         log.info("[Biz-KB] 知识库物理级联与逻辑删除完成: id={}", id);
     }
@@ -172,7 +182,7 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
      */
     @Override
     public UploadDocResponse uploadAndIndexDocument(String kbId, MultipartFile file) {
-        if (documentReaderFactory == null || embeddingStoreFactory == null) {
+        if (documentReaderFactory == null || !ragKnowledgeProvider.isEnabled()) {
             throw new BizException(400, "RAG 模块未启用，请在 application.yml 中配置启用");
         }
         if (file == null || file.isEmpty()) {
@@ -189,18 +199,13 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
 
         log.info("[Biz-Doc] 接收文档上传请求: name={}, size={}, kbId={}", originalFilename, file.getSize(), kbId);
 
-        // 1. 创建服务器本地多级落盘存储路径并保存
-        // 注意：必须先转换为绝对路径，否则 MultipartFile.transferTo() 会将相对路径拼接到
-        // Tomcat 临时工作目录（如 AppData/Local/Temp/tomcat.xxx）下，导致目录不存在而报错
-        Path storePath = Paths.get(UPLOAD_BASE_DIR, kbId, fileId + "." + ext).toAbsolutePath();
+        // 1. 落盘到 {agent.rag.upload-dir}/{kbId}/yyyy/MM/dd/{fileId}.{ext}，拿到相对路径用于落库
+        String relativePath;
         try {
-            Files.createDirectories(storePath.getParent());
-            // 使用 Files.copy 直接操作输入流，避免 transferTo(File) 依赖 Servlet 容器工作目录
-            Files.copy(file.getInputStream(), storePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            log.info("[Biz-Doc] 上传文件本地暂存落盘完成: path={}", storePath);
+            relativePath = fileStorage.store(kbId, fileId, ext, file.getInputStream());
         } catch (IOException e) {
-            log.error("[Biz-Doc] 文件写入本地磁盘异常: path={}", storePath, e);
-            throw new BizException(500, "文件写入本地失败: " + e.getMessage());
+            log.error("[Biz-Doc] 读取上传文件流失败: name={}", originalFilename, e);
+            throw new BizException(500, "读取上传文件失败: " + e.getMessage());
         }
 
         // 2. MySQL 关系表中快速插入一条处于 uploading 状态的元数据以跟踪状态
@@ -210,9 +215,10 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
                 .kbId(kbId)
                 .name(originalFilename)
                 .type(ext)
-                .status("uploading")
+                .status(DocumentStatusEnum.UPLOADING.getCode())
                 .sizeBytes(file.getSize())
-                .filePath(storePath.toAbsolutePath().toString())
+                // 保存相对于上传根目录的路径，跨操作系统与修改根目录后仍可解析
+                .filePath(relativePath)
                 .build();
         doc.setCreateBy(userId);
         doc.setCreateTime(LocalDateTime.now());
@@ -257,16 +263,11 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
             return;
         }
 
-        // 1. 物理清除服务器落盘的暂存文件
-        try {
-            Files.deleteIfExists(Paths.get(doc.getFilePath()));
-            log.info("[Biz-Doc] 成功清理本地磁盘暂存文件: path={}", doc.getFilePath());
-        } catch (IOException e) {
-            log.warn("[Biz-Doc] 清理本地磁盘文件失败: path={}", doc.getFilePath(), e);
-        }
+        // 1. 物理清除服务器落盘的文件（兼容早期保存的绝对路径）
+        fileStorage.deleteQuietly(doc.getFilePath());
 
-        // 2. 清理向量数据库中对应的内容（官方的 InMemoryStore 重建会自动丢弃，而外部 Milvus 会物理清理该文件的 Chunk）
-        // 生产级：我们可以通过在外部 Milvus 中执行 delete(chunkId) 来完成。
+        // 2. 清理向量库中该文档的全部切片向量（必须先于 MySQL 切片删除，需要切片 id 定位远端向量）
+        ragKnowledgeProvider.removeDocumentVectors(doc.getKbId(), docId);
 
         // 3. 清理 MySQL 中物理关联的所有纯文本切片明细记录
         knowledgeService.deleteChunksByDocId(docId);
@@ -288,26 +289,16 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
      */
     @Override
     public List<SearchChunkResponse> searchKnowledge(String kbId, String query, Integer limit) {
-        if (documentReaderFactory == null || embeddingStoreFactory == null) {
+        if (documentReaderFactory == null || !ragKnowledgeProvider.isEnabled()) {
             throw new BizException(400, "RAG 模块未启用");
         }
         log.info("[Biz-Query] 知识库 Playground 检索测试: kbId={}, query={}, limit={}", kbId, query, limit);
-        
-        // 1. 构建官方 SimpleKnowledge 管理器并配置向量计算引擎与连接介质
-        ModelProviderEnum provider = ModelProviderEnum.QWEN; // 采用千问自带的嵌入式计算，稳定快速
-        EmbeddingModel embeddingModel = embeddingStoreFactory.createEmbeddingModel(provider.getApiKey(), provider.getBaseUrl());
-        VDBStoreBase store = embeddingStoreFactory.createStore(kbId);
-        
-        SimpleKnowledge knowledge = SimpleKnowledge.builder()
-                .embeddingModel(embeddingModel)
-                .embeddingStore(store)
-                .build();
 
-        // 2. 预热当前知识库已存储的物理文档（主要针对本地开发测试使用的内存 InMemoryStore）
-        preheatMemoryStoreIfLocal(knowledge, kbId);
+        // 1. 获取该知识库的运行时 Knowledge（与入库端共享向量存储；IN_MEMORY 模式下自动从 MySQL 预热）
+        SimpleKnowledge knowledge = ragKnowledgeProvider.getKnowledge(kbId);
 
-        // 3. 执行官方原生的语义检索召回
-        int rowLimit = (limit != null) ? limit : 3;
+        // 2. 执行官方原生的语义检索召回
+        int rowLimit = (limit != null) ? limit : ragKnowledgeProvider.getDefaultRecallLimit();
         RetrieveConfig config = RetrieveConfig.builder()
                 .limit(rowLimit)
                 .scoreThreshold(0.1) // Playground 放宽过滤阈值以方便调试
@@ -320,7 +311,7 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
                 return List.of();
             }
 
-            // 4. 将检索出来的 Document 段转换为前端高亮响应的 DTO
+            // 3. 将检索出来的 Document 段转换为前端高亮响应的 DTO
             List<SearchChunkResponse> responses = new ArrayList<>();
             for (Document doc : result) {
                 SearchChunkResponse chunkResp = new SearchChunkResponse();
@@ -343,46 +334,6 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
         }
     }
 
-    // ========================================================
-    // 💡 内存型向量库预热辅助方法 (Private Helpers)
-    // ========================================================
-
-    /**
-     * 针对本地开发使用的 InMemoryStore 进行切片数据动态“预热加载”。
-     * <p>由于官方 {@link InMemoryStore} 存放在进程运行期内存中，一旦重启将丢失向量信息。
-     * 当配置为 InMemoryStore 时，我们在系统检索前动态读取关系表中的已入库切片，
-     * 内存中快速重构文档数据并灌入向量库，保障“零配置、零维护”本地极其丝滑的使用体验！</p>
-     *
-     * @param knowledge 官方构建的 Knowledge 实例，非空
-     * @param kbId      知识库 ID
-     */
-    private void preheatMemoryStoreIfLocal(SimpleKnowledge knowledge, String kbId) {
-        if (knowledge.getEmbeddingStore() instanceof InMemoryStore) {
-            InMemoryStore memStore = (InMemoryStore) knowledge.getEmbeddingStore();
-            if (memStore.isEmpty()) {
-                log.info("[Preheat-Local] 检测到 InMemoryStore 向量库为空，开始启动 MySQL 自动预热流水线: kbId={}", kbId);
-                List<KnowledgeChunk> dbChunks = knowledgeService.listChunksByKbId(kbId);
-                if (dbChunks.isEmpty()) {
-                    return;
-                }
-
-                // 从 MySQL 切片文本快速构造官方 Document
-                List<Document> preheatDocs = dbChunks.stream().map(c -> {
-                    DocumentMetadata meta = DocumentMetadata.builder()
-                            .docId(c.getDocId())
-                            .chunkId(String.valueOf(c.getChunkIndex()))
-                            .content(TextBlock.builder().text(c.getContent()).build())
-                            .build();
-                    return new Document(meta);
-                }).collect(Collectors.toList());
-
-                // 异步等待官方 preheat 向量化并载入内存
-                knowledge.addDocuments(preheatDocs).block();
-                log.info("[Preheat-Local] 本地自动向量预热流水线结束: 成功装载片数={}", preheatDocs.size());
-            }
-        }
-    }
-
     /**
      * 将物理实体映射为对外呈现的知识库 Response DTO。
      */
@@ -393,6 +344,9 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
         resp.setDescription(kb.getDescription());
         resp.setAvatar(kb.getAvatar());
         resp.setUserId(kb.getUserId());
+        resp.setEmbeddingModelId(kb.getEmbeddingModelId());
+        ModelInfo model = modelConfigService.getModel(kb.getEmbeddingModelId());
+        resp.setEmbeddingModelName(model != null ? model.getModelName() : null);
         resp.setCreateTime(kb.getCreateTime());
         return resp;
     }
@@ -420,9 +374,14 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
      */
     private String getFileExtension(String filename) {
         if (filename == null) {
-            return "txt";
+            return DEFAULT_EXTENSION;
         }
         int dotIdx = filename.lastIndexOf(".");
-        return (dotIdx == -1) ? "txt" : filename.substring(dotIdx + 1);
+        if (dotIdx == -1) {
+            return DEFAULT_EXTENSION;
+        }
+        // 扩展名来自客户端提交的文件名，只保留字母数字，避免 / \ 等字符在存储目录下生成多余层级
+        String ext = filename.substring(dotIdx + 1).replaceAll("[^A-Za-z0-9]", "").toLowerCase();
+        return ext.isEmpty() ? DEFAULT_EXTENSION : ext;
     }
 }

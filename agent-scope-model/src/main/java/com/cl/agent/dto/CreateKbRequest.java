@@ -20,4 +20,7 @@ public class CreateKbRequest implements Serializable {
 
     /** 知识库封面头像链接/标识，选填 */
     private String avatar;
+
+    /** 绑定的向量模型 ID，选填；为空时使用默认向量模型，创建后不可更换 */
+    private String embeddingModelId;
 }

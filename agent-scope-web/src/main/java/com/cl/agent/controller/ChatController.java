@@ -31,7 +31,6 @@ import java.util.function.Function;
  */
 @RestController
 @RequestMapping("/api/chat")
-@CrossOrigin(origins = "*")
 public class ChatController {
 
     @Autowired

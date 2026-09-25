@@ -13,8 +13,7 @@ import java.util.List;
 /**
  * SQL 执行结果值对象。
  *
- * <p>由 {@code SqlConfirmExecutor.execute} 返回，宿主 {@code SqlAgentBizImpl} 据此构造
- * SSE 推送给前端的 {@code tool_result} 帧。结果同时承担"成功执行"和"用户拒绝/异常"两种语义，
+ * <p>由 {@code QueryDatabaseTool} 执行并序列化，结果同时承担"成功执行"和"异常"等语义，
  * 通过 {@link #status} 字段区分。</p>
  *
  * <p>设计上行 + 列分离，便于前端 SqlResultTable 直接渲染表格，且支持空表（仅列、无行）。</p>

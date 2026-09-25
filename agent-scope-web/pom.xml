@@ -30,6 +30,11 @@
             <groupId>com.cl.agent</groupId>
             <artifactId>agent-scope-rag-spring-boot-starter</artifactId>
         </dependency>
+        <!-- 通用人机协同（HITL）插件 -->
+        <dependency>
+            <groupId>com.cl.agent</groupId>
+            <artifactId>agent-scope-hitl-spring-boot-starter</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

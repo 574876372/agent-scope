@@ -32,7 +32,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/knowledge-base")
-@CrossOrigin(origins = "*")
 public class KnowledgeController {
 
     @Autowired

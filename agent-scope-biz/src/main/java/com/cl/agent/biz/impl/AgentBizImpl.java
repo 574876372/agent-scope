@@ -7,12 +7,14 @@ import com.cl.agent.dto.AgentResponse;
 import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
 import com.cl.agent.dto.CreateAgentRequest;
-import com.cl.agent.enums.ModelProviderEnum;
+import com.cl.agent.biz.event.ModelConfigChangedEvent;
+import com.cl.agent.dto.model.ModelConnection;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.AgentInfo;
 import com.cl.agent.model.ChatMessage;
 import com.cl.agent.service.IAgentService;
 import com.cl.agent.service.IAgentToolRelService;
+import com.cl.agent.service.IModelConfigService;
 import io.agentscope.core.ReActAgent;
 import io.agentscope.core.agent.Agent;
 import io.agentscope.core.agent.Event;
@@ -25,24 +27,20 @@ import io.agentscope.core.model.transport.HttpTransport;
 import io.agentscope.core.model.transport.HttpTransportConfig;
 import io.agentscope.core.model.transport.HttpVersion;
 import io.agentscope.core.model.transport.OkHttpTransport;
-import io.agentscope.core.rag.model.Document;
-import io.agentscope.core.rag.model.DocumentMetadata;
 import io.agentscope.core.studio.StudioManager;
 import io.agentscope.core.studio.StudioMessageHook;
 import io.agentscope.core.tool.Toolkit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import com.cl.agent.service.IKnowledgeService;
-import com.cl.agent.rag.core.EmbeddingStoreFactory;
-import io.agentscope.core.embedding.EmbeddingModel;
-import io.agentscope.core.rag.knowledge.SimpleKnowledge;
+import com.cl.agent.biz.rag.RagKnowledgeProvider;
+import io.agentscope.core.rag.Knowledge;
 import io.agentscope.core.rag.RAGMode;
 import io.agentscope.core.rag.model.RetrieveConfig;
-import io.agentscope.core.rag.store.InMemoryStore;
-import com.cl.agent.model.KnowledgeChunk;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,12 +66,27 @@ public class AgentBizImpl implements IAgentBiz {
     @Autowired
     private IKnowledgeService knowledgeService;
 
-    @Autowired(required = false)
-    private EmbeddingStoreFactory embeddingStoreFactory;
+    @Autowired
+    private RagKnowledgeProvider ragKnowledgeProvider;
+    @Autowired
+    private IModelConfigService modelConfigService;
 
 
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
+
+    /**
+     * 模型配置（厂商密钥、地址、模型参数）变更后清空运行时 Agent 缓存。
+     * <p>缓存的 Agent 持有构建时的对话模型与知识库客户端，清空后下次对话按最新配置重建。</p>
+     *
+     * @param event 模型配置变更事件
+     */
+    @EventListener
+    public void onModelConfigChanged(ModelConfigChangedEvent event) {
+        int size = agentInstanceCache.size();
+        agentInstanceCache.clear();
+        log.info("[Agent] 模型配置已变更，清空运行时 Agent 缓存: count={}", size);
+    }
 
     /**
      * 创建并持久化一个新的 Agent 实例。
@@ -271,12 +284,14 @@ public class AgentBizImpl implements IAgentBiz {
         Msg reply;
         try {
             String userId = UserContext.getUserId();
-            reply = agent.call(Msg.builder()
+            reactor.core.publisher.Mono<Msg> callMono = agent.call(Msg.builder()
                             .textContent(request.getContent())
                             .role(MsgRole.USER)
-                            .build())
-                    .contextWrite(context -> context.put("userId", userId))
-                    .block();
+                            .build());
+            if (userId != null) {
+                callMono = callMono.contextWrite(context -> context.put("userId", userId));
+            }
+            reply = callMono.block();
             log.info("[Model] 模型同步调用完成, agentId={}, agentName={}, model={}, costMs={}",
                     id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs);
         } catch (Exception e) {
@@ -326,7 +341,7 @@ public class AgentBizImpl implements IAgentBiz {
         AtomicBoolean firstEvent = new AtomicBoolean(true);
 
         String userId = UserContext.getUserId();
-        return agent.stream(List.of(userMsg), options)
+        reactor.core.publisher.Flux<Event> stream = agent.stream(List.of(userMsg), options)
                 .doOnSubscribe(sub -> {
                     startMs.set(System.currentTimeMillis());
                     log.info("[Model] 开始调用模型(流式), agentId={}, agentName={}, model={}",
@@ -341,8 +356,11 @@ public class AgentBizImpl implements IAgentBiz {
                 .doOnComplete(() -> log.info("[Model] 模型流式调用完成, agentId={}, agentName={}, model={}, costMs={}",
                         id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get()))
                 .doOnError(e -> log.error("[Model] 模型流式调用异常, agentId={}, agentName={}, model={}, costMs={}",
-                        id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get(), e))
-                .contextWrite(context -> context.put("userId", userId));
+                        id, info.getName(), info.getModelName(), System.currentTimeMillis() - startMs.get(), e));
+        if (userId != null) {
+            stream = stream.contextWrite(context -> context.put("userId", userId));
+        }
+        return stream;
     }
 
     /**
@@ -382,7 +400,7 @@ public class AgentBizImpl implements IAgentBiz {
     /**
      * 统一构建 ReActAgent 运行时对象。
      * <p>根据模型和 Prompt 信息创建模型实例，并绑定授权的工具包。若绑定了知识库且开启了 RAG，
-     * 会自动动态在内存中重构向量索引数据库（实现多库动态预热支持），并调用官方原生 Builder 绑定 SimpleKnowledge 实例与 RAGMode。
+     * 会为每个绑定的知识库装配一个直连向量库（ES / Milvus / 缓存内存库）的 Knowledge，并调用官方原生 Builder 绑定 knowledges 与 RAGMode。
      * 若 Studio 可视化已开启，还会自动挂载 Studio 推理过程追踪 Hook。</p>
      *
      * @param name       Agent 的友好显示名称，非空
@@ -430,56 +448,34 @@ public class AgentBizImpl implements IAgentBiz {
      * @param agentName 智能体友好名称
      */
     private void loadRagKnowledge(ReActAgent.Builder builder, String agentId, AgentInfo info, String agentName) {
-        if (knowledgeService != null && embeddingStoreFactory != null && agentId != null) {
+        if (knowledgeService != null && ragKnowledgeProvider.isEnabled() && agentId != null) {
             List<String> kbIds = knowledgeService.getKbIdsByAgentId(agentId);
             String modeStr = info.getRagMode() != null ? info.getRagMode() : "DISABLED";
-            
+
             if (!kbIds.isEmpty() && !"DISABLED".equalsIgnoreCase(modeStr)) {
                 log.info("[RAG-Build] 检测到 Agent [{}] 开启并绑定知识库: kbIds={}, mode={}", agentName, kbIds, modeStr);
-                
-                // 1. 获取模型配置生成 Embedding Model 实例
-                ModelProviderEnum provider = ModelProviderEnum.QWEN;
-                EmbeddingModel embeddingModel = embeddingStoreFactory.createEmbeddingModel(provider.getApiKey(), provider.getBaseUrl());
-                
-                // 2. 构造一个专用于该 Agent 运行时检索的内存型向量存储实例，以支持灵活的多知识库聚合检索
-                InMemoryStore runtimeStore = InMemoryStore.builder().dimensions(1536).build();
-                SimpleKnowledge knowledge = SimpleKnowledge.builder()
-                        .embeddingModel(embeddingModel)
-                        .embeddingStore(runtimeStore)
-                        .build();
-                
-                // 3. 从 MySQL 中加载所有绑定知识库的已索引切片数据进行动态“预热注入”
-                List<Document> preheatDocs = new ArrayList<>();
+
+                // 1. 每个绑定的知识库对应一个 Knowledge，直接复用入库时的向量存储（ES / Milvus / 缓存的内存库），
+                //    不再在 Agent 构建时重算 Embedding；多知识库聚合由 ReActAgent.Builder#knowledges 原生完成
+                List<Knowledge> knowledges = new ArrayList<>();
                 for (String kbId : kbIds) {
-                    List<KnowledgeChunk> chunks = knowledgeService.listChunksByKbId(kbId);
-                    for (KnowledgeChunk chunk : chunks) {
-                        DocumentMetadata meta = DocumentMetadata.builder()
-                                .docId(chunk.getDocId())
-                                .chunkId(String.valueOf(chunk.getChunkIndex()))
-                                .content(io.agentscope.core.message.TextBlock.builder().text(chunk.getContent()).build())
-                                .build();
-                        preheatDocs.add(new Document(meta));
-                    }
+                    knowledges.add(ragKnowledgeProvider.getKnowledge(kbId));
                 }
-                
-                if (!preheatDocs.isEmpty()) {
-                    // 向量化加载入内存
-                    knowledge.addDocuments(preheatDocs).block();
-                    log.info("[RAG-Build] 成功向 Agent 运行时向量库预热加载切片数={}", preheatDocs.size());
-                }
-                
-                // 4. 配置召回限制和得分过滤阈值
-                int limit = info.getRecallLimit() != null ? info.getRecallLimit() : 3;
-                double threshold = info.getScoreThreshold() != null ? info.getScoreThreshold() : 0.3;
-                
-                // 5. 注入 AgentScope 官方原生支持的属性
-                builder.knowledge(knowledge)
+
+                // 2. 召回上限与相似度阈值：Agent 专属配置优先，缺省回落到 agent.rag.* 全局默认值
+                int limit = info.getRecallLimit() != null
+                        ? info.getRecallLimit() : ragKnowledgeProvider.getDefaultRecallLimit();
+                double threshold = info.getScoreThreshold() != null
+                        ? info.getScoreThreshold() : ragKnowledgeProvider.getDefaultScoreThreshold();
+
+                // 3. 注入 AgentScope 官方原生支持的属性
+                builder.knowledges(knowledges)
                        .ragMode(RAGMode.valueOf(modeStr))
                        .retrieveConfig(RetrieveConfig.builder()
                                .limit(limit)
                                .scoreThreshold(threshold)
                                .build());
-                log.info("[RAG-Build] RAG 配置装配完成: limit={}, threshold={}", limit, threshold);
+                log.info("[RAG-Build] RAG 配置装配完成: kbCount={}, limit={}, threshold={}", knowledges.size(), limit, threshold);
             }
         }
     }
@@ -488,13 +484,14 @@ public class AgentBizImpl implements IAgentBiz {
      * 根据模型厂商和名称构建 OpenAI 兼容协议大模型客户端。
      * <p>此处强制底层使用 HTTP/1.1 以规避 HTTP/2 在 SSE 长连接断开或复用时的部分不稳定问题，同时使用更具弹性的 OkHttp 传输层。</p>
      *
-     * @param modelType 模型厂商名称
+     * @param modelType 模型厂商编码，对应 t_model_provider.code
      * @param modelName 具体的模型名称
      * @return OpenAIChatModel 实例化完成的 LLM 客户端
      */
     private OpenAIChatModel buildModel(String modelType, String modelName) {
-        ModelProviderEnum provider = ModelProviderEnum.of(modelType);
-        
+        // 接口地址与密钥从模型配置表读取（密钥解密后仅在内存中使用）
+        ModelConnection conn = modelConfigService.resolveChatConnection(modelType, modelName);
+
         // 强制在客户端使用 HTTP/1.1 协议
         // 目的：防止 JDK HttpClient/OkHttp 用默认 HTTP/2 协议请求 DeepSeek/通义等接口时，
         // 在 SSE（流式）结束或连接复用时由于代理或网关发送的 RST_STREAM / 提前断开，
@@ -578,9 +575,9 @@ public class AgentBizImpl implements IAgentBiz {
                 .build();
                 
         return OpenAIChatModel.builder()
-                .baseUrl(provider.getBaseUrl())
-                .apiKey(provider.getApiKey())
-                .modelName(modelName)
+                .baseUrl(conn.getBaseUrl())
+                .apiKey(conn.getApiKey())
+                .modelName(conn.getModelName())
                 .stream(true)
                 .httpTransport(transport)
                 .build();

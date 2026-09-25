@@ -1,106 +1,155 @@
 package com.cl.agent.sql.tool;
 
+import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.sql.core.GuardResult;
 import com.cl.agent.sql.core.QueryCostEstimator;
 import com.cl.agent.sql.core.SqlAgentProperties;
-import com.cl.agent.sql.core.SqlApprovalTokenStore;
 import com.cl.agent.sql.core.SqlGuardEngine;
 import com.cl.agent.sql.spi.DatasourceDescriptor;
 import com.cl.agent.sql.spi.DatasourceProvider;
 import com.cl.agent.sql.spi.SqlAuditEvent;
 import com.cl.agent.sql.spi.SqlAuditPublisher;
+import com.cl.agent.sql.executor.SqlExecutionResult;
 import com.cl.agent.tool.annotation.AgentToolDef;
 import com.cl.agent.tool.annotation.AgentToolParam;
+import com.cl.agent.tool.annotation.RequiresApproval;
+import com.cl.agent.tool.annotation.PreCheckHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * SQL Agent 工具：提交 SQL 进入"人工确认"队列（**不直接执行**）。
- *
- * <h2>语义</h2>
- * 这是 HITL 的核心入口：
- * <ol>
- *   <li>解析数据源 → 通过守卫 → 跑 EXPLAIN 估算 → 颁发 token → 发 PENDING 审计</li>
- *   <li>返回结构化 PENDING_APPROVAL JSON 给 LLM；LLM 输出文本时会附带 SQL 让用户复核</li>
- *   <li>前端识别 status=PENDING_APPROVAL，渲染 SqlApprovalCard，用户点击后走 confirmSqlExecution 链路</li>
- * </ol>
- *
- * <h2>LLM 行为约束</h2>
- * 工具描述中已强制要求："当用户消息中已直接给出完整 SQL 语句时，必须将其原样作为 sql 参数传入，
- * 禁止改写、补字段、加表别名、调整 LIMIT、调整 WHERE"。这保障"用户直接输入 SQL"的路径 B 健壮性。
+ * SQL Agent 执行工具类。
+ * <p>使用说明：实现了 {@link PreCheckHandler}，在 Agent 调用本工具前，会触发预检安全守卫及 EXPLAIN 代价估算，
+ * 并将其返回结果发给前端确认。当用户在前端审批卡片点击同意后，本方法的真实方法体才会被执行，
+ * 真正访问数据源并返回序列化为 JSON 字符串的 {@link SqlExecutionResult}，回流给大模型做二次总结。</p>
  */
 @Slf4j
 @Component
-public class QueryDatabaseTool {
+public class QueryDatabaseTool implements PreCheckHandler {
 
-    /** 全局配置 */
+    /** SQL 全局配置属性 */
     private final SqlAgentProperties props;
 
-    /** 数据源 SPI */
+    /** 数据源提供器 SPI，用于获取连接 */
     private final DatasourceProvider datasourceProvider;
 
-    /** 守卫引擎 */
+    /** SQL 语法安全校验守卫 */
     private final SqlGuardEngine guardEngine;
 
-    /** 代价估算器 */
+    /** 代价估算器，执行 EXPLAIN */
     private final QueryCostEstimator costEstimator;
 
-    /** 审批令牌存储 */
-    private final SqlApprovalTokenStore tokenStore;
-
-    /** 审计发布器 */
+    /** 审计事件发布器，记录操作日志 */
     private final SqlAuditPublisher auditPublisher;
 
     /**
      * 构造方法。
+     * <p>使用说明：由 Spring 自动注入所需的核心 Bean，无需手动配置。</p>
      *
-     * @param props              全局配置
-     * @param datasourceProvider 数据源 SPI
-     * @param guardEngine        守卫
-     * @param costEstimator      EXPLAIN 估算器
-     * @param tokenStore         token 存储
-     * @param auditPublisher     审计发布器
+     * @param props              全局配置，非空
+     * @param datasourceProvider 数据源 SPI，非空
+     * @param guardEngine        守卫，非空
+     * @param costEstimator      EXPLAIN 估算器，非空
+     * @param auditPublisher     审计发布器，非空
      */
     public QueryDatabaseTool(SqlAgentProperties props,
                              DatasourceProvider datasourceProvider,
                              SqlGuardEngine guardEngine,
                              QueryCostEstimator costEstimator,
-                             SqlApprovalTokenStore tokenStore,
                              SqlAuditPublisher auditPublisher) {
         this.props = Objects.requireNonNull(props, "props");
         this.datasourceProvider = Objects.requireNonNull(datasourceProvider, "datasourceProvider");
         this.guardEngine = Objects.requireNonNull(guardEngine, "guardEngine");
         this.costEstimator = Objects.requireNonNull(costEstimator, "costEstimator");
-        this.tokenStore = Objects.requireNonNull(tokenStore, "tokenStore");
         this.auditPublisher = Objects.requireNonNull(auditPublisher, "auditPublisher");
     }
 
     /**
-     * 接收 LLM 提交的 SQL，做守卫校验 + EXPLAIN 估算 + 颁发审批 token。
+     * {@inheritDoc}
+     */
+    @Override
+    public Map<String, Object> preCheck(Map<String, Object> parameters) {
+        String sql = (String) parameters.get("sql");
+        String datasourceId = (String) parameters.get("datasourceId");
+        String userId = UserContext.getUserId();
+
+        Map<String, Object> preCheckMeta = new HashMap<>();
+        if (userId == null || userId.isBlank()) {
+            preCheckMeta.put("warnings", List.of("缺少当前用户上下文，拒绝预检。"));
+            preCheckMeta.put("estimatedRows", -1L);
+            return preCheckMeta;
+        }
+
+        // 1. 守卫静态校验及限制改写
+        GuardResult guard = guardEngine.validate(sql, props.getDefaultRowLimit());
+        if (!guard.isPassed()) {
+            preCheckMeta.put("warnings", List.of(guard.getErrorMessage()));
+            preCheckMeta.put("estimatedRows", -1L);
+            return preCheckMeta;
+        }
+
+        // 2. 尝试执行 EXPLAIN 估算扫描行数
+        long estimatedRows = -1L;
+        List<String> warnings = new ArrayList<>(guard.getWarnings());
+        Optional<DataSource> dsOpt = datasourceProvider.resolve(datasourceId, userId);
+        if (dsOpt.isPresent()) {
+            String dbType = resolveDbType(userId, datasourceId);
+            QueryCostEstimator.CostEstimate cost = costEstimator.estimate(dsOpt.get(), dbType, guard.getSanitizedSql());
+            estimatedRows = cost.getEstimatedRows();
+            if (cost.getWarning() != null && !cost.getWarning().isBlank()) {
+                warnings.add(cost.getWarning());
+            }
+        }
+
+        preCheckMeta.put("estimatedRows", estimatedRows);
+        preCheckMeta.put("warnings", warnings);
+        preCheckMeta.put("sql", guard.getSanitizedSql());
+
+        // 3. 发布 PENDING 审计事件
+        try {
+            auditPublisher.publish(SqlAuditEvent.builder()
+                    .phase(SqlAuditEvent.Phase.PENDING)
+                    .userId(userId)
+                    .datasourceId(datasourceId)
+                    .sql(guard.getSanitizedSql())
+                    .occurredAt(LocalDateTime.now())
+                    .build());
+            log.info("[SQL-Tool] PENDING 审计发布成功: sql={}", guard.getSanitizedSql());
+        } catch (Exception e) {
+            log.warn("[SQL-Tool] 发布 PENDING 审计失败（已吞）: {}", e.getMessage());
+        }
+
+        return preCheckMeta;
+    }
+
+    /**
+     * 接收并真实执行通过审批的 SQL 查询。
+     * <p>使用说明：本工具标有 {@link RequiresApproval}。首轮调用会被 HITL 自动拦截并生成 Token，
+     * 用户确认后由业务层续写触发真实执行。会运行二次守卫、设置查询超时、并向审计服务写入日志。</p>
      *
-     * <p>使用说明：本工具仅做"预检"，不会真正访问数据返回数据行。返回 JSON 中的 confirmToken
-     * 必须由前端在用户审批后回传，由 {@code SqlConfirmExecutor.execute} 消费方可执行。
-     * conversationId 通过 UserContext 之外的方式注入比较复杂，starter 不依赖它，留 null 即可。</p>
-     *
-     * @param datasourceId 数据源 ID（必填）
-     * @param sql          SQL 文本（必填）；当用户直接给出完整 SQL，LLM **必须原样**作为本参数传入
-     * @return PENDING_APPROVAL 的 JSON 字符串；守卫失败时返回 status=REJECTED + reason
+     * @param datasourceId 数据源 ID，由前置 list_datasources 返回，必填
+     * @param sql          SELECT 查询 SQL 语句，必填
+     * @return 序列化后的 {@link SqlExecutionResult} JSON 字符串，包含执行状态、行数据、列名及可能发生的异常报错
      */
     @AgentToolDef(
             name = "query_database",
-            description = "提交 SQL 进入人工确认队列（不会直接执行，需用户在前端 SQL 卡片点击确认）。" +
+            description = "提交 SQL 并真实执行。这是一个高危的敏感操作，调用前系统会自动拦截触发人机协同审批卡片，人类点击同意后本方法才会被运行。" +
                     "重要约束：当用户消息中已直接给出完整 SQL 语句时，必须将其原样作为 sql 参数传入，" +
                     "禁止改写、补字段、加表别名、调整 LIMIT、调整 WHERE；" +
                     "仅当用户用自然语言描述查询意图时，才允许你自行生成 SQL。" +
-                    "返回字段：status / confirmToken / sql / estimatedRows / warnings。",
+                    "返回字段：status / columns / rows / rowCount / elapsedMs / error。",
             parametersSchema = """
                     {
                       "type": "object",
@@ -118,94 +167,138 @@ public class QueryDatabaseTool {
                     }
                     """
     )
+    @RequiresApproval
     public String queryDatabase(
             @AgentToolParam(name = "datasourceId", description = "数据源 ID") String datasourceId,
             @AgentToolParam(name = "sql", description = "待执行的 SELECT 语句") String sql) {
 
         String userId = UserContext.getUserId();
-        JSONObject result = new JSONObject();
-
         if (userId == null || userId.isBlank()) {
-            result.put("status", "REJECTED");
-            result.put("reason", "缺少用户上下文，无法发起审批");
-            return result.toString();
-        }
-        log.info("[SQL-FLOW][4/4] query_database triggered. userId={}, datasourceId={}", userId, datasourceId);
-        log.info("[SQL-FLOW][4/4] Original SQL submitted by LLM: {}", sql);
-        if (datasourceId == null || datasourceId.isBlank()) {
-            log.warn("[SQL-FLOW][4/4] Validation failed: datasourceId is blank");
-            result.put("status", "REJECTED");
-            result.put("reason", "datasourceId 不能为空");
-            return result.toString();
+            return buildErrorResult("缺少用户上下文，拒绝执行", datasourceId, sql);
         }
 
-        Optional<DataSource> dsOpt = datasourceProvider.resolve(datasourceId, userId);
-        if (dsOpt.isEmpty()) {
-            log.warn("[SQL-FLOW][4/4] Validation failed: datasourceId={} not found or unauthorized for userId={}", datasourceId, userId);
-            result.put("status", "REJECTED");
-            result.put("reason", "数据源不存在或未授权: " + datasourceId);
-            return result.toString();
-        }
-        String dbType = resolveDbType(userId, datasourceId);
+        log.info("[SQL-Tool] 执行审批通过的 SQL 真实请求. userId={}, datasourceId={}", userId, datasourceId);
 
-        // 1. 守卫校验 + LIMIT 改写
+        // 1. 二次守卫安全重校验及最终改写
         GuardResult guard = guardEngine.validate(sql, props.getDefaultRowLimit());
         if (!guard.isPassed()) {
-            log.warn("[SQL-FLOW][4/4] SQL guard validation failed: {}", guard.getErrorMessage());
-            result.put("status", "REJECTED");
-            result.put("reason", guard.getErrorMessage());
-            return result.toString();
+            String errMsg = "SQL 校验失败: " + guard.getErrorMessage();
+            publishAudit(SqlAuditEvent.Phase.FAILED, userId, datasourceId, sql, null, null, errMsg);
+            return buildErrorResult(errMsg, datasourceId, sql);
         }
-        log.info("[SQL-FLOW][4/4] SQL guard validation passed. Sanitized SQL: {}", guard.getSanitizedSql());
 
-        // 2. EXPLAIN 估算（失败也不阻断）
-        QueryCostEstimator.CostEstimate cost = costEstimator.estimate(dsOpt.get(), dbType, guard.getSanitizedSql());
-        log.info("[SQL-FLOW][4/4] SQL cost estimate: estimatedRows={}, warning={}", cost.getEstimatedRows(), cost.getWarning());
+        String finalSql = guard.getSanitizedSql();
 
-        // 3. 颁发 token —— conversationId 暂未在工具层透出，留 null（宿主在 audit 落库时可二次补全）
-        String token = tokenStore.issue(userId, null, datasourceId, guard.getSanitizedSql(), cost.getEstimatedRows());
-        log.info("[SQL-FLOW][4/4] Issued approval token: {}", token);
+        // 2. 发布 APPROVED 确认通过审计事件
+        publishAudit(SqlAuditEvent.Phase.APPROVED, userId, datasourceId, finalSql, null, null, null);
 
-        // 4. 发布 PENDING 审计
+        // 3. 获取数据源连接并反射运行
+        Optional<DataSource> dsOpt = datasourceProvider.resolve(datasourceId, userId);
+        if (dsOpt.isEmpty()) {
+            String errMsg = "数据源不存在或未授权: " + datasourceId;
+            publishAudit(SqlAuditEvent.Phase.FAILED, userId, datasourceId, finalSql, null, null, errMsg);
+            return buildErrorResult(errMsg, datasourceId, finalSql);
+        }
+
+        JdbcTemplate jt = new JdbcTemplate(dsOpt.get());
+        jt.setQueryTimeout(Math.max(1, props.getExecutionTimeoutSeconds()));
+
+        long start = System.currentTimeMillis();
         try {
-            auditPublisher.publish(SqlAuditEvent.builder()
-                    .phase(SqlAuditEvent.Phase.PENDING)
-                    .userId(userId)
-                    .datasourceId(datasourceId)
-                    .sql(guard.getSanitizedSql())
-                    .confirmToken(token)
-                    .occurredAt(LocalDateTime.now())
-                    .build());
-            log.info("[SQL-FLOW][4/4] PENDING sql audit published successfully for token={}", token);
-        } catch (Exception e) {
-            log.warn("[Tool:query_database] PENDING 审计发布失败（已吞）: {}", e.getMessage());
-        }
+            SqlExecutionResult result = jt.query(finalSql, rs -> {
+                SqlExecutionResult inner = SqlExecutionResult.builder()
+                        .status("EXECUTED")
+                        .sql(finalSql)
+                        .datasourceId(datasourceId)
+                        .columns(new ArrayList<>())
+                        .rows(new ArrayList<>())
+                        .build();
+                java.sql.ResultSetMetaData md = rs.getMetaData();
+                int columnCount = md.getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    inner.getColumns().add(md.getColumnLabel(i));
+                }
+                while (rs.next()) {
+                    List<Object> row = new ArrayList<>(columnCount);
+                    for (int i = 1; i <= columnCount; i++) {
+                        row.add(rs.getObject(i));
+                    }
+                    inner.getRows().add(row);
+                }
+                inner.setRowCount(inner.getRows().size());
+                inner.setTruncated(inner.getRowCount() >= props.getDefaultRowLimit());
+                return inner;
+            });
 
-        // 5. 构造给 LLM 的结构化结果
-        result.put("status", "PENDING_APPROVAL");
-        result.put("confirmToken", token);
-        result.put("token", token);
-        result.put("datasourceId", datasourceId);
-        result.put("sql", guard.getSanitizedSql());
-        result.put("estimatedRows", cost.getEstimatedRows());
-        if (cost.getWarning() != null && !cost.getWarning().isBlank()) {
-            guard.getWarnings().add(cost.getWarning());
+            long elapsed = System.currentTimeMillis() - start;
+            if (result != null) {
+                result.setElapsedMs(elapsed);
+                publishAudit(SqlAuditEvent.Phase.EXECUTED, userId, datasourceId, finalSql, result.getRowCount(), elapsed, null);
+                return JSON.toJSONString(result);
+            }
+            return buildErrorResult("数据源未返回任何执行记录", datasourceId, finalSql);
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - start;
+            log.error("[SQL-Tool] SQL 运行异常, sql={}", finalSql, e);
+            String errMsg = "SQL 运行异常: " + e.getMessage();
+            publishAudit(SqlAuditEvent.Phase.FAILED, userId, datasourceId, finalSql, null, elapsed, errMsg);
+            return buildErrorResult(errMsg, datasourceId, finalSql);
         }
-        result.put("warnings", guard.getWarnings());
-        result.put("message", "SQL 已通过守卫并发起审批，请用户在卡片上点击 执行 / 编辑 / 取消。" +
-                "执行前请勿继续调用其它工具或猜测结果。");
-        log.info("[SQL-FLOW][4/4] query_database completed. Status: PENDING_APPROVAL, token={}", token);
-        log.info("[Tool:query_database] userId={}, ds={}, token={}, estRows={}",
-                userId, datasourceId, token, cost.getEstimatedRows());
-        return result.toString();
     }
 
     /**
-     * 反查 dbType；与 GetTableSchemaTool 中同名方法等价，独立维护避免跨工具耦合。
+     * 构建包含错信息描述的 {@link SqlExecutionResult} JSON 字符串。
+     *
+     * @param error        错误消息
+     * @param datasourceId 数据源 ID
+     * @param sql          执行 SQL
+     * @return 错误结果 JSON
+     */
+    private String buildErrorResult(String error, String datasourceId, String sql) {
+        SqlExecutionResult result = SqlExecutionResult.builder()
+                .status("ERROR")
+                .error(error)
+                .datasourceId(datasourceId)
+                .sql(sql)
+                .build();
+        return JSON.toJSONString(result);
+    }
+
+    /**
+     * 自动上报 SQL 审计事件。
+     *
+     * @param phase        事件阶段
+     * @param userId       用户 ID
+     * @param datasourceId 数据源 ID
+     * @param sql          执行的 SQL
+     * @param rowCount     返回的行数
+     * @param elapsedMs    执行耗时毫秒
+     * @param errorMsg     错误信息内容
+     */
+    private void publishAudit(SqlAuditEvent.Phase phase, String userId, String datasourceId, String sql,
+                              Integer rowCount, Long elapsedMs, String errorMsg) {
+        try {
+            auditPublisher.publish(SqlAuditEvent.builder()
+                    .phase(phase)
+                    .userId(userId)
+                    .datasourceId(datasourceId)
+                    .sql(sql)
+                    .rowCount(rowCount)
+                    .elapsedMs(elapsedMs)
+                    .errorMsg(errorMsg)
+                    .occurredAt(LocalDateTime.now())
+                    .build());
+        } catch (Exception e) {
+            log.warn("[SQL-Tool] 发布事件 {} 审计失败", phase, e);
+        }
+    }
+
+    /**
+     * 获取指定数据源的方言类型（默认 mysql）。
      *
      * @param userId       用户 ID
      * @param datasourceId 数据源 ID
-     * @return dbType；未知时回退 "mysql"
+     * @return 方言名称，默认为 "mysql"
      */
     private String resolveDbType(String userId, String datasourceId) {
         try {

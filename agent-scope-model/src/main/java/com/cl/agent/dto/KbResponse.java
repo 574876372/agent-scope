@@ -28,6 +28,12 @@ public class KbResponse implements Serializable {
     /** 所属用户 ID */
     private String userId;
 
+    /** 绑定的向量模型 ID */
+    private String embeddingModelId;
+
+    /** 绑定的向量模型名称，便于前端展示 */
+    private String embeddingModelName;
+
     /** 创建时间 */
     private LocalDateTime createTime;
 }

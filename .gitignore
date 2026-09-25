@@ -33,4 +33,5 @@ agent-client.code-workspace
 
 ### VS Code ###
 .vscode/
+agent-scope-web/logs/*
 

@@ -51,7 +51,7 @@ public class KnowledgeDocument extends BaseEntity {
     /** 经切片算法分割后的切片总数 */
     @TableField("chunk_count")
     private Integer chunkCount;
-
+    /** 文件存储路径：相对于 agent.rag.upload-dir 的路径（如 {kbId}/2026/09/25/{id}.md，统一 / 分隔）；早期数据为绝对路径 */
     /** 在服务器本地存储的物理文件绝对路径 */
     @TableField("file_path")
     private String filePath;

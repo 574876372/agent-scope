@@ -5,7 +5,6 @@ import com.cl.agent.dto.sql.DatasourceRequest;
 import com.cl.agent.dto.sql.DatasourceResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +37,6 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/datasources")
-@CrossOrigin(origins = "*")
 public class DatasourceController {
 
     /** 数据源业务编排层 */

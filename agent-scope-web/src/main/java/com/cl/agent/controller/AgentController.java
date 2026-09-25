@@ -5,16 +5,13 @@ import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
 import com.cl.agent.dto.CreateAgentRequest;
 import com.cl.agent.biz.IAgentBiz;
-import com.cl.agent.enums.ModelProviderEnum;
+import com.cl.agent.biz.IModelConfigBiz;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Agent 智能体管理 REST 控制器层。
@@ -36,29 +33,23 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/agents")
-@CrossOrigin(origins = "*")
 public class AgentController {
 
     @Autowired
     private IAgentBiz agentBiz;
 
+    @Autowired
+    private IModelConfigBiz modelConfigBiz;
+
     /**
      * 获取系统支持的全部模型厂商及其对应的可选模型列表。
-     * <p>使用说明：由前端创建/编辑智能体的模型选择下拉框初始化时调用；返回数据来自枚举定义，无需鉴权。</p>
+     * <p>使用说明：由前端创建/编辑智能体的模型选择下拉框初始化时调用；返回模型管理中已启用的厂商及其已启用的对话模型。</p>
      *
-     * @return {@link ResponseEntity} 包含厂商列表（每项含 {@code type} 与 {@code models} 字段），HTTP 状态码 200
+     * @return {@link ResponseEntity} 包含厂商列表（每项含 {@code type}、{@code name} 与 {@code models} 字段），HTTP 状态码 200
      */
     @GetMapping("/models")
     public ResponseEntity<List<Map<String, Object>>> getModelProviders() {
-        List<Map<String, Object>> providers = Arrays.stream(ModelProviderEnum.values())
-                .map(p -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("type", p.getType());
-                    map.put("models", p.getModels());
-                    return map;
-                })
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(providers);
+        return ResponseEntity.ok(modelConfigBiz.listChatModelOptions());
     }
 
     /**

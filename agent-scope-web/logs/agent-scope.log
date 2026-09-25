@@ -1,16 +1,1514 @@
-2026-05-22 16:19:09.562 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Starting AgentScopeApplicationTests using Java 17.0.1 with PID 26248 (started by Administrator in F:\project\agent-scope\agent-scope-web)
-2026-05-22 16:19:09.563 [main] DEBUG com.cl.agent.AgentScopeApplicationTests - Running with Spring Boot v3.4.0, Spring v6.2.0
-2026-05-22 16:19:09.563 [main] INFO  com.cl.agent.AgentScopeApplicationTests - No active profile set, falling back to 1 default profile: "default"
-2026-05-22 16:19:11.900 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Started AgentScopeApplicationTests in 2.61 seconds (process running for 3.255)
-2026-05-22 16:19:34.182 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Starting AgentScopeApplicationTests using Java 17.0.1 with PID 27448 (started by Administrator in F:\project\agent-scope\agent-scope-web)
-2026-05-22 16:19:34.184 [main] DEBUG com.cl.agent.AgentScopeApplicationTests - Running with Spring Boot v3.4.0, Spring v6.2.0
-2026-05-22 16:19:34.184 [main] INFO  com.cl.agent.AgentScopeApplicationTests - No active profile set, falling back to 1 default profile: "default"
-2026-05-22 16:19:36.458 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Started AgentScopeApplicationTests in 2.544 seconds (process running for 3.165)
-2026-05-22 16:19:50.206 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Starting AgentScopeApplicationTests using Java 17.0.1 with PID 27628 (started by Administrator in F:\project\agent-scope\agent-scope-web)
-2026-05-22 16:19:50.206 [main] DEBUG com.cl.agent.AgentScopeApplicationTests - Running with Spring Boot v3.4.0, Spring v6.2.0
-2026-05-22 16:19:50.207 [main] INFO  com.cl.agent.AgentScopeApplicationTests - No active profile set, falling back to 1 default profile: "default"
-2026-05-22 16:19:52.635 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Started AgentScopeApplicationTests in 2.712 seconds (process running for 3.518)
-2026-05-22 16:20:03.811 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Starting AgentScopeApplicationTests using Java 17.0.1 with PID 8696 (started by Administrator in F:\project\agent-scope\agent-scope-web)
-2026-05-22 16:20:03.813 [main] DEBUG com.cl.agent.AgentScopeApplicationTests - Running with Spring Boot v3.4.0, Spring v6.2.0
-2026-05-22 16:20:03.815 [main] INFO  com.cl.agent.AgentScopeApplicationTests - No active profile set, falling back to 1 default profile: "default"
-2026-05-22 16:20:06.820 [main] INFO  com.cl.agent.AgentScopeApplicationTests - Started AgentScopeApplicationTests in 3.263 seconds (process running for 3.889)
+2026-09-25 13:42:53.603 INFO  [           main] com.cl.agent.AgentScopeApplication - Starting AgentScopeApplication using Java 17.0.1 with PID 25040 (F:\project\agent-scope\agent-scope-web\target\classes started by Administrator in F:\project\agent-scope\agent-scope-web)
+2026-09-25 13:42:53.603 DEBUG [           main] com.cl.agent.AgentScopeApplication - Running with Spring Boot v3.4.0, Spring v6.2.0
+2026-09-25 13:42:53.604 INFO  [           main] com.cl.agent.AgentScopeApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-25 13:42:54.614 INFO  [           main] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-25 13:42:54.614 INFO  [           main] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-09-25 13:42:54.682 INFO  [           main] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-09-25 13:42:54.699 INFO  [           main] com.cl.agent.config.web.CorsConfig - [CORS] 全局跨域已开启: path=/**, origins=[http://localhost:*, http://127.0.0.1:*], credentials=false, maxAge=3600s
+2026-09-25 13:42:55.587 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方向量库路由工厂 EmbeddingStoreFactory, 配置类型: ELASTICSEARCH
+2026-09-25 13:42:55.661 INFO  [           main] com.cl.agent.hitl.core.GenericApprovalTokenStore - [HITL-TokenStore] 令牌管理器初始化成功: ttl=600s, maxSize=10000
+2026-09-25 13:42:55.685 INFO  [           main] com.cl.agent.sql.core.CryptoService - [CryptoService] AES-GCM 加解密服务初始化完成 (密钥长度=256bit)
+2026-09-25 13:42:55.692 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方多格式 Reader 路由工厂 DocumentReaderFactory
+2026-09-25 13:42:55.796 INFO  [           main] c.c.a.sql.autoconfigure.SqlAgentAutoConfiguration - [SqlAgentAutoConfig] 注册 DialectRouter (mysql)
+2026-09-25 13:42:55.798 INFO  [           main] com.cl.agent.sql.core.SchemaRetriever - [SchemaRetriever] 初始化完成: ttl=5min, maxSize=2048, queryTimeout=15s
+2026-09-25 13:42:56.085 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 扫描到 1 个全局工具拦截器
+2026-09-25 13:42:56.149 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=calculate, bean=CalculatorToolServiceImpl, method=calculate
+2026-09-25 13:42:56.149 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_weather, bean=WeatherToolServiceImpl, method=getWeather
+2026-09-25 13:42:56.149 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=web_search, bean=WebSearchToolServiceImpl, method=webSearch
+2026-09-25 13:42:56.149 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_table_schema, bean=GetTableSchemaTool, method=getTableSchema
+2026-09-25 13:42:56.150 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=list_datasources, bean=ListDatasourcesTool, method=listDatasources
+2026-09-25 13:42:56.150 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=query_database, bean=QueryDatabaseTool, method=queryDatabase
+2026-09-25 13:42:56.196 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 已注册 6 个 Agent 工具: [calculate, get_weather, web_search, get_table_schema, list_datasources, query_database]
+2026-09-25 13:42:56.395 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 13:42:56.404 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: calculate(String)
+2026-09-25 13:42:56.440 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 13:42:56.442 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 13:42:56.443 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 13:42:56.444 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: calculate(String), 数学计算(String), 计算数学表达式，支持 +、-、*、/、括号和小数(String), com.cl.agent.tool.builtin.impl.CalculatorToolServiceImpl(String), calculate(String), {
+  "type": "object",
+  "properties": {
+    "expression": {
+      "type": "string",
+      "description": "数学表达式，如 (1+2)*3/4"
+    }
+  },
+  "required": ["expression"]
+}
+(String), builtin(String), 🔢(String), true(Boolean), null, 2026-09-25T13:42:56.442627900(LocalDateTime), 1(Long)
+2026-09-25 13:42:56.451 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 13:42:56.451 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: calculate
+2026-09-25 13:42:56.452 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 13:42:56.452 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_weather(String)
+2026-09-25 13:42:56.453 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 13:42:56.453 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 13:42:56.454 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 13:42:56.454 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_weather(String), 天气查询(String), 查询指定城市的当前天气信息，包括温度、天气状况等(String), com.cl.agent.tool.builtin.impl.WeatherToolServiceImpl(String), getWeather(String), {
+  "type": "object",
+  "properties": {
+    "city": {
+      "type": "string",
+      "description": "城市名称，如 Beijing、上海"
+    }
+  },
+  "required": ["city"]
+}
+(String), builtin(String), 🌤️(String), true(Boolean), null, 2026-09-25T13:42:56.453628300(LocalDateTime), 2(Long)
+2026-09-25 13:42:56.455 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 13:42:56.455 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_weather
+2026-09-25 13:42:56.455 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 13:42:56.456 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: web_search(String)
+2026-09-25 13:42:56.456 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 13:42:56.456 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 13:42:56.457 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 13:42:56.457 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: web_search(String), 网页搜索(String), 搜索互联网信息，返回与查询相关的摘要内容(String), com.cl.agent.tool.builtin.impl.WebSearchToolServiceImpl(String), webSearch(String), {
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "搜索关键词或问题"
+    }
+  },
+  "required": ["query"]
+}
+(String), builtin(String), 🔍(String), true(Boolean), null, 2026-09-25T13:42:56.456628800(LocalDateTime), 3(Long)
+2026-09-25 13:42:56.458 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 13:42:56.458 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: web_search
+2026-09-25 13:42:56.458 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 13:42:56.458 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_table_schema(String)
+2026-09-25 13:42:56.459 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 13:42:56.459 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 13:42:56.459 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 13:42:56.459 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_table_schema(String), 获取表结构(String), 获取指定数据源中若干表的建表 DDL（CREATE TABLE 语句），用于理解字段含义后生成 SQL。若不确定有哪些表，传入空 tables 数组，本工具会先返回全部表清单（含 comment），随后再用具体表名再次调用以获取 DDL。(String), com.cl.agent.sql.tool.GetTableSchemaTool(String), getTableSchema(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "tables": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "需要获取 DDL 的表名列表；为空时仅返回表清单"
+    }
+  },
+  "required": ["datasourceId", "tables"]
+}
+(String), sql(String), 📋(String), true(Boolean), null, 2026-09-25T13:42:56.459633100(LocalDateTime), 5(Long)
+2026-09-25 13:42:56.460 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 13:42:56.460 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_table_schema
+2026-09-25 13:42:56.461 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 13:42:56.461 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: list_datasources(String)
+2026-09-25 13:42:56.461 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 13:42:56.462 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 13:42:56.462 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 13:42:56.462 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: list_datasources(String), 列出数据源(String), 列出当前用户可访问的全部业务数据源（含 id/name/description/dbType）。在生成任何 SQL 之前必须先调用本工具确定 datasourceId；若返回空数组，则告诉用户暂未配置任何数据源。(String), com.cl.agent.sql.tool.ListDatasourcesTool(String), listDatasources(String), {
+  "type": "object",
+  "properties": {},
+  "required": []
+}
+(String), sql(String), 🗄️(String), true(Boolean), null, 2026-09-25T13:42:56.462636(LocalDateTime), 6(Long)
+2026-09-25 13:42:56.463 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 13:42:56.463 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: list_datasources
+2026-09-25 13:42:56.464 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 13:42:56.464 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: query_database(String)
+2026-09-25 13:42:56.464 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 13:42:56.465 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 13:42:56.465 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 13:42:56.465 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: query_database(String), SQL 查询审批(String), 提交 SQL 并真实执行。这是一个高危的敏感操作，调用前系统会自动拦截触发人机协同审批卡片，人类点击同意后本方法才会被运行。重要约束：当用户消息中已直接给出完整 SQL 语句时，必须将其原样作为 sql 参数传入，禁止改写、补字段、加表别名、调整 LIMIT、调整 WHERE；仅当用户用自然语言描述查询意图时，才允许你自行生成 SQL。返回字段：status / columns / rows / rowCount / elapsedMs / error。(String), com.cl.agent.sql.tool.QueryDatabaseTool(String), queryDatabase(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "sql": {
+      "type": "string",
+      "description": "SELECT 查询语句；不允许 INSERT/UPDATE/DELETE/DDL"
+    }
+  },
+  "required": ["datasourceId", "sql"]
+}
+(String), sql(String), 🔍(String), true(Boolean), null, 2026-09-25T13:42:56.465637900(LocalDateTime), 7(Long)
+2026-09-25 13:42:56.466 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 13:42:56.466 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: query_database
+2026-09-25 13:42:56.466 INFO  [           main] com.cl.agent.biz.tool.ToolConfigSyncService - [ToolSync] 已同步 6 条工具元数据到数据库
+2026-09-25 13:42:56.488 INFO  [           main] com.cl.agent.AgentScopeApplication - Started AgentScopeApplication in 3.213 seconds (process running for 3.485)
+2026-09-25 13:43:03.411 INFO  [io-18080-exec-1] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-25 14:27:33.890 INFO  [           main] com.cl.agent.AgentScopeApplication - Starting AgentScopeApplication using Java 17.0.1 with PID 23076 (F:\project\agent-scope\agent-scope-web\target\classes started by Administrator in F:\project\agent-scope\agent-scope-web)
+2026-09-25 14:27:33.891 DEBUG [           main] com.cl.agent.AgentScopeApplication - Running with Spring Boot v3.4.0, Spring v6.2.0
+2026-09-25 14:27:33.892 INFO  [           main] com.cl.agent.AgentScopeApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-25 14:27:34.864 INFO  [           main] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-25 14:27:34.865 INFO  [           main] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-09-25 14:27:34.929 INFO  [           main] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-09-25 14:27:34.942 INFO  [           main] com.cl.agent.config.web.CorsConfig - [CORS] 全局跨域已开启: path=/**, origins=[http://localhost:*, http://127.0.0.1:*], credentials=false, maxAge=3600s
+2026-09-25 14:27:35.766 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方向量库路由工厂 EmbeddingStoreFactory, 配置类型: ELASTICSEARCH
+2026-09-25 14:27:35.799 INFO  [           main] com.cl.agent.commons.crypto.CryptoService - [CryptoService] AES-GCM 加解密服务初始化完成 (密钥长度=256bit)
+2026-09-25 14:27:35.884 INFO  [           main] com.cl.agent.hitl.core.GenericApprovalTokenStore - [HITL-TokenStore] 令牌管理器初始化成功: ttl=600s, maxSize=10000
+2026-09-25 14:27:35.910 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方多格式 Reader 路由工厂 DocumentReaderFactory
+2026-09-25 14:27:36.026 INFO  [           main] c.c.a.sql.autoconfigure.SqlAgentAutoConfiguration - [SqlAgentAutoConfig] 注册 DialectRouter (mysql)
+2026-09-25 14:27:36.028 INFO  [           main] com.cl.agent.sql.core.SchemaRetriever - [SchemaRetriever] 初始化完成: ttl=5min, maxSize=2048, queryTimeout=15s
+2026-09-25 14:27:36.321 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 扫描到 1 个全局工具拦截器
+2026-09-25 14:27:36.387 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=calculate, bean=CalculatorToolServiceImpl, method=calculate
+2026-09-25 14:27:36.387 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_weather, bean=WeatherToolServiceImpl, method=getWeather
+2026-09-25 14:27:36.388 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=web_search, bean=WebSearchToolServiceImpl, method=webSearch
+2026-09-25 14:27:36.388 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_table_schema, bean=GetTableSchemaTool, method=getTableSchema
+2026-09-25 14:27:36.389 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=list_datasources, bean=ListDatasourcesTool, method=listDatasources
+2026-09-25 14:27:36.389 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=query_database, bean=QueryDatabaseTool, method=queryDatabase
+2026-09-25 14:27:36.432 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 已注册 6 个 Agent 工具: [calculate, get_weather, web_search, get_table_schema, list_datasources, query_database]
+2026-09-25 14:27:36.597 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:27:36.605 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: calculate(String)
+2026-09-25 14:27:36.615 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:27:36.619 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:27:36.620 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:27:36.621 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: calculate(String), 数学计算(String), 计算数学表达式，支持 +、-、*、/、括号和小数(String), com.cl.agent.tool.builtin.impl.CalculatorToolServiceImpl(String), calculate(String), {
+  "type": "object",
+  "properties": {
+    "expression": {
+      "type": "string",
+      "description": "数学表达式，如 (1+2)*3/4"
+    }
+  },
+  "required": ["expression"]
+}
+(String), builtin(String), 🔢(String), true(Boolean), null, 2026-09-25T14:27:36.619142100(LocalDateTime), 1(Long)
+2026-09-25 14:27:36.624 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:27:36.624 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: calculate
+2026-09-25 14:27:36.625 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:27:36.625 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_weather(String)
+2026-09-25 14:27:36.626 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:27:36.626 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:27:36.626 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:27:36.626 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_weather(String), 天气查询(String), 查询指定城市的当前天气信息，包括温度、天气状况等(String), com.cl.agent.tool.builtin.impl.WeatherToolServiceImpl(String), getWeather(String), {
+  "type": "object",
+  "properties": {
+    "city": {
+      "type": "string",
+      "description": "城市名称，如 Beijing、上海"
+    }
+  },
+  "required": ["city"]
+}
+(String), builtin(String), 🌤️(String), true(Boolean), null, 2026-09-25T14:27:36.626707700(LocalDateTime), 2(Long)
+2026-09-25 14:27:36.628 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:27:36.628 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_weather
+2026-09-25 14:27:36.628 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:27:36.628 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: web_search(String)
+2026-09-25 14:27:36.629 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:27:36.630 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:27:36.630 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:27:36.630 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: web_search(String), 网页搜索(String), 搜索互联网信息，返回与查询相关的摘要内容(String), com.cl.agent.tool.builtin.impl.WebSearchToolServiceImpl(String), webSearch(String), {
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "搜索关键词或问题"
+    }
+  },
+  "required": ["query"]
+}
+(String), builtin(String), 🔍(String), true(Boolean), null, 2026-09-25T14:27:36.630712600(LocalDateTime), 3(Long)
+2026-09-25 14:27:36.631 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:27:36.631 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: web_search
+2026-09-25 14:27:36.631 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:27:36.631 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_table_schema(String)
+2026-09-25 14:27:36.632 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:27:36.632 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:27:36.632 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:27:36.632 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_table_schema(String), 获取表结构(String), 获取指定数据源中若干表的建表 DDL（CREATE TABLE 语句），用于理解字段含义后生成 SQL。若不确定有哪些表，传入空 tables 数组，本工具会先返回全部表清单（含 comment），随后再用具体表名再次调用以获取 DDL。(String), com.cl.agent.sql.tool.GetTableSchemaTool(String), getTableSchema(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "tables": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "需要获取 DDL 的表名列表；为空时仅返回表清单"
+    }
+  },
+  "required": ["datasourceId", "tables"]
+}
+(String), sql(String), 📋(String), true(Boolean), null, 2026-09-25T14:27:36.632715800(LocalDateTime), 5(Long)
+2026-09-25 14:27:36.634 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:27:36.634 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_table_schema
+2026-09-25 14:27:36.634 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:27:36.634 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: list_datasources(String)
+2026-09-25 14:27:36.635 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:27:36.635 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:27:36.635 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:27:36.636 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: list_datasources(String), 列出数据源(String), 列出当前用户可访问的全部业务数据源（含 id/name/description/dbType）。在生成任何 SQL 之前必须先调用本工具确定 datasourceId；若返回空数组，则告诉用户暂未配置任何数据源。(String), com.cl.agent.sql.tool.ListDatasourcesTool(String), listDatasources(String), {
+  "type": "object",
+  "properties": {},
+  "required": []
+}
+(String), sql(String), 🗄️(String), true(Boolean), null, 2026-09-25T14:27:36.635425600(LocalDateTime), 6(Long)
+2026-09-25 14:27:36.637 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:27:36.637 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: list_datasources
+2026-09-25 14:27:36.637 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:27:36.637 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: query_database(String)
+2026-09-25 14:27:36.638 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:27:36.638 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:27:36.638 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:27:36.638 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: query_database(String), SQL 查询审批(String), 提交 SQL 并真实执行。这是一个高危的敏感操作，调用前系统会自动拦截触发人机协同审批卡片，人类点击同意后本方法才会被运行。重要约束：当用户消息中已直接给出完整 SQL 语句时，必须将其原样作为 sql 参数传入，禁止改写、补字段、加表别名、调整 LIMIT、调整 WHERE；仅当用户用自然语言描述查询意图时，才允许你自行生成 SQL。返回字段：status / columns / rows / rowCount / elapsedMs / error。(String), com.cl.agent.sql.tool.QueryDatabaseTool(String), queryDatabase(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "sql": {
+      "type": "string",
+      "description": "SELECT 查询语句；不允许 INSERT/UPDATE/DELETE/DDL"
+    }
+  },
+  "required": ["datasourceId", "sql"]
+}
+(String), sql(String), 🔍(String), true(Boolean), null, 2026-09-25T14:27:36.638424800(LocalDateTime), 7(Long)
+2026-09-25 14:27:36.639 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:27:36.639 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: query_database
+2026-09-25 14:27:36.639 INFO  [           main] com.cl.agent.biz.tool.ToolConfigSyncService - [ToolSync] 已同步 6 条工具元数据到数据库
+2026-09-25 14:27:36.665 INFO  [           main] com.cl.agent.AgentScopeApplication - Started AgentScopeApplication in 3.093 seconds (process running for 3.362)
+2026-09-25 14:27:44.867 INFO  [io-18080-exec-1] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-25 14:27:44.890 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/agents/models] AgentController.getModelProviders 入参: []
+2026-09-25 14:27:44.892 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelInfoMapper.selectList - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE del_flag=0 AND (model_type = ?) ORDER BY create_time ASC
+2026-09-25 14:27:44.892 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelInfoMapper.selectList - ==> Parameters: CHAT(String)
+2026-09-25 14:27:44.896 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelInfoMapper.selectList - <==      Total: 11
+2026-09-25 14:27:44.897 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelProviderMapper.selectList - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE del_flag=0 ORDER BY create_time ASC
+2026-09-25 14:27:44.897 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelProviderMapper.selectList - ==> Parameters: 
+2026-09-25 14:27:44.899 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelProviderMapper.selectList - <==      Total: 3
+2026-09-25 14:27:44.912 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [GET /api/agents/models] AgentController.getModelProviders 返回: {"body":[{"models":["qwen-max","qwen-long","qwen-plus","qwen-turbo","Qwen3.5-27B"],"name":"通义千问","type":"Qwen"},{"models":["gpt-4","gpt-4o","gpt-4-turbo","gpt-3.5-turbo"],"name":"OpenAI","type":"OpenAI"},{"models":["deepseek-chat","deepseek-reasoner"],"name":"DeepSeek","type":"DeepSeek"}],"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 10ms)
+2026-09-25 14:27:44.964 INFO  [io-18080-exec-3] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/model-config/providers/list] ModelConfigController.listProviders 入参: []
+2026-09-25 14:27:44.965 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelProviderMapper.selectList - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE del_flag=0 ORDER BY create_time ASC
+2026-09-25 14:27:44.965 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelProviderMapper.selectList - ==> Parameters: 
+2026-09-25 14:27:44.966 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelProviderMapper.selectList - <==      Total: 3
+2026-09-25 14:27:44.970 INFO  [io-18080-exec-3] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [GET /api/model-config/providers/list] ModelConfigController.listProviders 返回: {"body":[{"apiKeyConfigured":false,"baseUrl":"https://dashscope.aliyuncs.com/compatible-mode/v1","code":"Qwen","createTime":"2026-09-25 14:27:01","enabled":1,"id":"provider-qwen","name":"通义千问","protocol":"OPENAI","updateTime":"2026-09-25 14:27:01"},{"apiKeyConfigured":false,"baseUrl":"https://api.openai.com/v1","code":"OpenAI","createTime":"2026-09-25 14:27:01","enabled":1,"id":"provider-openai","name":"OpenAI","protocol":"OPENAI","updateTime":"2026-09-25 14:27:01"},{"apiKeyConfigured":false,"baseUrl":"https://api.deepseek.com/v1","code":"DeepSeek","createTime":"2026-09-25 14:27:01","enabled":1,"id":"provider-deepseek","name":"DeepSeek","protocol":"OPENAI","updateTime":"2026-09-25 14:27:01"}],"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 3ms)
+2026-09-25 14:27:45.146 INFO  [io-18080-exec-5] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/model-config/models/list] ModelConfigController.listModels 入参: ["EMBEDDING"]
+2026-09-25 14:27:45.147 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelProviderMapper.selectList - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE del_flag=0 ORDER BY create_time ASC
+2026-09-25 14:27:45.148 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelProviderMapper.selectList - ==> Parameters: 
+2026-09-25 14:27:45.149 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelProviderMapper.selectList - <==      Total: 3
+2026-09-25 14:27:45.150 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelInfoMapper.selectList - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE del_flag=0 AND (model_type = ?) ORDER BY create_time ASC
+2026-09-25 14:27:45.150 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelInfoMapper.selectList - ==> Parameters: EMBEDDING(String)
+2026-09-25 14:27:45.150 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelInfoMapper.selectList - <==      Total: 1
+2026-09-25 14:27:45.151 DEBUG [io-18080-exec-5] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_knowledge_base WHERE del_flag=0 AND (embedding_model_id = ?)
+2026-09-25 14:27:45.152 DEBUG [io-18080-exec-5] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.153 DEBUG [io-18080-exec-5] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - <==      Total: 1
+2026-09-25 14:27:45.155 INFO  [io-18080-exec-5] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [GET /api/model-config/models/list] ModelConfigController.listModels 返回: {"body":[{"boundKbCount":1,"createTime":"2026-09-25 14:27:01","dimensions":1536,"enabled":1,"id":"model-qwen-text-embedding-v2","isDefault":1,"modelName":"text-embedding-v2","modelType":"EMBEDDING","providerId":"provider-qwen","providerName":"通义千问","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"}],"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 7ms)
+2026-09-25 14:27:45.199 INFO  [io-18080-exec-7] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/model-config/models/test] ModelConfigController.testModel 入参: ["model-qwen-text-embedding-v2"]
+2026-09-25 14:27:45.199 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.200 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.200 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.200 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.201 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.201 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.201 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.201 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: provider-qwen(String)
+2026-09-25 14:27:45.201 DEBUG [io-18080-exec-7] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.202 ERROR [io-18080-exec-7] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [POST /api/model-config/models/test] ModelConfigController.testModel 异常: 模型厂商「通义千问」尚未配置 API Key，请在模型管理中补充 (耗时 3ms)
+com.cl.agent.exception.BizException: 模型厂商「通义千问」尚未配置 API Key，请在模型管理中补充
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.buildConnection(ModelConfigServiceImpl.java:335)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.resolveConnection(ModelConfigServiceImpl.java:320)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.resolveConnection(<generated>)
+	at com.cl.agent.biz.impl.ModelConfigBizImpl.testModel(ModelConfigBizImpl.java:117)
+	at com.cl.agent.controller.ModelConfigController.testModel(ModelConfigController.java:143)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.ModelConfigController$$SpringCGLIB$$0.testModel(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:27:45.259 INFO  [io-18080-exec-8] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [PUT /api/model-config/models/update] ModelConfigController.updateModel 入参: ["model-qwen-text-embedding-v2",{"dimensions":1024,"modelName":"text-embedding-v2","modelType":"EMBEDDING","providerId":"provider-qwen"}]
+2026-09-25 14:27:45.262 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.263 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.264 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.264 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.264 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: provider-qwen(String)
+2026-09-25 14:27:45.265 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.265 DEBUG [io-18080-exec-8] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_knowledge_base WHERE del_flag=0 AND (embedding_model_id = ?)
+2026-09-25 14:27:45.265 DEBUG [io-18080-exec-8] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.265 DEBUG [io-18080-exec-8] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - <==      Total: 1
+2026-09-25 14:27:45.267 ERROR [io-18080-exec-8] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [PUT /api/model-config/models/update] ModelConfigController.updateModel 异常: 该模型已被 1 个知识库绑定，不可修改厂商、类型、模型名与维度 (耗时 8ms)
+com.cl.agent.exception.BizException: 该模型已被 1 个知识库绑定，不可修改厂商、类型、模型名与维度
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.updateModel(ModelConfigServiceImpl.java:218)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:380)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.updateModel(<generated>)
+	at com.cl.agent.biz.impl.ModelConfigBizImpl.updateModel(ModelConfigBizImpl.java:99)
+	at com.cl.agent.controller.ModelConfigController.updateModel(ModelConfigController.java:120)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.ModelConfigController$$SpringCGLIB$$0.updateModel(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doPut(FrameworkServlet.java:925)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:593)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:27:45.302 INFO  [io-18080-exec-9] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [DELETE /api/model-config/models/delete] ModelConfigController.deleteModel 入参: ["model-qwen-text-embedding-v2"]
+2026-09-25 14:27:45.302 DEBUG [io-18080-exec-9] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.303 DEBUG [io-18080-exec-9] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.305 DEBUG [io-18080-exec-9] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.305 DEBUG [io-18080-exec-9] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_knowledge_base WHERE del_flag=0 AND (embedding_model_id = ?)
+2026-09-25 14:27:45.306 DEBUG [io-18080-exec-9] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:27:45.306 DEBUG [io-18080-exec-9] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - <==      Total: 1
+2026-09-25 14:27:45.306 ERROR [io-18080-exec-9] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [DELETE /api/model-config/models/delete] ModelConfigController.deleteModel 异常: 该模型已被 1 个知识库绑定，不可删除 (耗时 4ms)
+com.cl.agent.exception.BizException: 该模型已被 1 个知识库绑定，不可删除
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.deleteModel(ModelConfigServiceImpl.java:251)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.deleteModel(<generated>)
+	at com.cl.agent.biz.impl.ModelConfigBizImpl.deleteModel(ModelConfigBizImpl.java:106)
+	at com.cl.agent.controller.ModelConfigController.deleteModel(ModelConfigController.java:131)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.ModelConfigController$$SpringCGLIB$$0.deleteModel(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doDelete(FrameworkServlet.java:936)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:596)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:27:45.343 INFO  [o-18080-exec-10] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [DELETE /api/model-config/providers/delete] ModelConfigController.deleteProvider 入参: ["provider-deepseek"]
+2026-09-25 14:27:45.344 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.345 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: provider-deepseek(String)
+2026-09-25 14:27:45.346 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.346 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_model WHERE del_flag=0 AND (provider_id = ?)
+2026-09-25 14:27:45.346 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectCount - ==> Parameters: provider-deepseek(String)
+2026-09-25 14:27:45.347 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectCount - <==      Total: 1
+2026-09-25 14:27:45.347 ERROR [o-18080-exec-10] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [DELETE /api/model-config/providers/delete] ModelConfigController.deleteProvider 异常: 该厂商下仍有 2 个模型，请先删除模型 (耗时 3ms)
+com.cl.agent.exception.BizException: 该厂商下仍有 2 个模型，请先删除模型
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.deleteProvider(ModelConfigServiceImpl.java:141)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.deleteProvider(<generated>)
+	at com.cl.agent.biz.impl.ModelConfigBizImpl.deleteProvider(ModelConfigBizImpl.java:75)
+	at com.cl.agent.controller.ModelConfigController.deleteProvider(ModelConfigController.java:84)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.ModelConfigController$$SpringCGLIB$$0.deleteProvider(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doDelete(FrameworkServlet.java:936)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:596)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:27:45.406 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [PUT /api/model-config/providers/update] ModelConfigController.updateProvider 入参: ["provider-openai",{"baseUrl":"https://api.openai.com/v1","code":"OAI","name":"OpenAI"}]
+2026-09-25 14:27:45.406 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:27:45.406 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: provider-openai(String)
+2026-09-25 14:27:45.407 DEBUG [io-18080-exec-1] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:27:45.407 ERROR [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [PUT /api/model-config/providers/update] ModelConfigController.updateProvider 异常: 厂商编码创建后不可修改 (耗时 1ms)
+com.cl.agent.exception.BizException: 厂商编码创建后不可修改
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.updateProvider(ModelConfigServiceImpl.java:109)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.updateProvider(<generated>)
+	at com.cl.agent.biz.impl.ModelConfigBizImpl.updateProvider(ModelConfigBizImpl.java:68)
+	at com.cl.agent.controller.ModelConfigController.updateProvider(ModelConfigController.java:73)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.ModelConfigController$$SpringCGLIB$$0.updateProvider(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doPut(FrameworkServlet.java:925)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:593)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:28:02.732 INFO  [io-18080-exec-7] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/knowledge-base/list] KnowledgeController.listKbs 入参: []
+2026-09-25 14:28:02.732 INFO  [io-18080-exec-7] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-KB] 查询活跃知识库列表: userId=1
+2026-09-25 14:28:02.732 DEBUG [io-18080-exec-7] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-KB] 列出创建用户名下的知识库: userId=1
+2026-09-25 14:28:02.733 DEBUG [io-18080-exec-7] com.cl.agent.dao.KnowledgeBaseMapper.selectList - ==>  Preparing: SELECT id,name,description,avatar,user_id,embedding_model_id,create_by,create_time,update_by,update_time,del_flag FROM t_knowledge_base WHERE del_flag=0 AND (user_id = ?)
+2026-09-25 14:28:02.733 DEBUG [io-18080-exec-7] com.cl.agent.dao.KnowledgeBaseMapper.selectList - ==> Parameters: 1(String)
+2026-09-25 14:28:02.734 DEBUG [io-18080-exec-7] com.cl.agent.dao.KnowledgeBaseMapper.selectList - <==      Total: 0
+2026-09-25 14:28:02.734 INFO  [io-18080-exec-7] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [GET /api/knowledge-base/list] KnowledgeController.listKbs 返回: {"body":[],"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 2ms)
+2026-09-25 14:28:02.986 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/knowledge-base/search] KnowledgeController.search 入参: ["","test",null]
+2026-09-25 14:28:02.986 INFO  [io-18080-exec-1] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-Query] 知识库 Playground 检索测试: kbId=, query=test, limit=null
+2026-09-25 14:28:02.986 DEBUG [io-18080-exec-1] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-KB] 根据主键获取知识库: id=
+2026-09-25 14:28:02.987 DEBUG [io-18080-exec-1] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==>  Preparing: SELECT id,name,description,avatar,user_id,embedding_model_id,create_by,create_time,update_by,update_time,del_flag FROM t_knowledge_base WHERE id=? AND del_flag=0
+2026-09-25 14:28:02.987 DEBUG [io-18080-exec-1] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==> Parameters: (String)
+2026-09-25 14:28:02.987 DEBUG [io-18080-exec-1] com.cl.agent.dao.KnowledgeBaseMapper.selectById - <==      Total: 0
+2026-09-25 14:28:02.987 ERROR [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [GET /api/knowledge-base/search] KnowledgeController.search 异常: 知识库不存在:  (耗时 1ms)
+com.cl.agent.exception.BizException: 知识库不存在: 
+	at com.cl.agent.biz.rag.RagKnowledgeProvider.requireKnowledgeBase(RagKnowledgeProvider.java:171)
+	at com.cl.agent.biz.rag.RagKnowledgeProvider.getKnowledge(RagKnowledgeProvider.java:79)
+	at com.cl.agent.biz.impl.KnowledgeBizImpl.searchKnowledge(KnowledgeBizImpl.java:305)
+	at com.cl.agent.controller.KnowledgeController.search(KnowledgeController.java:146)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.KnowledgeController$$SpringCGLIB$$0.search(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:28:24.221 INFO  [io-18080-exec-4] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/knowledge-base/create] KnowledgeController.createKb 入参: [{"embeddingModelId":"model-qwen-plus","name":"bind-test"}]
+2026-09-25 14:28:24.221 INFO  [io-18080-exec-4] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-KB] 准备创建知识库: name=bind-test
+2026-09-25 14:28:24.221 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.222 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-plus(String)
+2026-09-25 14:28:24.223 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:28:24.223 ERROR [io-18080-exec-4] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [POST /api/knowledge-base/create] KnowledgeController.createKb 异常: 所选模型不是向量模型: qwen-plus (耗时 2ms)
+com.cl.agent.exception.BizException: 所选模型不是向量模型: qwen-plus
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.requireUsableEmbeddingModel(ModelConfigServiceImpl.java:277)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.requireUsableEmbeddingModel(<generated>)
+	at com.cl.agent.biz.impl.KnowledgeBizImpl.createKnowledgeBase(KnowledgeBizImpl.java:79)
+	at com.cl.agent.controller.KnowledgeController.createKb(KnowledgeController.java:49)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.KnowledgeController$$SpringCGLIB$$0.createKb(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doPost(FrameworkServlet.java:914)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:590)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:28:24.286 INFO  [io-18080-exec-3] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/knowledge-base/create] KnowledgeController.createKb 入参: [{"name":"bind-test"}]
+2026-09-25 14:28:24.286 INFO  [io-18080-exec-3] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-KB] 准备创建知识库: name=bind-test
+2026-09-25 14:28:24.287 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelInfoMapper.selectList - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE del_flag=0 AND (model_type = ? AND is_default = ?) LIMIT 1
+2026-09-25 14:28:24.287 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelInfoMapper.selectList - ==> Parameters: EMBEDDING(String), 1(Integer)
+2026-09-25 14:28:24.288 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelInfoMapper.selectList - <==      Total: 1
+2026-09-25 14:28:24.289 DEBUG [io-18080-exec-3] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-KB] 保存知识库: id=5047162b-f330-490a-ab85-844abdea280a, name=bind-test
+2026-09-25 14:28:24.289 DEBUG [io-18080-exec-3] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==>  Preparing: SELECT id,name,description,avatar,user_id,embedding_model_id,create_by,create_time,update_by,update_time,del_flag FROM t_knowledge_base WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.289 DEBUG [io-18080-exec-3] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==> Parameters: 5047162b-f330-490a-ab85-844abdea280a(String)
+2026-09-25 14:28:24.289 DEBUG [io-18080-exec-3] com.cl.agent.dao.KnowledgeBaseMapper.selectById - <==      Total: 0
+2026-09-25 14:28:24.290 DEBUG [io-18080-exec-3] com.cl.agent.config.db.MyMetaObjectHandler - Start insert fill...
+2026-09-25 14:28:24.290 DEBUG [io-18080-exec-3] com.cl.agent.dao.KnowledgeBaseMapper.insert - ==>  Preparing: INSERT INTO t_knowledge_base ( id, name, user_id, embedding_model_id, create_by, create_time, update_by, update_time, del_flag ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )
+2026-09-25 14:28:24.290 DEBUG [io-18080-exec-3] com.cl.agent.dao.KnowledgeBaseMapper.insert - ==> Parameters: 5047162b-f330-490a-ab85-844abdea280a(String), bind-test(String), 1(String), model-qwen-text-embedding-v2(String), 1(String), 2026-09-25T14:28:24.288121900(LocalDateTime), 1(String), 2026-09-25T14:28:24.290115600(LocalDateTime), 0(Integer)
+2026-09-25 14:28:24.290 DEBUG [io-18080-exec-3] com.cl.agent.dao.KnowledgeBaseMapper.insert - <==    Updates: 1
+2026-09-25 14:28:24.291 INFO  [io-18080-exec-3] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-KB] 知识库创建成功: id=5047162b-f330-490a-ab85-844abdea280a, name=bind-test, embeddingModel=text-embedding-v2
+2026-09-25 14:28:24.292 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.292 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:28:24.292 DEBUG [io-18080-exec-3] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:28:24.294 INFO  [io-18080-exec-3] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [POST /api/knowledge-base/create] KnowledgeController.createKb 返回: {"body":{"createTime":"2026-09-25 14:28:24.288121900","embeddingModelId":"model-qwen-text-embedding-v2","embeddingModelName":"text-embedding-v2","id":"5047162b-f330-490a-ab85-844abdea280a","name":"bind-test","userId":"1"},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 6ms)
+2026-09-25 14:28:24.436 INFO  [io-18080-exec-5] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/knowledge-base/search] KnowledgeController.search 入参: ["5047162b-f330-490a-ab85-844abdea280a","test",null]
+2026-09-25 14:28:24.436 INFO  [io-18080-exec-5] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-Query] 知识库 Playground 检索测试: kbId=5047162b-f330-490a-ab85-844abdea280a, query=test, limit=null
+2026-09-25 14:28:24.436 DEBUG [io-18080-exec-5] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-KB] 根据主键获取知识库: id=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.437 DEBUG [io-18080-exec-5] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==>  Preparing: SELECT id,name,description,avatar,user_id,embedding_model_id,create_by,create_time,update_by,update_time,del_flag FROM t_knowledge_base WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.437 DEBUG [io-18080-exec-5] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==> Parameters: 5047162b-f330-490a-ab85-844abdea280a(String)
+2026-09-25 14:28:24.437 DEBUG [io-18080-exec-5] com.cl.agent.dao.KnowledgeBaseMapper.selectById - <==      Total: 1
+2026-09-25 14:28:24.438 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.438 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: model-qwen-text-embedding-v2(String)
+2026-09-25 14:28:24.438 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:28:24.438 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.438 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: provider-qwen(String)
+2026-09-25 14:28:24.439 DEBUG [io-18080-exec-5] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:28:24.439 ERROR [io-18080-exec-5] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求异常 ═══ [GET /api/knowledge-base/search] KnowledgeController.search 异常: 模型厂商「通义千问」尚未配置 API Key，请在模型管理中补充 (耗时 3ms)
+com.cl.agent.exception.BizException: 模型厂商「通义千问」尚未配置 API Key，请在模型管理中补充
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.buildConnection(ModelConfigServiceImpl.java:335)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl.resolveEmbeddingConnection(ModelConfigServiceImpl.java:293)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:723)
+	at com.cl.agent.service.impl.ModelConfigServiceImpl$$SpringCGLIB$$0.resolveEmbeddingConnection(<generated>)
+	at com.cl.agent.biz.rag.RagKnowledgeProvider.getKnowledge(RagKnowledgeProvider.java:79)
+	at com.cl.agent.biz.impl.KnowledgeBizImpl.searchKnowledge(KnowledgeBizImpl.java:305)
+	at com.cl.agent.controller.KnowledgeController.search(KnowledgeController.java:146)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:359)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.aspectj.MethodInvocationProceedingJoinPoint.proceed(MethodInvocationProceedingJoinPoint.java:89)
+	at com.cl.agent.config.aop.ControllerLogAspect.logAround(ControllerLogAspect.java:65)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethodWithGivenArgs(AbstractAspectJAdvice.java:638)
+	at org.springframework.aop.aspectj.AbstractAspectJAdvice.invokeAdviceMethod(AbstractAspectJAdvice.java:628)
+	at org.springframework.aop.aspectj.AspectJAroundAdvice.invoke(AspectJAroundAdvice.java:71)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:727)
+	at com.cl.agent.controller.KnowledgeController$$SpringCGLIB$$0.search(<generated>)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:986)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:891)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1088)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:978)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at com.alibaba.druid.support.jakarta.WebStatFilter.doFilter(WebStatFilter.java:113)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:397)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2026-09-25 14:28:24.472 INFO  [io-18080-exec-6] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [DELETE /api/knowledge-base/delete] KnowledgeController.deleteKb 入参: ["5047162b-f330-490a-ab85-844abdea280a"]
+2026-09-25 14:28:24.472 INFO  [io-18080-exec-6] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-KB] 准备删除知识库级联元数据: id=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.472 DEBUG [io-18080-exec-6] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-KB] 根据主键获取知识库: id=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.473 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==>  Preparing: SELECT id,name,description,avatar,user_id,embedding_model_id,create_by,create_time,update_by,update_time,del_flag FROM t_knowledge_base WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.473 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.selectById - ==> Parameters: 5047162b-f330-490a-ab85-844abdea280a(String)
+2026-09-25 14:28:24.473 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.selectById - <==      Total: 1
+2026-09-25 14:28:24.474 DEBUG [io-18080-exec-6] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-Rel] 物理清除与指定知识库关联的所有绑定关系: kbId=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.474 DEBUG [io-18080-exec-6] com.cl.agent.dao.AgentKbRelMapper.delete - ==>  Preparing: UPDATE t_agent_kb_rel SET del_flag=1 WHERE del_flag=0 AND (kb_id = ?)
+2026-09-25 14:28:24.474 DEBUG [io-18080-exec-6] com.cl.agent.dao.AgentKbRelMapper.delete - ==> Parameters: 5047162b-f330-490a-ab85-844abdea280a(String)
+2026-09-25 14:28:24.479 DEBUG [io-18080-exec-6] com.cl.agent.dao.AgentKbRelMapper.delete - <==    Updates: 0
+2026-09-25 14:28:24.479 DEBUG [io-18080-exec-6] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-Doc] 获取知识库关联的所有文档: kbId=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.480 DEBUG [io-18080-exec-6] c.cl.agent.dao.KnowledgeDocumentMapper.selectList - ==>  Preparing: SELECT id,kb_id,name,type,status,size_bytes,char_count,chunk_count,file_path,error_message,create_by,create_time,update_by,update_time,del_flag FROM t_knowledge_document WHERE del_flag=0 AND (kb_id = ?)
+2026-09-25 14:28:24.480 DEBUG [io-18080-exec-6] c.cl.agent.dao.KnowledgeDocumentMapper.selectList - ==> Parameters: 5047162b-f330-490a-ab85-844abdea280a(String)
+2026-09-25 14:28:24.484 DEBUG [io-18080-exec-6] c.cl.agent.dao.KnowledgeDocumentMapper.selectList - <==      Total: 0
+2026-09-25 14:28:24.485 DEBUG [io-18080-exec-6] com.cl.agent.service.impl.KnowledgeServiceImpl - [Service-KB] 逻辑删除知识库: id=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.487 DEBUG [io-18080-exec-6] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:28:24.487 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.deleteById - ==>  Preparing: UPDATE t_knowledge_base SET update_by=?,update_time=?, del_flag=1 WHERE id=? AND del_flag=0
+2026-09-25 14:28:24.488 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.deleteById - ==> Parameters: 1(String), 2026-09-25T14:28:24.487864100(LocalDateTime), 5047162b-f330-490a-ab85-844abdea280a(String)
+2026-09-25 14:28:24.488 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.deleteById - <==    Updates: 1
+2026-09-25 14:28:24.489 INFO  [io-18080-exec-6] com.cl.agent.biz.impl.KnowledgeBizImpl - [Biz-KB] 知识库物理级联与逻辑删除完成: id=5047162b-f330-490a-ab85-844abdea280a
+2026-09-25 14:28:24.489 INFO  [io-18080-exec-6] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [DELETE /api/knowledge-base/delete] KnowledgeController.deleteKb 返回: {"headers":{},"statusCode":"NO_CONTENT","statusCodeValue":204} (耗时 17ms)
+2026-09-25 14:28:37.218 INFO  [io-18080-exec-8] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/model-config/providers/create] ModelConfigController.createProvider 入参: [{"apiKeyPlain":"sk-test-123","baseUrl":"http://127.0.0.1:1/v1","code":"TestP","name":"TestP"}]
+2026-09-25 14:28:37.219 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectList - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE del_flag=0 AND (code = ?) LIMIT 1
+2026-09-25 14:28:37.219 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectList - ==> Parameters: TestP(String)
+2026-09-25 14:28:37.219 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectList - <==      Total: 0
+2026-09-25 14:28:37.222 DEBUG [io-18080-exec-8] com.cl.agent.config.db.MyMetaObjectHandler - Start insert fill...
+2026-09-25 14:28:37.222 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.insert - ==>  Preparing: INSERT INTO t_model_provider ( id, code, name, protocol, base_url, api_key_cipher, enabled, create_by, create_time, update_by, update_time, del_flag ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+2026-09-25 14:28:37.223 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.insert - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String), TestP(String), TestP(String), OPENAI(String), http://127.0.0.1:1/v1(String), 6rap+qpOaxvqrmJk3KYdhXJvC4NqD2pfxOXtTa18toh6mfy+FZ6k(String), 1(Integer), 1(String), 2026-09-25T14:28:37.222630400(LocalDateTime), 1(String), 2026-09-25T14:28:37.222630400(LocalDateTime), 0(Integer)
+2026-09-25 14:28:37.224 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.insert - <==    Updates: 1
+2026-09-25 14:28:37.224 INFO  [io-18080-exec-8] com.cl.agent.service.impl.ModelConfigServiceImpl - [ModelConfig] 新增厂商: id=a83c1f4d4bc30666ce332382480c3e0e, code=TestP, baseUrl=http://127.0.0.1:1/v1
+2026-09-25 14:28:37.224 INFO  [io-18080-exec-8] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [POST /api/model-config/providers/create] ModelConfigController.createProvider 返回: {"body":{"apiKeyConfigured":true,"baseUrl":"http://127.0.0.1:1/v1","code":"TestP","createTime":"2026-09-25 14:28:37.222630400","enabled":1,"id":"a83c1f4d4bc30666ce332382480c3e0e","name":"TestP","protocol":"OPENAI","updateTime":"2026-09-25 14:28:37.222630400"},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 6ms)
+2026-09-25 14:28:37.471 INFO  [o-18080-exec-10] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/model-config/models/create] ModelConfigController.createModel 入参: [{"dimensions":8,"modelName":"fake-embed","modelType":"EMBEDDING","providerId":"a83c1f4d4bc30666ce332382480c3e0e"}]
+2026-09-25 14:28:37.472 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:28:37.472 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:37.473 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:28:37.473 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_model WHERE del_flag=0 AND (provider_id = ? AND model_type = ? AND model_name = ?)
+2026-09-25 14:28:37.473 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectCount - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String), EMBEDDING(String), fake-embed(String)
+2026-09-25 14:28:37.475 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectCount - <==      Total: 1
+2026-09-25 14:28:37.475 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectList - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE del_flag=0 AND (model_type = ? AND is_default = ?) LIMIT 1
+2026-09-25 14:28:37.476 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectList - ==> Parameters: EMBEDDING(String), 1(Integer)
+2026-09-25 14:28:37.476 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.selectList - <==      Total: 1
+2026-09-25 14:28:37.477 DEBUG [o-18080-exec-10] com.cl.agent.config.db.MyMetaObjectHandler - Start insert fill...
+2026-09-25 14:28:37.477 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.insert - ==>  Preparing: INSERT INTO t_model ( id, provider_id, model_type, model_name, dimensions, send_dimensions, is_default, enabled, create_by, create_time, update_by, update_time, del_flag ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+2026-09-25 14:28:37.478 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.insert - ==> Parameters: 8f619b5e6fb049dac7f9bb65e46b75a9(String), a83c1f4d4bc30666ce332382480c3e0e(String), EMBEDDING(String), fake-embed(String), 8(Integer), 0(Integer), 0(Integer), 1(Integer), 1(String), 2026-09-25T14:28:37.477118200(LocalDateTime), 1(String), 2026-09-25T14:28:37.477118200(LocalDateTime), 0(Integer)
+2026-09-25 14:28:37.478 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelInfoMapper.insert - <==    Updates: 1
+2026-09-25 14:28:37.478 INFO  [o-18080-exec-10] com.cl.agent.service.impl.ModelConfigServiceImpl - [ModelConfig] 新增模型: id=8f619b5e6fb049dac7f9bb65e46b75a9, type=EMBEDDING, name=fake-embed, dimensions=8, default=0
+2026-09-25 14:28:37.479 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:28:37.479 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:37.480 DEBUG [o-18080-exec-10] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:28:37.481 DEBUG [o-18080-exec-10] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_knowledge_base WHERE del_flag=0 AND (embedding_model_id = ?)
+2026-09-25 14:28:37.481 DEBUG [o-18080-exec-10] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==> Parameters: 8f619b5e6fb049dac7f9bb65e46b75a9(String)
+2026-09-25 14:28:37.481 DEBUG [o-18080-exec-10] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - <==      Total: 1
+2026-09-25 14:28:37.481 INFO  [o-18080-exec-10] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [POST /api/model-config/models/create] ModelConfigController.createModel 返回: {"body":{"boundKbCount":0,"createTime":"2026-09-25 14:28:37.477118200","dimensions":8,"enabled":1,"id":"8f619b5e6fb049dac7f9bb65e46b75a9","isDefault":0,"modelName":"fake-embed","modelType":"EMBEDDING","providerId":"a83c1f4d4bc30666ce332382480c3e0e","providerName":"TestP","sendDimensions":0,"updateTime":"2026-09-25 14:28:37.477118200"},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 10ms)
+2026-09-25 14:28:37.682 INFO  [io-18080-exec-4] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/model-config/models/test] ModelConfigController.testModel 入参: ["8f619b5e6fb049dac7f9bb65e46b75a9"]
+2026-09-25 14:28:37.682 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:28:37.682 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: 8f619b5e6fb049dac7f9bb65e46b75a9(String)
+2026-09-25 14:28:37.683 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:28:37.683 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:28:37.683 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: 8f619b5e6fb049dac7f9bb65e46b75a9(String)
+2026-09-25 14:28:37.684 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:28:37.684 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:28:37.684 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:37.684 DEBUG [io-18080-exec-4] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:28:37.686 INFO  [io-18080-exec-4] com.cl.agent.rag.core.EmbeddingStoreFactory - [RAG-Model] 构建 Embedding 客户端: EmbeddingModelSpec(modelId=8f619b5e6fb049dac7f9bb65e46b75a9, protocol=OPENAI, baseUrl=http://127.0.0.1:1/v1, modelName=fake-embed, dimensions=8, sendDimensions=false)
+2026-09-25 14:28:39.232 WARN  [io-18080-exec-4] i.a.core.embedding.openai.OpenAITextEmbedding - Retrying Embedding request (attempt 1/2) due to: Failed to generate embedding: Request failed
+2026-09-25 14:28:42.948 WARN  [     parallel-2] i.a.core.embedding.openai.OpenAITextEmbedding - Retrying Embedding request (attempt 2/2) due to: Failed to generate embedding: Request failed
+2026-09-25 14:28:46.627 INFO  [io-18080-exec-4] com.cl.agent.biz.impl.ModelConfigBizImpl - [ModelConfig] 模型连通性测试失败: id=8f619b5e6fb049dac7f9bb65e46b75a9, name=fake-embed, reason=Retries exhausted: 2/2
+2026-09-25 14:28:46.627 INFO  [io-18080-exec-4] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [POST /api/model-config/models/test] ModelConfigController.testModel 返回: {"body":{"success":false,"message":"调用失败: Retries exhausted: 2/2"},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 8945ms)
+2026-09-25 14:28:46.705 INFO  [io-18080-exec-2] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [PUT /api/model-config/providers/update] ModelConfigController.updateProvider 入参: ["a83c1f4d4bc30666ce332382480c3e0e",{"apiKeyPlain":"sk-rotated","baseUrl":"http://127.0.0.1:1/v1","name":"TestP"}]
+2026-09-25 14:28:46.705 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:28:46.705 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:46.706 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:28:46.707 DEBUG [io-18080-exec-2] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:28:46.707 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.updateById - ==>  Preparing: UPDATE t_model_provider SET code=?, name=?, protocol=?, base_url=?, api_key_cipher=?, enabled=?, create_by=?, create_time=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:28:46.707 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.updateById - ==> Parameters: TestP(String), TestP(String), OPENAI(String), http://127.0.0.1:1/v1(String), 9+lbJiYiITSTCrivrqTkkBzKmMcB1xMCNpNd0J73fWJhtcLuBBU=(String), 1(Integer), 1(String), 2026-09-25T14:28:37(LocalDateTime), 1(String), 2026-09-25T14:28:46.706554200(LocalDateTime), a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:46.708 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.updateById - <==    Updates: 1
+2026-09-25 14:28:46.708 INFO  [io-18080-exec-2] com.cl.agent.service.impl.ModelConfigServiceImpl - [ModelConfig] 更新厂商: id=a83c1f4d4bc30666ce332382480c3e0e, code=TestP, apiKeyChanged=true
+2026-09-25 14:28:46.709 INFO  [io-18080-exec-2] com.cl.agent.biz.impl.AgentBizImpl - [Agent] 模型配置已变更，清空运行时 Agent 缓存: count=0
+2026-09-25 14:28:46.709 INFO  [io-18080-exec-2] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [PUT /api/model-config/providers/update] ModelConfigController.updateProvider 返回: {"body":{"apiKeyConfigured":true,"baseUrl":"http://127.0.0.1:1/v1","code":"TestP","createTime":"2026-09-25 14:28:37","enabled":1,"id":"a83c1f4d4bc30666ce332382480c3e0e","name":"TestP","protocol":"OPENAI","updateTime":"2026-09-25 14:28:46.706554200"},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 4ms)
+2026-09-25 14:28:46.891 INFO  [io-18080-exec-6] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [DELETE /api/model-config/models/delete] ModelConfigController.deleteModel 入参: ["8f619b5e6fb049dac7f9bb65e46b75a9"]
+2026-09-25 14:28:46.891 DEBUG [io-18080-exec-6] com.cl.agent.dao.ModelInfoMapper.selectById - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE id=? AND del_flag=0
+2026-09-25 14:28:46.892 DEBUG [io-18080-exec-6] com.cl.agent.dao.ModelInfoMapper.selectById - ==> Parameters: 8f619b5e6fb049dac7f9bb65e46b75a9(String)
+2026-09-25 14:28:46.892 DEBUG [io-18080-exec-6] com.cl.agent.dao.ModelInfoMapper.selectById - <==      Total: 1
+2026-09-25 14:28:46.893 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_knowledge_base WHERE del_flag=0 AND (embedding_model_id = ?)
+2026-09-25 14:28:46.893 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - ==> Parameters: 8f619b5e6fb049dac7f9bb65e46b75a9(String)
+2026-09-25 14:28:46.893 DEBUG [io-18080-exec-6] com.cl.agent.dao.KnowledgeBaseMapper.selectCount - <==      Total: 1
+2026-09-25 14:28:46.893 DEBUG [io-18080-exec-6] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:28:46.893 DEBUG [io-18080-exec-6] com.cl.agent.dao.ModelInfoMapper.deleteById - ==>  Preparing: UPDATE t_model SET update_by=?,update_time=?, del_flag=1 WHERE id=? AND del_flag=0
+2026-09-25 14:28:46.894 DEBUG [io-18080-exec-6] com.cl.agent.dao.ModelInfoMapper.deleteById - ==> Parameters: 1(String), 2026-09-25T14:28:46.893792300(LocalDateTime), 8f619b5e6fb049dac7f9bb65e46b75a9(String)
+2026-09-25 14:28:46.895 DEBUG [io-18080-exec-6] com.cl.agent.dao.ModelInfoMapper.deleteById - <==    Updates: 1
+2026-09-25 14:28:46.895 INFO  [io-18080-exec-6] com.cl.agent.service.impl.ModelConfigServiceImpl - [ModelConfig] 删除模型: id=8f619b5e6fb049dac7f9bb65e46b75a9, name=fake-embed
+2026-09-25 14:28:46.895 INFO  [io-18080-exec-6] com.cl.agent.biz.impl.AgentBizImpl - [Agent] 模型配置已变更，清空运行时 Agent 缓存: count=0
+2026-09-25 14:28:46.895 INFO  [io-18080-exec-6] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [DELETE /api/model-config/models/delete] ModelConfigController.deleteModel 返回: {"headers":{},"statusCode":"NO_CONTENT","statusCodeValue":204} (耗时 4ms)
+2026-09-25 14:28:46.940 INFO  [io-18080-exec-8] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [DELETE /api/model-config/providers/delete] ModelConfigController.deleteProvider 入参: ["a83c1f4d4bc30666ce332382480c3e0e"]
+2026-09-25 14:28:46.940 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectById - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE id=? AND del_flag=0
+2026-09-25 14:28:46.940 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectById - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:46.941 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.selectById - <==      Total: 1
+2026-09-25 14:28:46.941 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_model WHERE del_flag=0 AND (provider_id = ?)
+2026-09-25 14:28:46.941 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectCount - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:46.942 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectCount - <==      Total: 1
+2026-09-25 14:28:46.942 DEBUG [io-18080-exec-8] com.cl.agent.dao.AgentInfoMapper.selectCount - ==>  Preparing: SELECT COUNT( * ) AS total FROM t_agent_info WHERE del_flag=0 AND (model_type = ?)
+2026-09-25 14:28:46.942 DEBUG [io-18080-exec-8] com.cl.agent.dao.AgentInfoMapper.selectCount - ==> Parameters: TestP(String)
+2026-09-25 14:28:46.943 DEBUG [io-18080-exec-8] com.cl.agent.dao.AgentInfoMapper.selectCount - <==      Total: 1
+2026-09-25 14:28:46.943 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectList - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE del_flag=0 AND (provider_id = ? AND model_type = ?)
+2026-09-25 14:28:46.943 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectList - ==> Parameters: a83c1f4d4bc30666ce332382480c3e0e(String), EMBEDDING(String)
+2026-09-25 14:28:46.944 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelInfoMapper.selectList - <==      Total: 0
+2026-09-25 14:28:46.944 DEBUG [io-18080-exec-8] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:28:46.944 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.deleteById - ==>  Preparing: UPDATE t_model_provider SET update_by=?,update_time=?, del_flag=1 WHERE id=? AND del_flag=0
+2026-09-25 14:28:46.944 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.deleteById - ==> Parameters: 1(String), 2026-09-25T14:28:46.944397200(LocalDateTime), a83c1f4d4bc30666ce332382480c3e0e(String)
+2026-09-25 14:28:46.945 DEBUG [io-18080-exec-8] com.cl.agent.dao.ModelProviderMapper.deleteById - <==    Updates: 1
+2026-09-25 14:28:46.945 INFO  [io-18080-exec-8] com.cl.agent.service.impl.ModelConfigServiceImpl - [ModelConfig] 删除厂商: id=a83c1f4d4bc30666ce332382480c3e0e, code=TestP
+2026-09-25 14:28:46.946 INFO  [io-18080-exec-8] com.cl.agent.biz.impl.AgentBizImpl - [Agent] 模型配置已变更，清空运行时 Agent 缓存: count=0
+2026-09-25 14:28:46.946 INFO  [io-18080-exec-8] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [DELETE /api/model-config/providers/delete] ModelConfigController.deleteProvider 返回: {"headers":{},"statusCode":"NO_CONTENT","statusCodeValue":204} (耗时 6ms)
+2026-09-25 14:31:45.602 INFO  [           main] com.cl.agent.AgentScopeApplication - Starting AgentScopeApplication using Java 17.0.1 with PID 17248 (F:\project\agent-scope\agent-scope-web\target\classes started by Administrator in F:\project\agent-scope\agent-scope-web)
+2026-09-25 14:31:45.603 DEBUG [           main] com.cl.agent.AgentScopeApplication - Running with Spring Boot v3.4.0, Spring v6.2.0
+2026-09-25 14:31:45.604 INFO  [           main] com.cl.agent.AgentScopeApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-25 14:31:46.520 INFO  [           main] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-25 14:31:46.520 INFO  [           main] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-09-25 14:31:46.592 INFO  [           main] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-09-25 14:31:46.605 INFO  [           main] com.cl.agent.config.web.CorsConfig - [CORS] 全局跨域已开启: path=/**, origins=[http://localhost:*, http://127.0.0.1:*], credentials=false, maxAge=3600s
+2026-09-25 14:31:47.407 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方向量库路由工厂 EmbeddingStoreFactory, 配置类型: ELASTICSEARCH
+2026-09-25 14:31:47.435 INFO  [           main] com.cl.agent.commons.crypto.CryptoService - [CryptoService] AES-GCM 加解密服务初始化完成 (密钥长度=256bit)
+2026-09-25 14:31:47.517 INFO  [           main] com.cl.agent.hitl.core.GenericApprovalTokenStore - [HITL-TokenStore] 令牌管理器初始化成功: ttl=600s, maxSize=10000
+2026-09-25 14:31:47.537 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方多格式 Reader 路由工厂 DocumentReaderFactory
+2026-09-25 14:31:47.634 INFO  [           main] c.c.a.sql.autoconfigure.SqlAgentAutoConfiguration - [SqlAgentAutoConfig] 注册 DialectRouter (mysql)
+2026-09-25 14:31:47.636 INFO  [           main] com.cl.agent.sql.core.SchemaRetriever - [SchemaRetriever] 初始化完成: ttl=5min, maxSize=2048, queryTimeout=15s
+2026-09-25 14:31:47.937 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 扫描到 1 个全局工具拦截器
+2026-09-25 14:31:48.001 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=calculate, bean=CalculatorToolServiceImpl, method=calculate
+2026-09-25 14:31:48.002 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_weather, bean=WeatherToolServiceImpl, method=getWeather
+2026-09-25 14:31:48.002 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=web_search, bean=WebSearchToolServiceImpl, method=webSearch
+2026-09-25 14:31:48.002 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_table_schema, bean=GetTableSchemaTool, method=getTableSchema
+2026-09-25 14:31:48.002 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=list_datasources, bean=ListDatasourcesTool, method=listDatasources
+2026-09-25 14:31:48.002 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=query_database, bean=QueryDatabaseTool, method=queryDatabase
+2026-09-25 14:31:48.046 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 已注册 6 个 Agent 工具: [calculate, get_weather, web_search, get_table_schema, list_datasources, query_database]
+2026-09-25 14:31:48.212 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:31:48.222 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: calculate(String)
+2026-09-25 14:31:48.231 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:31:48.234 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:31:48.235 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:31:48.236 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: calculate(String), 数学计算(String), 计算数学表达式，支持 +、-、*、/、括号和小数(String), com.cl.agent.tool.builtin.impl.CalculatorToolServiceImpl(String), calculate(String), {
+  "type": "object",
+  "properties": {
+    "expression": {
+      "type": "string",
+      "description": "数学表达式，如 (1+2)*3/4"
+    }
+  },
+  "required": ["expression"]
+}
+(String), builtin(String), 🔢(String), true(Boolean), null, 2026-09-25T14:31:48.234128300(LocalDateTime), 1(Long)
+2026-09-25 14:31:48.239 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:31:48.239 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: calculate
+2026-09-25 14:31:48.240 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:31:48.240 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_weather(String)
+2026-09-25 14:31:48.241 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:31:48.242 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:31:48.242 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:31:48.243 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_weather(String), 天气查询(String), 查询指定城市的当前天气信息，包括温度、天气状况等(String), com.cl.agent.tool.builtin.impl.WeatherToolServiceImpl(String), getWeather(String), {
+  "type": "object",
+  "properties": {
+    "city": {
+      "type": "string",
+      "description": "城市名称，如 Beijing、上海"
+    }
+  },
+  "required": ["city"]
+}
+(String), builtin(String), 🌤️(String), true(Boolean), null, 2026-09-25T14:31:48.242127200(LocalDateTime), 2(Long)
+2026-09-25 14:31:48.244 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:31:48.244 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_weather
+2026-09-25 14:31:48.244 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:31:48.244 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: web_search(String)
+2026-09-25 14:31:48.245 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:31:48.245 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:31:48.245 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:31:48.246 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: web_search(String), 网页搜索(String), 搜索互联网信息，返回与查询相关的摘要内容(String), com.cl.agent.tool.builtin.impl.WebSearchToolServiceImpl(String), webSearch(String), {
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "搜索关键词或问题"
+    }
+  },
+  "required": ["query"]
+}
+(String), builtin(String), 🔍(String), true(Boolean), null, 2026-09-25T14:31:48.245127500(LocalDateTime), 3(Long)
+2026-09-25 14:31:48.247 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:31:48.247 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: web_search
+2026-09-25 14:31:48.248 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:31:48.248 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_table_schema(String)
+2026-09-25 14:31:48.249 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:31:48.249 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:31:48.249 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:31:48.249 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_table_schema(String), 获取表结构(String), 获取指定数据源中若干表的建表 DDL（CREATE TABLE 语句），用于理解字段含义后生成 SQL。若不确定有哪些表，传入空 tables 数组，本工具会先返回全部表清单（含 comment），随后再用具体表名再次调用以获取 DDL。(String), com.cl.agent.sql.tool.GetTableSchemaTool(String), getTableSchema(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "tables": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "需要获取 DDL 的表名列表；为空时仅返回表清单"
+    }
+  },
+  "required": ["datasourceId", "tables"]
+}
+(String), sql(String), 📋(String), true(Boolean), null, 2026-09-25T14:31:48.249126800(LocalDateTime), 5(Long)
+2026-09-25 14:31:48.250 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:31:48.251 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_table_schema
+2026-09-25 14:31:48.251 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:31:48.251 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: list_datasources(String)
+2026-09-25 14:31:48.252 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:31:48.253 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:31:48.253 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:31:48.253 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: list_datasources(String), 列出数据源(String), 列出当前用户可访问的全部业务数据源（含 id/name/description/dbType）。在生成任何 SQL 之前必须先调用本工具确定 datasourceId；若返回空数组，则告诉用户暂未配置任何数据源。(String), com.cl.agent.sql.tool.ListDatasourcesTool(String), listDatasources(String), {
+  "type": "object",
+  "properties": {},
+  "required": []
+}
+(String), sql(String), 🗄️(String), true(Boolean), null, 2026-09-25T14:31:48.253127300(LocalDateTime), 6(Long)
+2026-09-25 14:31:48.254 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:31:48.254 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: list_datasources
+2026-09-25 14:31:48.255 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:31:48.255 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: query_database(String)
+2026-09-25 14:31:48.256 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:31:48.256 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:31:48.256 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:31:48.256 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: query_database(String), SQL 查询审批(String), 提交 SQL 并真实执行。这是一个高危的敏感操作，调用前系统会自动拦截触发人机协同审批卡片，人类点击同意后本方法才会被运行。重要约束：当用户消息中已直接给出完整 SQL 语句时，必须将其原样作为 sql 参数传入，禁止改写、补字段、加表别名、调整 LIMIT、调整 WHERE；仅当用户用自然语言描述查询意图时，才允许你自行生成 SQL。返回字段：status / columns / rows / rowCount / elapsedMs / error。(String), com.cl.agent.sql.tool.QueryDatabaseTool(String), queryDatabase(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "sql": {
+      "type": "string",
+      "description": "SELECT 查询语句；不允许 INSERT/UPDATE/DELETE/DDL"
+    }
+  },
+  "required": ["datasourceId", "sql"]
+}
+(String), sql(String), 🔍(String), true(Boolean), null, 2026-09-25T14:31:48.256132600(LocalDateTime), 7(Long)
+2026-09-25 14:31:48.257 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:31:48.257 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: query_database
+2026-09-25 14:31:48.257 INFO  [           main] com.cl.agent.biz.tool.ToolConfigSyncService - [ToolSync] 已同步 6 条工具元数据到数据库
+2026-09-25 14:31:48.285 INFO  [           main] com.cl.agent.AgentScopeApplication - Started AgentScopeApplication in 2.995 seconds (process running for 3.273)
+2026-09-25 14:31:49.068 INFO  [io-18080-exec-1] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-25 14:31:49.140 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/datasources/test/existing] DatasourceController.testExisting 入参: ["0bf6d4e4142f992e70edca4d9fe082e2",{}]
+2026-09-25 14:31:49.141 DEBUG [io-18080-exec-1] com.cl.agent.dao.DatasourceMapper.selectById - ==>  Preparing: SELECT id,user_id,name,description,db_type,jdbc_url,username,password_cipher,read_only,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_datasource WHERE id=? AND del_flag=0
+2026-09-25 14:31:49.141 DEBUG [io-18080-exec-1] com.cl.agent.dao.DatasourceMapper.selectById - ==> Parameters: 0bf6d4e4142f992e70edca4d9fe082e2(String)
+2026-09-25 14:31:49.143 DEBUG [io-18080-exec-1] com.cl.agent.dao.DatasourceMapper.selectById - <==      Total: 1
+2026-09-25 14:31:49.145 ERROR [io-18080-exec-1] com.zaxxer.hikari.HikariConfig - ds-test-1790317909145 - dataSource or dataSourceClassName or jdbcUrl is required.
+2026-09-25 14:31:49.146 INFO  [io-18080-exec-1] com.cl.agent.service.impl.DatasourceServiceImpl - [Datasource] 测试连接失败: dataSource or dataSourceClassName or jdbcUrl is required.
+2026-09-25 14:31:49.151 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [POST /api/datasources/test/existing] DatasourceController.testExisting 返回: {"body":{"success":false},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 6ms)
+2026-09-25 14:31:49.199 INFO  [io-18080-exec-2] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [GET /api/model-config/models/list] ModelConfigController.listModels 入参: ["CHAT"]
+2026-09-25 14:31:49.200 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.selectList - ==>  Preparing: SELECT id,code,name,protocol,base_url,api_key_cipher,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model_provider WHERE del_flag=0 ORDER BY create_time ASC,code ASC
+2026-09-25 14:31:49.200 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.selectList - ==> Parameters: 
+2026-09-25 14:31:49.203 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelProviderMapper.selectList - <==      Total: 3
+2026-09-25 14:31:49.204 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelInfoMapper.selectList - ==>  Preparing: SELECT id,provider_id,model_type,model_name,dimensions,send_dimensions,is_default,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_model WHERE del_flag=0 AND (model_type = ?) ORDER BY create_time ASC,model_name ASC
+2026-09-25 14:31:49.204 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelInfoMapper.selectList - ==> Parameters: CHAT(String)
+2026-09-25 14:31:49.208 DEBUG [io-18080-exec-2] com.cl.agent.dao.ModelInfoMapper.selectList - <==      Total: 11
+2026-09-25 14:31:49.212 INFO  [io-18080-exec-2] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [GET /api/model-config/models/list] ModelConfigController.listModels 返回: {"body":[{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-deepseek-chat","isDefault":0,"modelName":"deepseek-chat","modelType":"CHAT","providerId":"provider-deepseek","providerName":"DeepSeek","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-deepseek-reasoner","isDefault":0,"modelName":"deepseek-reasoner","modelType":"CHAT","providerId":"provider-deepseek","providerName":"DeepSeek","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-gpt-3-5-turbo","isDefault":0,"modelName":"gpt-3.5-turbo","modelType":"CHAT","providerId":"provider-openai","providerName":"OpenAI","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-gpt-4","isDefault":0,"modelName":"gpt-4","modelType":"CHAT","providerId":"provider-openai","providerName":"OpenAI","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-gpt-4-turbo","isDefault":0,"modelName":"gpt-4-turbo","modelType":"CHAT","providerId":"provider-openai","providerName":"OpenAI","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-gpt-4o","isDefault":0,"modelName":"gpt-4o","modelType":"CHAT","providerId":"provider-openai","providerName":"OpenAI","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-qwen-long","isDefault":0,"modelName":"qwen-long","modelType":"CHAT","providerId":"provider-qwen","providerName":"通义千问","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-qwen-max","isDefault":0,"modelName":"qwen-max","modelType":"CHAT","providerId":"provider-qwen","providerName":"通义千问","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-qwen-plus","isDefault":1,"modelName":"qwen-plus","modelType":"CHAT","providerId":"provider-qwen","providerName":"通义千问","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-qwen-turbo","isDefault":0,"modelName":"qwen-turbo","modelType":"CHAT","providerId":"provider-qwen","providerName":"通义千问","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"},{"boundKbCount":0,"createTime":"2026-09-25 14:27:01","enabled":1,"id":"model-qwen3-5-27b","isDefault":0,"modelName":"Qwen3.5-27B","modelType":"CHAT","providerId":"provider-qwen","providerName":"通义千问","sendDimensions":0,"updateTime":"2026-09-25 14:27:01"}],"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 10ms)
+2026-09-25 14:32:08.320 INFO  [           main] com.cl.agent.AgentScopeApplication - Starting AgentScopeApplication using Java 17.0.1 with PID 22628 (F:\project\agent-scope\agent-scope-web\target\classes started by Administrator in F:\project\agent-scope\agent-scope-web)
+2026-09-25 14:32:08.322 DEBUG [           main] com.cl.agent.AgentScopeApplication - Running with Spring Boot v3.4.0, Spring v6.2.0
+2026-09-25 14:32:08.322 INFO  [           main] com.cl.agent.AgentScopeApplication - No active profile set, falling back to 1 default profile: "default"
+2026-09-25 14:32:09.256 INFO  [           main] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-09-25 14:32:09.256 INFO  [           main] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.33]
+2026-09-25 14:32:09.318 INFO  [           main] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-09-25 14:32:09.331 INFO  [           main] com.cl.agent.config.web.CorsConfig - [CORS] 全局跨域已开启: path=/**, origins=[http://localhost:*, http://127.0.0.1:*], credentials=false, maxAge=3600s
+2026-09-25 14:32:10.140 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方向量库路由工厂 EmbeddingStoreFactory, 配置类型: ELASTICSEARCH
+2026-09-25 14:32:10.176 INFO  [           main] com.cl.agent.commons.crypto.CryptoService - [CryptoService] AES-GCM 加解密服务初始化完成 (密钥长度=256bit)
+2026-09-25 14:32:10.270 INFO  [           main] com.cl.agent.hitl.core.GenericApprovalTokenStore - [HITL-TokenStore] 令牌管理器初始化成功: ttl=600s, maxSize=10000
+2026-09-25 14:32:10.299 INFO  [           main] com.cl.agent.rag.config.RagAutoConfiguration - [RAG-AutoConfig] 成功装配官方多格式 Reader 路由工厂 DocumentReaderFactory
+2026-09-25 14:32:10.409 INFO  [           main] c.c.a.sql.autoconfigure.SqlAgentAutoConfiguration - [SqlAgentAutoConfig] 注册 DialectRouter (mysql)
+2026-09-25 14:32:10.412 INFO  [           main] com.cl.agent.sql.core.SchemaRetriever - [SchemaRetriever] 初始化完成: ttl=5min, maxSize=2048, queryTimeout=15s
+2026-09-25 14:32:10.708 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 扫描到 1 个全局工具拦截器
+2026-09-25 14:32:10.769 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=calculate, bean=CalculatorToolServiceImpl, method=calculate
+2026-09-25 14:32:10.770 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_weather, bean=WeatherToolServiceImpl, method=getWeather
+2026-09-25 14:32:10.770 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=web_search, bean=WebSearchToolServiceImpl, method=webSearch
+2026-09-25 14:32:10.770 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=get_table_schema, bean=GetTableSchemaTool, method=getTableSchema
+2026-09-25 14:32:10.770 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=list_datasources, bean=ListDatasourcesTool, method=listDatasources
+2026-09-25 14:32:10.770 DEBUG [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 注册工具: name=query_database, bean=QueryDatabaseTool, method=queryDatabase
+2026-09-25 14:32:10.815 INFO  [           main] com.cl.agent.tool.core.AgentToolRegistry - [Tool] 已注册 6 个 Agent 工具: [calculate, get_weather, web_search, get_table_schema, list_datasources, query_database]
+2026-09-25 14:32:10.965 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:32:10.974 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: calculate(String)
+2026-09-25 14:32:10.983 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:32:10.985 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:32:10.986 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:32:10.987 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: calculate(String), 数学计算(String), 计算数学表达式，支持 +、-、*、/、括号和小数(String), com.cl.agent.tool.builtin.impl.CalculatorToolServiceImpl(String), calculate(String), {
+  "type": "object",
+  "properties": {
+    "expression": {
+      "type": "string",
+      "description": "数学表达式，如 (1+2)*3/4"
+    }
+  },
+  "required": ["expression"]
+}
+(String), builtin(String), 🔢(String), true(Boolean), null, 2026-09-25T14:32:10.985880(LocalDateTime), 1(Long)
+2026-09-25 14:32:10.995 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:32:10.995 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: calculate
+2026-09-25 14:32:10.996 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:32:10.996 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_weather(String)
+2026-09-25 14:32:10.997 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:32:10.997 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:32:10.997 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:32:10.997 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_weather(String), 天气查询(String), 查询指定城市的当前天气信息，包括温度、天气状况等(String), com.cl.agent.tool.builtin.impl.WeatherToolServiceImpl(String), getWeather(String), {
+  "type": "object",
+  "properties": {
+    "city": {
+      "type": "string",
+      "description": "城市名称，如 Beijing、上海"
+    }
+  },
+  "required": ["city"]
+}
+(String), builtin(String), 🌤️(String), true(Boolean), null, 2026-09-25T14:32:10.997879900(LocalDateTime), 2(Long)
+2026-09-25 14:32:11.000 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:32:11.000 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_weather
+2026-09-25 14:32:11.000 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:32:11.000 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: web_search(String)
+2026-09-25 14:32:11.001 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:32:11.001 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:32:11.001 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:32:11.001 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: web_search(String), 网页搜索(String), 搜索互联网信息，返回与查询相关的摘要内容(String), com.cl.agent.tool.builtin.impl.WebSearchToolServiceImpl(String), webSearch(String), {
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "搜索关键词或问题"
+    }
+  },
+  "required": ["query"]
+}
+(String), builtin(String), 🔍(String), true(Boolean), null, 2026-09-25T14:32:11.001021400(LocalDateTime), 3(Long)
+2026-09-25 14:32:11.002 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:32:11.002 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: web_search
+2026-09-25 14:32:11.002 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:32:11.002 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: get_table_schema(String)
+2026-09-25 14:32:11.002 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:32:11.003 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:32:11.003 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:32:11.003 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: get_table_schema(String), 获取表结构(String), 获取指定数据源中若干表的建表 DDL（CREATE TABLE 语句），用于理解字段含义后生成 SQL。若不确定有哪些表，传入空 tables 数组，本工具会先返回全部表清单（含 comment），随后再用具体表名再次调用以获取 DDL。(String), com.cl.agent.sql.tool.GetTableSchemaTool(String), getTableSchema(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "tables": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "需要获取 DDL 的表名列表；为空时仅返回表清单"
+    }
+  },
+  "required": ["datasourceId", "tables"]
+}
+(String), sql(String), 📋(String), true(Boolean), null, 2026-09-25T14:32:11.003406300(LocalDateTime), 5(Long)
+2026-09-25 14:32:11.004 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:32:11.004 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: get_table_schema
+2026-09-25 14:32:11.004 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:32:11.004 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: list_datasources(String)
+2026-09-25 14:32:11.005 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:32:11.005 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:32:11.005 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:32:11.005 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: list_datasources(String), 列出数据源(String), 列出当前用户可访问的全部业务数据源（含 id/name/description/dbType）。在生成任何 SQL 之前必须先调用本工具确定 datasourceId；若返回空数组，则告诉用户暂未配置任何数据源。(String), com.cl.agent.sql.tool.ListDatasourcesTool(String), listDatasources(String), {
+  "type": "object",
+  "properties": {},
+  "required": []
+}
+(String), sql(String), 🗄️(String), true(Boolean), null, 2026-09-25T14:32:11.005412500(LocalDateTime), 6(Long)
+2026-09-25 14:32:11.006 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:32:11.006 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: list_datasources
+2026-09-25 14:32:11.006 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==>  Preparing: SELECT id,tool_name,display_name,description,bean_class,method_name,parameters_schema,category,icon,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_tool_config WHERE del_flag=0 AND (tool_name = ?)
+2026-09-25 14:32:11.006 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - ==> Parameters: query_database(String)
+2026-09-25 14:32:11.007 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.selectList - <==      Total: 1
+2026-09-25 14:32:11.007 DEBUG [           main] com.cl.agent.config.db.MyMetaObjectHandler - Start update fill...
+2026-09-25 14:32:11.007 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==>  Preparing: UPDATE t_tool_config SET tool_name=?, display_name=?, description=?, bean_class=?, method_name=?, parameters_schema=?, category=?, icon=?, enabled=?, update_by=?, update_time=? WHERE id=? AND del_flag=0
+2026-09-25 14:32:11.007 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - ==> Parameters: query_database(String), SQL 查询审批(String), 提交 SQL 并真实执行。这是一个高危的敏感操作，调用前系统会自动拦截触发人机协同审批卡片，人类点击同意后本方法才会被运行。重要约束：当用户消息中已直接给出完整 SQL 语句时，必须将其原样作为 sql 参数传入，禁止改写、补字段、加表别名、调整 LIMIT、调整 WHERE；仅当用户用自然语言描述查询意图时，才允许你自行生成 SQL。返回字段：status / columns / rows / rowCount / elapsedMs / error。(String), com.cl.agent.sql.tool.QueryDatabaseTool(String), queryDatabase(String), {
+  "type": "object",
+  "properties": {
+    "datasourceId": {
+      "type": "string",
+      "description": "数据源 ID，由 list_datasources 返回"
+    },
+    "sql": {
+      "type": "string",
+      "description": "SELECT 查询语句；不允许 INSERT/UPDATE/DELETE/DDL"
+    }
+  },
+  "required": ["datasourceId", "sql"]
+}
+(String), sql(String), 🔍(String), true(Boolean), null, 2026-09-25T14:32:11.007867600(LocalDateTime), 7(Long)
+2026-09-25 14:32:11.008 DEBUG [           main] com.cl.agent.dao.ToolConfigMapper.updateById - <==    Updates: 1
+2026-09-25 14:32:11.008 DEBUG [           main] com.cl.agent.service.impl.ToolConfigServiceImpl - [ToolConfig] 更新工具配置: query_database
+2026-09-25 14:32:11.008 INFO  [           main] com.cl.agent.biz.tool.ToolConfigSyncService - [ToolSync] 已同步 6 条工具元数据到数据库
+2026-09-25 14:32:11.036 INFO  [           main] com.cl.agent.AgentScopeApplication - Started AgentScopeApplication in 3.029 seconds (process running for 3.29)
+2026-09-25 14:32:11.380 INFO  [io-18080-exec-1] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-09-25 14:32:11.454 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求开始 ═══ [POST /api/datasources/test/existing] DatasourceController.testExisting 入参: ["0bf6d4e4142f992e70edca4d9fe082e2",{"jdbcUrl":"jdbc:mysql://127.0.0.1:3306/upay_server_test?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false","username":"root"}]
+2026-09-25 14:32:11.455 DEBUG [io-18080-exec-1] com.cl.agent.dao.DatasourceMapper.selectById - ==>  Preparing: SELECT id,user_id,name,description,db_type,jdbc_url,username,password_cipher,read_only,enabled,create_by,create_time,update_by,update_time,del_flag FROM t_datasource WHERE id=? AND del_flag=0
+2026-09-25 14:32:11.455 DEBUG [io-18080-exec-1] com.cl.agent.dao.DatasourceMapper.selectById - ==> Parameters: 0bf6d4e4142f992e70edca4d9fe082e2(String)
+2026-09-25 14:32:11.457 DEBUG [io-18080-exec-1] com.cl.agent.dao.DatasourceMapper.selectById - <==      Total: 1
+2026-09-25 14:32:11.459 INFO  [io-18080-exec-1] com.zaxxer.hikari.HikariDataSource - ds-test-1790317931458 - Starting...
+2026-09-25 14:32:11.476 INFO  [io-18080-exec-1] com.zaxxer.hikari.pool.HikariPool - ds-test-1790317931458 - Added connection com.mysql.cj.jdbc.ConnectionImpl@72f07736
+2026-09-25 14:32:11.477 INFO  [io-18080-exec-1] com.zaxxer.hikari.HikariDataSource - ds-test-1790317931458 - Start completed.
+2026-09-25 14:32:11.479 INFO  [io-18080-exec-1] com.zaxxer.hikari.HikariDataSource - ds-test-1790317931458 - Shutdown initiated...
+2026-09-25 14:32:11.481 INFO  [io-18080-exec-1] com.zaxxer.hikari.HikariDataSource - ds-test-1790317931458 - Shutdown completed.
+2026-09-25 14:32:11.487 INFO  [io-18080-exec-1] com.cl.agent.config.aop.ControllerLogAspect - ═══ 请求结束 ═══ [POST /api/datasources/test/existing] DatasourceController.testExisting 返回: {"body":{"success":true},"headers":{},"statusCode":"OK","statusCodeValue":200} (耗时 28ms)

@@ -8,9 +8,10 @@ package com.cl.agent.enums;
  * 在 {@code SendMessageRequest.sqlAction} 中携带本枚举值。后端 {@code ChatBizImpl} 入口据此短路
  * 到 {@code SqlAgentBizImpl.confirmSqlExecution}，由 starter 的 {@code SqlConfirmExecutor} 执行。</p>
  *
+ * @deprecated 已被通用人机协同（HITL）框架替代，请使用 {@code SendMessageRequest#hitlAction}。
+ *
  * <p>放在 {@code agent-scope-common} 而非 starter 内部的原因：
- * 同时被 {@code agent-scope-model} 的 {@code SendMessageRequest} 与
- * starter 的 {@code SqlConfirmExecutor} 引用，置于 common 可避免 model 依赖 starter。</p>
+ * 同时被 {@code agent-scope-model} 的 {@code SendMessageRequest} 引用，置于 common 可避免 model 依赖 starter。</p>
  */
 public enum SqlAction {
 

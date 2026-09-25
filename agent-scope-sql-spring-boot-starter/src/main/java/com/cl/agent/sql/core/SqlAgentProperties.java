@@ -15,7 +15,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   <li>{@code QueryCostEstimator} 读 {@link #explainRowThreshold} 触发预警标记</li>
  *   <li>{@code SqlApprovalTokenStore} 读 {@link #tokenTtlSeconds} 设置 Caffeine TTL</li>
  *   <li>{@code SqlConfirmExecutor} 读 {@link #executionTimeoutSeconds} 限制 JdbcTemplate 查询超时</li>
- *   <li>{@code CryptoService} 读 {@link #cryptoKey} 派生 AES 密钥</li>
  * </ul>
  */
 @Data
@@ -36,7 +35,4 @@ public class SqlAgentProperties {
 
     /** 审批令牌有效期（秒）；超时未确认则 Caffeine 自动驱逐，需要 LLM 重新发起 query_database */
     private int tokenTtlSeconds = 300;
-
-    /** AES-GCM 主密钥原文；建议通过环境变量 {@code SQL_DS_CRYPTO_KEY} 注入，禁止直接写入 yml */
-    private String cryptoKey = "";
 }

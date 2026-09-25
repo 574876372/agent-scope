@@ -10,12 +10,12 @@ import java.io.Serializable;
  *
  * <p>同一接口 {@code /api/chat/message/stream} 同时承担两类请求：
  * <ol>
- *   <li><b>普通聊天</b>：{@link #content} 必填，{@link #sqlAction} 为 null —— 进入常规 LLM 推理流程。</li>
- *   <li><b>HITL SQL 确认</b>：{@link #sqlAction} 非 null，{@link #confirmToken} 必填；
- *       {@code ChatBizImpl} 入口短路到 {@code SqlAgentBizImpl.confirmSqlExecution}，不进 LLM。</li>
+ *   <li><b>普通聊天</b>：{@link #content} 必填，{@link #hitlAction} 为 null —— 进入常规 LLM 推理流程。</li>
+ *   <li><b>通用 HITL 审批确认</b>：{@link #hitlAction} 非 null，{@link #hitlToken} 必填；
+ *       {@code ChatBizImpl} 入口短路到 {@code GenericHitlBizImpl.confirmExecution}，不进 LLM。</li>
  * </ol>
  *
- * 复用同一 DTO 而不新增 {@code SqlConfirmRequest} 的目的：减少前后端 API 维护面、避免 endpoint 膨胀。
+ * 复用同一 DTO 的目的：减少前后端 API 维护面、避免 endpoint 膨胀。
  */
 @Data
 public class SendMessageRequest implements Serializable {
@@ -44,4 +44,13 @@ public class SendMessageRequest implements Serializable {
 
     /** 用户在审批卡片中编辑后的 SQL，仅 {@code sqlAction=EDIT} 时使用 */
     private String editedSql;
+
+    /** 通用 HITL 确认动作：APPROVE, EDIT, REJECT；非空时触发通用人机协同确认流程 */
+    private String hitlAction;
+
+    /** 通用 HITL 审批 Token；hitlAction 非空时必填 */
+    private String hitlToken;
+
+    /** 用户在审批卡片中编辑后的工具入参 Map，仅在 hitlAction=EDIT 时生效 */
+    private java.util.Map<String, Object> editedParameters;
 }

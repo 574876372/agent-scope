@@ -10,7 +10,6 @@ import io.agentscope.core.rag.reader.TextReader;
 import io.agentscope.core.rag.reader.TikaReader;
 import io.agentscope.core.rag.reader.WordReader;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +25,6 @@ import java.util.List;
  * Document {@link Reader}，支持 PDF、Word (Docx/Doc)、Excel (Xlsx/Xls)、XML、TXT 等格式一站式解析。</p>
  */
 @Slf4j
-@Component
 public class DocumentReaderFactory {
 
     /** RAG 属性配置项 */

@@ -2,7 +2,7 @@ package com.cl.agent.biz.impl;
 
 import com.cl.agent.biz.IAgentBiz;
 import com.cl.agent.biz.IChatBiz;
-import com.cl.agent.biz.ISqlAgentBiz;
+import com.cl.agent.biz.IGenericHitlBiz;
 import com.cl.agent.biz.memory.MemoryManager;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.*;
@@ -64,9 +64,9 @@ public class ChatBizImpl implements IChatBiz {
     @Autowired
     private MemoryManager memoryManager;
 
-    /** SQL Agent HITL 业务，仅在 sqlAction 非空的请求中被入口短路调用 */
+    /** 通用 HITL 业务接口，仅在 hitlAction 非空的请求中被拦截调用 */
     @Autowired
-    private ISqlAgentBiz sqlAgentBiz;
+    private IGenericHitlBiz genericHitlBiz;
 
     @Override
     public ConversationResponse createConversation(CreateConversationRequest request) {
@@ -148,8 +148,8 @@ public class ChatBizImpl implements IChatBiz {
 
     @Override
     public Flux<ChatStreamEvent> sendMessageStream(SendMessageRequest request) {
-        if (request.getSqlAction() != null) {
-            return sqlAgentBiz.confirmSqlExecution(request);
+        if (request.getHitlAction() != null) {
+            return genericHitlBiz.confirmExecution(request);
         }
         //处理会话id  如果会话不存在则创建新的会话
         String resolvedConversationId = resolveConversationId(request);

@@ -15,7 +15,9 @@ import reactor.core.scheduler.Schedulers;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 将 {@link AgentToolDef} 注解方法包装为 AgentScope {@link AgentTool}。
@@ -101,14 +103,87 @@ public class ReflectiveAgentTool implements AgentTool {
         return parameters;
     }
 
+    /** 拦截器列表，由 Registry 统一查找并在扫描完成后注入，不可为空 */
+    private List<ToolInterceptor> interceptors = Collections.emptyList();
+
     /**
-     * 异步执行注解工具方法，异常包装为 {@link ToolResultBlock#error(String)}。
+     * 设置工具调用拦截器列表。
+     * <p>使用说明：由 {@link AgentToolRegistry} 在扫描注册工具时统一注入拦截器。</p>
+     *
+     * @param interceptors 拦截器列表，非空
+     */
+    public void setInterceptors(List<ToolInterceptor> interceptors) {
+        this.interceptors = Objects.requireNonNull(interceptors, "interceptors");
+    }
+
+    /**
+     * 异步执行注解工具方法。执行前会依次通过 {@link ToolInterceptor} 链式拦截；
+     * 若被拦截则短路返回拦截结果，否则反射调用真实 Bean 方法。异常会被包装为 {@link ToolResultBlock#error(String)}。
      *
      * @param param AgentScope 传入的调用参数
      * @return 工具执行结果
      */
     @Override
     public Mono<ToolResultBlock> callAsync(ToolCallParam param) {
+        Map<String, Object> input = param.getInput() != null ? param.getInput() : Collections.emptyMap();
+
+        // 1. 链式执行拦截器，首个返回非空结果的拦截器会短路执行
+        Mono<ToolResultBlock> interceptChain = Mono.empty();
+        if (interceptors != null) {
+            ToolInterceptorContext context = ToolInterceptorContext.builder()
+                    .tool(this)
+                    .input(input)
+                    .build();
+            for (ToolInterceptor interceptor : interceptors) {
+                interceptChain = interceptChain.switchIfEmpty(
+                        Mono.defer(() -> interceptor.intercept(context))
+                );
+            }
+        }
+
+        // 2. 如果没有任何拦截器拦截（全部返回 empty），则执行真实的反射方法
+        return interceptChain.switchIfEmpty(
+                Mono.deferContextual(ctx -> {
+                    String userId = ctx.getOrDefault("userId", null);
+                    return Mono.fromCallable(() -> {
+                        String oldUserId = UserContext.getUserId();
+                        try {
+                            if (userId != null) {
+                                UserContext.setUserId(userId);
+                            }
+                            return invokeMethod(input);
+                        } finally {
+                            if (oldUserId != null) {
+                                UserContext.setUserId(oldUserId);
+                            } else {
+                                UserContext.clear();
+                            }
+                        }
+                    })
+                    .map(this::toResultBlock);
+                }))
+                .subscribeOn(Schedulers.boundedElastic())
+                .onErrorResume(error -> {
+                    log.warn("[Tool] 工具 {} 执行失败: {}", metadata.name(), error.getMessage(), error);
+                    // 构建结构化的错误 Observation，帮助 LLM 理解问题并尝试修正
+                    String observation = String.format(
+                            "工具 [%s] 执行失败。错误类型: %s，错误信息: %s。请检查输入参数后重试或换用其他方式回答。",
+                            metadata.name(),
+                            error.getClass().getSimpleName(),
+                            error.getMessage() != null ? error.getMessage() : "未知错误"
+                    );
+                    return Mono.just(ToolResultBlock.error(observation));
+                });
+    }
+
+    /**
+     * 绕过拦截器链，直接反射执行真实的工具方法。
+     * <p>使用说明：在人机协同（HITL）审批通过或编辑确认后，由业务执行器直接调用该方法执行工具逻辑。</p>
+     *
+     * @param input  工具入参 Map，非空
+     * @return 包含 {@link ToolResultBlock} 包装的工具执行结果 Mono
+     */
+    public Mono<ToolResultBlock> executeDirectly(Map<String, Object> input) {
         return Mono.deferContextual(ctx -> {
             String userId = ctx.getOrDefault("userId", null);
             return Mono.fromCallable(() -> {
@@ -117,7 +192,7 @@ public class ReflectiveAgentTool implements AgentTool {
                     if (userId != null) {
                         UserContext.setUserId(userId);
                     }
-                    return invokeMethod(param.getInput());
+                    return invokeMethod(input);
                 } finally {
                     if (oldUserId != null) {
                         UserContext.setUserId(oldUserId);
@@ -125,13 +200,12 @@ public class ReflectiveAgentTool implements AgentTool {
                         UserContext.clear();
                     }
                 }
-            });
+            })
+            .map(this::toResultBlock);
         })
         .subscribeOn(Schedulers.boundedElastic())
-        .map(this::toResultBlock)
         .onErrorResume(error -> {
-            log.warn("[Tool] 工具 {} 执行失败: {}", metadata.name(), error.getMessage(), error);
-            // 构建结构化的错误 Observation，帮助 LLM 理解问题并尝试修正
+            log.warn("[Tool] 工具 {} 直接执行失败: {}", metadata.name(), error.getMessage(), error);
             String observation = String.format(
                     "工具 [%s] 执行失败。错误类型: %s，错误信息: %s。请检查输入参数后重试或换用其他方式回答。",
                     metadata.name(),

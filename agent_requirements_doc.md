@@ -78,7 +78,7 @@
 ### 3.5 SQL Agent（多数据源 Text-to-SQL + HITL 确认） 【🟢 已完成】
 *   **背景**：用户希望 Agent 能根据自然语言查询外部业务库，但 SELECT 执行必须经过人工确认，防止 LLM 直接访问生产数据。
 *   **需求点**：
-    *   `[x]` **SPI 瘦 Starter**：新增 `agent-scope-sql-spring-boot-starter`，提供 SqlGuardEngine / SchemaRetriever / SqlApprovalTokenStore / CryptoService 及三个 `@AgentToolDef` 工具；宿主实现 `DatasourceProvider` + `SqlAuditPublisher` 两个 SPI。*(已完成)*
+    *   `[x]` **SPI 瘦 Starter**：新增 `agent-scope-sql-spring-boot-starter`，提供 SqlGuardEngine / SchemaRetriever / SqlApprovalTokenStore 及三个 `@AgentToolDef` 工具；宿主实现 `DatasourceProvider` + `SqlAuditPublisher` 两个 SPI。*(已完成)*
     *   `[x]` **多数据源注册**：`t_datasource` 表 + `/api/datasources` CRUD + 前端数据源管理页；密码 AES-GCM 加密落库。*(已完成)*
     *   `[x]` **仅 SELECT + 强制 LIMIT**：JSqlParser 守卫拦截 DML/DDL/多语句/危险函数；EXPLAIN 估算扫描行数。*(已完成)*
     *   `[x]` **HITL 审批卡片**：`query_database` 返回 `PENDING_APPROVAL` + token；前端 SqlApprovalCard 支持执行/编辑/取消；复用 `/api/chat/message/stream` 携带 `sqlAction/confirmToken/editedSql`。*(已完成)*
@@ -101,19 +101,20 @@
 *   **[🟢 T1 (Phase 1)]**: 完成基础角色定制与持久化。*(已完成)*
 *   **[🟢 T2 (Phase 2)]**: 实现第一个核心工具（如 Weather Tool）的闭环调用。*(已完成)*
 *   **[🟢 T3 (Phase 3)]**: 优化前端 UI，支持推理链路展示。*(已完成)*
-*   **[🟡 T4 (Phase 4)]**: 引入私有知识库 (RAG)，赋予 Agent 检索本地文档的能力。*(未完成)*
+*   **[🟢 T4 (Phase 4)]**: 引入私有知识库 (RAG)，赋予 Agent 检索本地文档的能力。*(已完成)*
 *   **[🟡 T5 (Phase 5)]**: 实现人机协同 (Human-in-the-loop)。**SQL 查询类 HITL 审批已交付**（见 §3.5）；邮件发送、系统写操作等通用 HITL 未实现。*(部分完成)*
 *   **[🔴 T6 (Phase 6)]**: 探索多智能体 (Multi-Agent) 协作与工作流编排，解决复杂多步任务。*(未完成)*
 
 ---
 
-## 7. 进阶与高级需求 (Advanced Features) 【🔴 未完成】
+## 7. 进阶与高级需求 (Advanced Features) 【🟡 部分完成】
 
-### 7.1 检索增强生成 (RAG - Knowledge Base) 【🔴 未完成】
+### 7.1 检索增强生成 (RAG - Knowledge Base) 【🟢 已完成】
 *   **背景**：Agent 需要结合企业的私有数据或最新的外部文档来回答问题，避免产生“幻觉”。
 *   **需求点**：
-    *   `[ ]` **文档解析与向量化**：支持上传文本/PDF文档，利用 Embedding 模型转换为向量并存储到向量数据库（如 Milvus / Chroma）。
-    *   `[ ]` **检索与挂载**：在 Agent 执行过程中，先根据用户问题在向量库中进行语义检索 (Similarity Search)，将相关内容作为 Context 挂载到 Prompt 中再交给大模型。
+    *   `[x]` **文档解析与向量化**：支持上传文本/PDF文档，利用 Embedding 模型转换为向量并存储到向量数据库（如 Milvus / Chroma）。*(已完成)*
+    *   `[x]` **检索与挂载**：在 Agent 执行过程中，先根据用户问题在向量库中进行语义检索 (Similarity Search)，将相关内容作为 Context 挂载到 Prompt 中再交给大模型。*(已完成)*
+    *   `[x]` **模型配置管理**：对话模型与向量模型的接口地址、密钥统一存储在数据库（`t_model_provider` / `t_model`，密钥 AES-GCM 加密），由「模型管理」页面维护，修改后无需重启；每个知识库创建时绑定一个向量模型，已被绑定的向量模型不可修改模型名与维度。*(已完成)*
 
 ### 7.2 多智能体协作 (Multi-Agent Collaboration) 【🔴 未完成】
 *   **背景**：针对复杂的业务场景，单一的 Agent 往往难以兼顾所有逻辑，需要多个专职 Agent 协同工作。

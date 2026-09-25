@@ -1,13 +1,10 @@
 package com.cl.agent.sql.autoconfigure;
 
-import com.cl.agent.sql.core.CryptoService;
 import com.cl.agent.sql.core.DialectRouter;
 import com.cl.agent.sql.core.QueryCostEstimator;
 import com.cl.agent.sql.core.SchemaRetriever;
 import com.cl.agent.sql.core.SqlAgentProperties;
-import com.cl.agent.sql.core.SqlApprovalTokenStore;
 import com.cl.agent.sql.core.SqlGuardEngine;
-import com.cl.agent.sql.executor.SqlConfirmExecutor;
 import com.cl.agent.sql.spi.DatasourceProvider;
 import com.cl.agent.sql.spi.SqlAuditPublisher;
 import com.cl.agent.sql.spi.support.NoOpDatasourceProvider;
@@ -30,10 +27,9 @@ import org.springframework.context.annotation.ComponentScan;
  * <h2>Bean 装配顺序</h2>
  * <ol>
  *   <li>{@link SqlAgentProperties}（由 {@code @EnableConfigurationProperties} 注入）</li>
- *   <li>{@link DialectRouter} / {@link SqlGuardEngine} / {@link CryptoService}（纯静态依赖）</li>
- *   <li>{@link SqlApprovalTokenStore} / {@link SchemaRetriever} / {@link QueryCostEstimator}（依赖 properties）</li>
+ *   <li>{@link DialectRouter} / {@link SqlGuardEngine}（纯静态依赖）</li>
+ *   <li>{@link SchemaRetriever} / {@link QueryCostEstimator}（依赖 properties）</li>
  *   <li>NoOp SPI 兜底（仅当宿主未提供 Bean 时生效）</li>
- *   <li>{@link SqlConfirmExecutor}（依赖 SPI + core）</li>
  *   <li>{@code com.cl.agent.sql.tool} 包下 3 个工具 Bean —— 通过 ComponentScan 自动注册</li>
  * </ol>
  *
@@ -72,18 +68,6 @@ public class SqlAgentAutoConfiguration {
     }
 
     /**
-     * 加解密服务。
-     *
-     * @param props starter 配置
-     * @return CryptoService 单例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public CryptoService cryptoService(SqlAgentProperties props) {
-        return new CryptoService(props);
-    }
-
-    /**
      * Schema 抽取器（Caffeine 缓存）。
      *
      * @param dialectRouter 方言路由器
@@ -110,18 +94,6 @@ public class SqlAgentAutoConfiguration {
     }
 
     /**
-     * 审批令牌存储（Caffeine）。
-     *
-     * @param props 配置（读 TTL）
-     * @return SqlApprovalTokenStore 单例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public SqlApprovalTokenStore sqlApprovalTokenStore(SqlAgentProperties props) {
-        return new SqlApprovalTokenStore(props);
-    }
-
-    /**
      * 数据源 SPI 兜底实现：宿主未提供 Bean 时生效。
      *
      * @return NoOpDatasourceProvider 单例
@@ -143,27 +115,5 @@ public class SqlAgentAutoConfiguration {
     public SqlAuditPublisher noOpSqlAuditPublisher() {
         log.warn("[SqlAgentAutoConfig] 未发现宿主 SqlAuditPublisher Bean，注册 NoOp 兜底实现");
         return new NoOpSqlAuditPublisher();
-    }
-
-    /**
-     * SQL 审批执行器。
-     *
-     * @param props              配置
-     * @param datasourceProvider 数据源 SPI
-     * @param tokenStore         token 存储
-     * @param guardEngine        守卫
-     * @param auditPublisher     审计
-     * @return SqlConfirmExecutor 单例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public SqlConfirmExecutor sqlConfirmExecutor(SqlAgentProperties props,
-                                                 DatasourceProvider datasourceProvider,
-                                                 SqlApprovalTokenStore tokenStore,
-                                                 SqlGuardEngine guardEngine,
-                                                 SqlAuditPublisher auditPublisher) {
-        log.info("[SqlAgentAutoConfig] SQL Agent 已就绪 (rowLimit={}, tokenTtl={}s, timeout={}s)",
-                props.getDefaultRowLimit(), props.getTokenTtlSeconds(), props.getExecutionTimeoutSeconds());
-        return new SqlConfirmExecutor(props, datasourceProvider, tokenStore, guardEngine, auditPublisher);
     }
 }

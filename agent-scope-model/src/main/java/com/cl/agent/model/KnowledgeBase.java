@@ -39,4 +39,8 @@ public class KnowledgeBase extends BaseEntity {
     /** 创建并拥有此知识库的用户 ID */
     @TableField("user_id")
     private String userId;
+
+    /** 绑定的向量模型 ID，关联 t_model.id；创建时确定，之后不可更换，否则已入库向量与检索向量不在同一向量空间 */
+    @TableField("embedding_model_id")
+    private String embeddingModelId;
 }

@@ -21,6 +21,7 @@
         <module>agent-scope-tool-spring-boot-starter</module>
         <module>agent-scope-sql-spring-boot-starter</module>
         <module>agent-scope-rag-spring-boot-starter</module>
+        <module>agent-scope-hitl-spring-boot-starter</module>
         <module>agent-scope-dao</module>
         <module>agent-scope-service</module>
         <module>agent-scope-biz</module>
@@ -132,6 +133,11 @@
             <dependency>
                 <groupId>com.cl.agent</groupId>
                 <artifactId>agent-scope-rag-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.cl.agent</groupId>
+                <artifactId>agent-scope-hitl-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

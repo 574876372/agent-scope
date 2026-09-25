@@ -1,4 +1,4 @@
-package com.cl.agent.sql.core;
+package com.cl.agent.commons.crypto;
 
 import com.cl.agent.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,8 @@ import java.util.Base64;
  * AES/GCM 对称加解密服务。
  *
  * <h2>用途</h2>
- * 对宿主存入 {@code t_datasource.password_cipher} 的数据库密码字段加解密。算法选择 AES-256-GCM：
+ * 对需要落库的敏感字段加解密，如 {@code t_datasource.password_cipher}（数据源密码）、
+ * {@code t_model_provider.api_key_cipher}（模型厂商密钥）。算法选择 AES-256-GCM：
  * <ul>
  *   <li>对称加密性能足够（每次仅几百字节）；</li>
  *   <li>GCM 模式自带认证（防篡改），无需额外 HMAC；</li>
@@ -24,8 +25,9 @@ import java.util.Base64;
  * </ul>
  *
  * <h2>密钥派生</h2>
- * 配置项 {@code agent.sql.crypto-key} 经 SHA-256 派生为 32 字节 AES 密钥；
- * 建议通过环境变量 {@code SQL_DS_CRYPTO_KEY} 注入，避免明文进 yml。
+ * 配置项 {@code agent.crypto-key} 经 SHA-256 派生为 32 字节 AES 密钥；
+ * 建议通过环境变量 {@code AGENT_CRYPTO_KEY} 注入，避免明文进 yml。
+ * 更换密钥后已有密文将无法解密，需重新录入全部密码与密钥。
  *
  * <h2>线程安全</h2>
  * {@link Cipher} 实例**非**线程安全，故每次加/解密都新建实例；性能损耗在密码量级下可忽略。
@@ -51,19 +53,18 @@ public class CryptoService {
     /**
      * 构造方法。
      *
-     * @param props 全局配置；从 {@link SqlAgentProperties#getCryptoKey()} 取原始密钥串
-     * @throws BizException 密钥为空或长度不足时
+     * @param raw 原始密钥串，来自配置项 {@code agent.crypto-key}
+     * @throws BizException 密钥长度不足时
      */
-    public CryptoService(SqlAgentProperties props) {
-        String raw = props.getCryptoKey();
+    public CryptoService(String raw) {
         if (raw == null || raw.isBlank()) {
             // 启动期不直接抛错：仅日志告警；首次调用 encrypt/decrypt 才抛
-            log.warn("[CryptoService] agent.sql.crypto-key 未配置，加解密功能将不可用");
+            log.warn("[CryptoService] agent.crypto-key 未配置，加解密功能将不可用");
             this.secretKey = null;
             return;
         }
         if (raw.length() < 16) {
-            throw new BizException(500, "agent.sql.crypto-key 长度过短，建议至少 16 字符");
+            throw new BizException(500, "agent.crypto-key 长度过短，建议至少 16 字符");
         }
         try {
             byte[] hashed = MessageDigest.getInstance("SHA-256").digest(raw.getBytes(StandardCharsets.UTF_8));
@@ -142,7 +143,7 @@ public class CryptoService {
      */
     private void ensureKey() {
         if (secretKey == null) {
-            throw new BizException(500, "agent.sql.crypto-key 未配置，无法执行加解密");
+            throw new BizException(500, "agent.crypto-key 未配置，无法执行加解密");
         }
     }
 }
