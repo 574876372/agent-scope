@@ -30,9 +30,6 @@ public class DocumentReaderFactory {
     /** RAG 属性配置项 */
     private final AgentRagProperties properties;
 
-    /** 默认的重叠字符尺寸，防止段落边界信息断层 */
-    private static final int DEFAULT_OVERLAP = 80;
-
     /**
      * 构造文档解析工厂。
      *
@@ -54,26 +51,27 @@ public class DocumentReaderFactory {
     public List<Document> parseFile(String filePath, String fileType) {
         String ext = fileType.trim().toLowerCase();
         int chunkSize = properties.getChunkSize();
+        int overlap = properties.getChunkOverlap();
         
         log.info("[RAG-Reader] 开始解析文档: path={}, type={}, chunkSize={}, overlap={}", 
-                filePath, ext, chunkSize, DEFAULT_OVERLAP);
+                filePath, ext, chunkSize, overlap);
         
         Reader reader;
         switch (ext) {
             case "pdf":
                 // 1. PDF 文件原生 Reader 装配
-                reader = new PDFReader(chunkSize, SplitStrategy.PARAGRAPH, DEFAULT_OVERLAP);
+                reader = new PDFReader(chunkSize, SplitStrategy.PARAGRAPH, overlap);
                 break;
                 
             case "txt":
             case "md":
                 // 2. 纯文本及 Markdown 文件原生 Reader 装配
-                reader = new TextReader(chunkSize, SplitStrategy.PARAGRAPH, DEFAULT_OVERLAP);
+                reader = new TextReader(chunkSize, SplitStrategy.PARAGRAPH, overlap);
                 break;
                 
             case "docx":
                 // 3. Word 新版 Docx 文件原生 WordReader 装配
-                reader = new WordReader(chunkSize, SplitStrategy.PARAGRAPH, DEFAULT_OVERLAP, false, false, null);
+                reader = new WordReader(chunkSize, SplitStrategy.PARAGRAPH, overlap, false, false, null);
                 break;
                 
             case "xls":
@@ -85,7 +83,7 @@ public class DocumentReaderFactory {
             default:
                 // 4. 万能的 TikaReader 覆盖：支持 Excel 表格、旧版 Office 文档、XML 结构化抽取等所有格式
                 log.info("[RAG-Reader] 动态装配 TikaReader 引擎解析文件类型: {}", ext);
-                reader = new TikaReader(chunkSize, SplitStrategy.PARAGRAPH, DEFAULT_OVERLAP, null);
+                reader = new TikaReader(chunkSize, SplitStrategy.PARAGRAPH, overlap, null);
                 break;
         }
 

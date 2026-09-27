@@ -44,6 +44,12 @@ public class AgentRagProperties {
     private int chunkSize = 512;
 
     /**
+     * 相邻文档切片之间的重叠字符数。
+     * <p>默认为 80，防止段落边界信息断层，保持上下文连续性。</p>
+     */
+    private int chunkOverlap = 80;
+
+    /**
      * 知识库上传文档的本地存储根目录。
      * <p>实际路径为 {@code {uploadDir}/{知识库ID}/yyyy/MM/dd/{文档ID}.{扩展名}}；
      * 相对路径以后端进程的启动目录为基准，生产环境建议配置绝对路径。</p>

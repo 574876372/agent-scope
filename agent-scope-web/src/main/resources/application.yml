@@ -138,6 +138,7 @@ agent:
     default-row-limit: 3                                     # 默认单次检索召回的最大文本分片数量（Top-K）
     default-score-threshold: 0.3                             # 默认检索相似度得分最低过滤阈值，取值范围 0.0 ~ 1.0，仅召回大于或等于该分数的片段
     chunk-size: 512                                          # 文档切片分割的最大字数/字符尺寸
+    chunk-overlap: 80                                        # 相邻文档切片之间的重叠字符数（保持上下文连续性）
     upload-dir: ./data/uploads                               # 上传文档存储根目录，实际路径为 {upload-dir}/{知识库ID}/年/月/日/；相对路径以启动目录为基准，生产环境建议配置绝对路径
     # 向量模型不在此配置：由「模型管理」页面维护（t_model_provider / t_model），每个知识库创建时绑定一个向量模型
     in-memory:
