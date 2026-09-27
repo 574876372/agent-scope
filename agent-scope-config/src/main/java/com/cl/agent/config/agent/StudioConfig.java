@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  *       project: my-project
  * </pre>
  *
- * @see io.agentscope.core.studio.StudioManager
+ * @see StudioManager
  */
 @Slf4j
 @Configuration

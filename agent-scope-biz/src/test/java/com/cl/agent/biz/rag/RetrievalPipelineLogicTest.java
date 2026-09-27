@@ -151,9 +151,67 @@ public class RetrievalPipelineLogicTest {
         assertEquals(12, whole.getEndIndex());
         assertEquals("请求参数表第一部分\n请求参数表第二部分\n请求参数表第三部分", whole.getContent());
 
-        RetrievalSegment trimmed = expander.expand(List.of(h), kbMap, 5, 12, 4000).get(0);
-        assertEquals("trimmed", trimmed.getExpandMode());
-        assertTrue(trimmed.getCharCount() <= 12 + "\n……（内容过长，已截断）".length());
+        // 总上限 12 字放不下整章（3 片共 29 字）：改为章节节选，只取得下命中切片本身
+        RetrievalSegment partial = expander.expand(List.of(h), kbMap, 5, 12, 0).get(0);
+        assertEquals("section-partial", partial.getExpandMode());
+        assertEquals(11, partial.getStartIndex());
+        assertEquals(11, partial.getEndIndex());
+        assertTrue(RetrievalPipeline.buildContextText(List.of(partial)).contains("章节节选"));
+    }
+
+    /**
+     * 复现线上问题：1101 请求参数表 9 片共 8299 字。旧逻辑整章上限固定 4000 字，退回前后 2 片后在第 38 项截断；
+     * 现在整章上限跟随上下文总上限，总上限足够时整章带入。
+     */
+    @Test
+    public void largeParameterTableIsIncludedWhole() {
+        IKnowledgeService ks = Mockito.mock(IKnowledgeService.class);
+        String path = "一、账户类接口 (1100) › 1101 - 商户进件 › 请求参数（In）";
+        List<KnowledgeChunk> section = new ArrayList<>();
+        for (int i = 9; i <= 17; i++) {
+            section.add(chunk("api", i, "参".repeat(922), path));
+        }
+        Mockito.when(ks.listChunksBySection(eq("api"), eq(path))).thenReturn(section);
+        Mockito.when(ks.listChunksInRange(eq("api"), anyInt(), anyInt())).thenAnswer(inv -> {
+            int from = inv.getArgument(1);
+            int to = inv.getArgument(2);
+            return section.stream().filter(c -> c.getChunkIndex() >= from && c.getChunkIndex() <= to).toList();
+        });
+        ContextExpander expander = newExpander(ks);
+        Map<String, KnowledgeBase> kbMap = Map.of("tech", KnowledgeBase.builder().id("tech").kbType("TECH_DOC").build());
+        RetrievalHit h = hit("tech", "api", 12, 1, null);
+        h.setSectionPath(path);
+        h.setFusedScore(0.1);
+
+        RetrievalSegment whole = expander.expand(List.of(h), kbMap, 5, 20000, 0).get(0);
+        assertEquals("section", whole.getExpandMode());
+        assertEquals(9, whole.getStartIndex());
+        assertEquals(17, whole.getEndIndex());
+
+        // 总上限只有 4500 字时取章节节选：以命中片为中心尽量取满，而不是固定前后 2 片
+        RetrievalSegment partial = expander.expand(List.of(h), kbMap, 5, 4500, 0).get(0);
+        assertEquals("section-partial", partial.getExpandMode());
+        assertEquals(11, partial.getStartIndex());
+        assertEquals(14, partial.getEndIndex());
+    }
+
+    /**
+     * 章节节选先向后扩展、再向前；合并段时取覆盖更大的扩展方式。
+     */
+    @Test
+    public void sectionExcerptAndModeMerge() {
+        List<KnowledgeChunk> section = new ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            section.add(chunk("d", i, "x".repeat(100), "s"));
+        }
+        assertArrayEquals(new int[]{0, 2}, ContextExpander.sectionExcerpt(section, 0, 300));
+        assertArrayEquals(new int[]{2, 4}, ContextExpander.sectionExcerpt(section, 3, 300));
+        assertArrayEquals(new int[]{4, 5}, ContextExpander.sectionExcerpt(section, 5, 250));
+        assertNull(ContextExpander.sectionExcerpt(section, 9, 300));
+
+        assertEquals("section", ContextExpander.strongerMode("section-partial", "section"));
+        assertEquals("section-partial", ContextExpander.strongerMode("window", "section-partial"));
+        assertEquals("window", ContextExpander.strongerMode("window", "none"));
     }
 
     /**

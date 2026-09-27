@@ -22,11 +22,17 @@ public class RetrievalProperties {
     /** 最终交给模型的段数（上下文扩展、合并后的连续原文段） */
     private int finalTopK = 5;
 
-    /** 注入上下文的总字符数上限，超出时按融合排名从低到高舍弃 */
-    private int contextMaxChars = 8000;
+    /**
+     * 注入上下文的总字符数上限，超出时按融合排名从低到高舍弃。
+     * <p>默认 20000 字（约 1.2~1.5 万 token），可容纳接口文档中常见的大参数表整章。</p>
+     */
+    private int contextMaxChars = 20000;
 
-    /** 技术文档类型整章带入时，单个章节的最大字符数；超过则改为按相邻切片扩展 */
-    private int sectionMaxChars = 4000;
+    /**
+     * 技术文档类型整章带入时，单个章节的最大字符数；≤0 表示与上下文总长上限一致。
+     * <p>超过时在章节内以命中位置为中心尽量取满上限（章节节选）。</p>
+     */
+    private int sectionMaxChars = 0;
 
     /** 是否默认开启查询改写（结合对话历史把追问改写为独立检索词） */
     private boolean queryRewrite = true;

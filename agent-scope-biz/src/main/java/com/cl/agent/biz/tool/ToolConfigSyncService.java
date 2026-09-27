@@ -2,6 +2,7 @@ package com.cl.agent.biz.tool;
 
 import com.cl.agent.model.ToolConfig;
 import com.cl.agent.service.IToolConfigService;
+import com.cl.agent.tool.core.AgentToolRegistry;
 import com.cl.agent.tool.core.ReflectiveAgentTool;
 import com.cl.agent.tool.core.ToolRegistrySyncCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +15,7 @@ import java.util.Set;
 
 /**
  * 工具元数据同步服务：应用启动时自动将 {@code @AgentToolDef} 注解的工具信息同步到 {@code t_tool_config} 表。
- * <p>实现 {@link ToolRegistrySyncCallback}，在 {@link com.cl.agent.tool.core.AgentToolRegistry}
+ * <p>实现 {@link ToolRegistrySyncCallback}，在 {@link AgentToolRegistry}
  * 完成扫描后被调用。</p>
  */
 @Service

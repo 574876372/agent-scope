@@ -144,8 +144,8 @@ agent:
       keyword-top-n: 20                                      # 关键词（全文索引）召回数
       rrf-k: 60                                              # RRF 融合常数：得分 = Σ 1 / (rrf-k + 排名)
       final-top-k: 5                                         # 最终交给模型的段数（上下文扩展、合并后的连续原文段）
-      context-max-chars: 8000                                # 注入上下文总长上限（字符），超出时按融合排名从低到高舍弃
-      section-max-chars: 4000                                # 技术文档整章带入时单个章节的字符数上限，超过则改为按相邻切片扩展
+      context-max-chars: 20000                               # 注入上下文总长上限（字符），超出时按融合排名从低到高舍弃；需容纳大参数表整章
+      section-max-chars: 0                                   # 技术文档整章带入时单个章节的字符数上限；0 表示与 context-max-chars 一致，超过时取章节节选
       query-rewrite: true                                    # 是否默认开启查询改写（结合对话历史把追问改写为独立检索词）
       history-turns: 3                                       # 查询改写参考的最近对话轮数
       rerank-candidates: 30                                  # 进入重排的融合候选数上限（配置了重排模型时生效）

@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -464,7 +465,7 @@ public class DocumentStructureReader {
         }
         List<String> header = new ArrayList<>();
         header.add(toPipeRow(rows.get(0), columns));
-        header.add(toPipeRow(java.util.Collections.nCopies(columns, "---"), columns));
+        header.add(toPipeRow(Collections.nCopies(columns, "---"), columns));
         List<String> body = new ArrayList<>();
         for (int r = 1; r < rows.size(); r++) {
             body.add(toPipeRow(rows.get(r), columns));

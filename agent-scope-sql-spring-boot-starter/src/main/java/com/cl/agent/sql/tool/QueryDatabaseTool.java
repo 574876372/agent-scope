@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.sql.ResultSetMetaData;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -213,7 +214,7 @@ public class QueryDatabaseTool implements PreCheckHandler {
                         .columns(new ArrayList<>())
                         .rows(new ArrayList<>())
                         .build();
-                java.sql.ResultSetMetaData md = rs.getMetaData();
+                ResultSetMetaData md = rs.getMetaData();
                 int columnCount = md.getColumnCount();
                 for (int i = 1; i <= columnCount; i++) {
                     inner.getColumns().add(md.getColumnLabel(i));

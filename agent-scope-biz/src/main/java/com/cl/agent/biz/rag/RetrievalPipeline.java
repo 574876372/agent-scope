@@ -55,6 +55,9 @@ public class RetrievalPipeline {
     private static final String CONTEXT_HEADER = "以下是从知识库检索到的参考资料（共 %d 段）。回答时优先依据这些资料，"
             + "引用时在句末标注来源编号，如 [1]；资料中没有的信息请明确说明未检索到，不要编造。\n";
 
+    /** 来源段只包含章节一部分时附加在来源标注后的说明 */
+    private static final String PARTIAL_NOTE = "（章节节选：该章节超过上下文长度上限，此处未完整给出）";
+
     @Autowired
     private IKnowledgeService knowledgeService;
 
@@ -190,8 +193,12 @@ public class RetrievalPipeline {
         StringBuilder sb = new StringBuilder("<retrieved_knowledge>\n");
         sb.append(String.format(CONTEXT_HEADER, segments.size()));
         for (RetrievalSegment s : segments) {
-            sb.append("\n[").append(s.getCitation()).append("] 来源：").append(s.sourceLabel()).append('\n');
-            sb.append(s.getContent()).append('\n');
+            sb.append("\n[").append(s.getCitation()).append("] 来源：").append(s.sourceLabel());
+            // 章节超过上限只给出了一部分时明确告知模型，避免把节选当作完整内容作答
+            if ("section-partial".equals(s.getExpandMode()) || "trimmed".equals(s.getExpandMode())) {
+                sb.append(PARTIAL_NOTE);
+            }
+            sb.append('\n').append(s.getContent()).append('\n');
         }
         sb.append("</retrieved_knowledge>");
         return sb.toString();

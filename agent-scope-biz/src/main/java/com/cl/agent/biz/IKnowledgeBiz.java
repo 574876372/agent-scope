@@ -1,6 +1,10 @@
 package com.cl.agent.biz;
 
 import com.cl.agent.dto.*;
+import com.cl.agent.dto.rag.KbTypeOptionResponse;
+import com.cl.agent.dto.rag.RetrievalTestRequest;
+import com.cl.agent.dto.rag.RetrievalTrace;
+import com.cl.agent.exception.BizException;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
@@ -32,7 +36,7 @@ public interface IKnowledgeBiz {
      *
      * @param id 知识库唯一标识 ID，非空
      * @return {@link KbResponse} 知识库详情响应对象
-     * @throws com.cl.agent.exception.BizException 当对应的知识库不存在时抛出 404 错误
+     * @throws BizException 当对应的知识库不存在时抛出 404 错误
      */
     KbResponse getKnowledgeBase(String id);
 
@@ -55,7 +59,7 @@ public interface IKnowledgeBiz {
      * @param kbId 目标绑定的知识库唯一 ID，非空
      * @param file 前端提交的 Multipart 物理文件，必填且非空
      * @return {@link UploadDocResponse} 包含文档初步登记元数据与上传中状态的响应对象
-     * @throws com.cl.agent.exception.BizException 当文件为空、格式不支持或所属知识库不存在时抛出
+     * @throws BizException 当文件为空、格式不支持或所属知识库不存在时抛出
      */
     UploadDocResponse uploadAndIndexDocument(String kbId, MultipartFile file);
 
@@ -96,7 +100,7 @@ public interface IKnowledgeBiz {
      * @param id      知识库 ID，非空
      * @param request 更新内容；名称为空时保留原名称，切片参数为空表示恢复类型预设
      * @return 更新后的知识库详情
-     * @throws com.cl.agent.exception.BizException 知识库不存在（404）或参数超出范围（400）时抛出
+     * @throws BizException 知识库不存在（404）或参数超出范围（400）时抛出
      */
     KbResponse updateKnowledgeBase(String id, CreateKbRequest request);
 
@@ -105,14 +109,14 @@ public interface IKnowledgeBiz {
      *
      * @return 类型选项列表，非空
      */
-    List<com.cl.agent.dto.rag.KbTypeOptionResponse> listKbTypes();
+    List<KbTypeOptionResponse> listKbTypes();
 
     /**
      * 按知识库当前配置重新解析单个文档，原文件无需重新上传；异步执行。
      *
      * @param docId 文档 ID，非空
      * @return 置为解析中的文档信息
-     * @throws com.cl.agent.exception.BizException RAG 未启用、文档不存在（404）或正在解析中（409）时抛出
+     * @throws BizException RAG 未启用、文档不存在（404）或正在解析中（409）时抛出
      */
     UploadDocResponse reparseDocument(String docId);
 
@@ -121,7 +125,7 @@ public interface IKnowledgeBiz {
      *
      * @param kbId 知识库 ID，非空
      * @return 本次提交重新解析的文档数量
-     * @throws com.cl.agent.exception.BizException RAG 未启用或知识库不存在时抛出
+     * @throws BizException RAG 未启用或知识库不存在时抛出
      */
     int reparseKnowledgeBase(String kbId);
 
@@ -130,7 +134,7 @@ public interface IKnowledgeBiz {
      *
      * @param request 演练场请求，{@code kbId} 与 {@code query} 必填
      * @return 完整检索过程记录
-     * @throws com.cl.agent.exception.BizException RAG 未启用、参数缺失或知识库不存在时抛出
+     * @throws BizException RAG 未启用、参数缺失或知识库不存在时抛出
      */
-    com.cl.agent.dto.rag.RetrievalTrace retrievalTest(com.cl.agent.dto.rag.RetrievalTestRequest request);
+    RetrievalTrace retrievalTest(RetrievalTestRequest request);
 }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.cl.agent.enums.MemoryMode;
 import lombok.*;
 
 /**
@@ -49,7 +50,7 @@ public class AgentInfo extends BaseEntity {
 
     /**
      * 记忆模式：FULL=全量不压缩 / WINDOW=纯滑动丢弃 / SUMMARY=摘要+滑动（默认）。
-     * 对应枚举 {@link com.cl.agent.enums.MemoryMode}，以字符串形式存储。
+     * 对应枚举 {@link MemoryMode}，以字符串形式存储。
      */
     @TableField("memory_mode")
     private String memoryMode;

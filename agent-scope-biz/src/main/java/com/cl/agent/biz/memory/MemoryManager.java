@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 public class MemoryManager {
 
     /** 助手消息中持久化的检索来源块（{@code <retrieval>…</retrieval>}），生成摘要前去除 */
-    private static final java.util.regex.Pattern RETRIEVAL_BLOCK = java.util.regex.Pattern.compile("(?s)<retrieval>.*?</retrieval>");
+    private static final Pattern RETRIEVAL_BLOCK = Pattern.compile("(?s)<retrieval>.*?</retrieval>");
 
     @Autowired
     private AgentMemoryProperties memoryProperties;

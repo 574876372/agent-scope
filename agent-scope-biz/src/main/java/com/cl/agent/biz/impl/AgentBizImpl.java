@@ -29,6 +29,7 @@ import io.agentscope.core.model.transport.HttpTransport;
 import io.agentscope.core.model.transport.HttpTransportConfig;
 import io.agentscope.core.model.transport.HttpVersion;
 import io.agentscope.core.model.transport.OkHttpTransport;
+import io.agentscope.core.model.transport.ProxyConfig;
 import io.agentscope.core.studio.StudioManager;
 import io.agentscope.core.studio.StudioMessageHook;
 import io.agentscope.core.tool.Toolkit;
@@ -36,7 +37,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import okhttp3.ConnectionPool;
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 
 import com.cl.agent.service.IKnowledgeService;
 import com.cl.agent.biz.rag.EnhancedKnowledge;
@@ -47,12 +54,24 @@ import io.agentscope.core.rag.Knowledge;
 import io.agentscope.core.rag.RAGMode;
 import io.agentscope.core.rag.model.RetrieveConfig;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.IOException;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.SocketAddress;
+import java.net.URI;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -88,7 +107,7 @@ public class AgentBizImpl implements IAgentBiz {
     private static final int DEFAULT_TOOL_TOP_K = 5;
 
     /** 持久化到助手消息中的检索来源块，送入模型记忆前需去除 */
-    private static final java.util.regex.Pattern RETRIEVAL_BLOCK = java.util.regex.Pattern.compile("(?s)<retrieval>.*?</retrieval>");
+    private static final Pattern RETRIEVAL_BLOCK = Pattern.compile("(?s)<retrieval>.*?</retrieval>");
 
 
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
@@ -132,7 +151,7 @@ public class AgentBizImpl implements IAgentBiz {
      * @return AgentResponse 创建成功的 Agent 详细配置信息响应对象
      */
     @Override
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public AgentResponse createAgent(CreateAgentRequest request) {
         // 生成 Agent ID
         String agentId = UUID.randomUUID().toString();
@@ -222,7 +241,7 @@ public class AgentBizImpl implements IAgentBiz {
      * @return 无返回值；方法返回时数据库与缓存均已清理
      */
     @Override
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public void deleteAgent(String id) {
         agentService.deleteById(id);
         agentToolRelService.deleteByAgentId(id);
@@ -242,7 +261,7 @@ public class AgentBizImpl implements IAgentBiz {
      * @throws BizException 当对应的 Agent 不存在时抛出 404 错误
      */
     @Override
-    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Exception.class)
     public AgentResponse updateAgent(String id, CreateAgentRequest request) {
         AgentInfo info = agentService.getById(id);
         if (info == null) {
@@ -319,7 +338,7 @@ public class AgentBizImpl implements IAgentBiz {
         Msg reply;
         try {
             String userId = UserContext.getUserId();
-            reactor.core.publisher.Mono<Msg> callMono = agent.call(buildInputMessages(request));
+            Mono<Msg> callMono = agent.call(buildInputMessages(request));
             if (userId != null) {
                 callMono = callMono.contextWrite(context -> context.put("userId", userId));
             }
@@ -370,7 +389,7 @@ public class AgentBizImpl implements IAgentBiz {
         AtomicBoolean firstEvent = new AtomicBoolean(true);
 
         String userId = UserContext.getUserId();
-        reactor.core.publisher.Flux<Event> stream = agent.stream(inputMessages, options)
+        Flux<Event> stream = agent.stream(inputMessages, options)
                 .doOnSubscribe(sub -> {
                     startMs.set(System.currentTimeMillis());
                     log.info("[Model] 开始调用模型(流式), agentId={}, agentName={}, model={}",
@@ -517,41 +536,41 @@ public class AgentBizImpl implements IAgentBiz {
         // 目的：防止 JDK HttpClient/OkHttp 用默认 HTTP/2 协议请求 DeepSeek/通义等接口时，
         // 在 SSE（流式）结束或连接复用时由于代理或网关发送的 RST_STREAM / 提前断开，
         // 导致抛出 "okhttp3.internal.http2.StreamResetException: stream was reset: CANCEL"
-        // 或 "java.io.IOException: closed" / "EOFReachedException" 异常。
+        // 或 "IOException: closed" / "EOFReachedException" 异常。
         HttpTransportConfig config = HttpTransportConfig.builder()
                 .httpVersion(HttpVersion.HTTP_1_1)
                 .build();
                 
         // 显式构建 OkHttpClient 并强制设定协议为 HTTP/1.1 (因为 OkHttpTransport 默认会忽略 HttpTransportConfig.httpVersion)
-        okhttp3.OkHttpClient.Builder clientBuilder = new okhttp3.OkHttpClient.Builder()
-                .connectTimeout(config.getConnectTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
-                .readTimeout(config.getReadTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
-                .writeTimeout(config.getWriteTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
-                .connectionPool(new okhttp3.ConnectionPool(
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
+                .connectTimeout(config.getConnectTimeout().toMillis(), TimeUnit.MILLISECONDS)
+                .readTimeout(config.getReadTimeout().toMillis(), TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getWriteTimeout().toMillis(), TimeUnit.MILLISECONDS)
+                .connectionPool(new ConnectionPool(
                         config.getMaxIdleConnections(),
                         config.getKeepAliveDuration().toMillis(),
-                        java.util.concurrent.TimeUnit.MILLISECONDS
+                        TimeUnit.MILLISECONDS
                 ))
-                .protocols(java.util.List.of(okhttp3.Protocol.HTTP_1_1));
+                .protocols(List.of(Protocol.HTTP_1_1));
 
         // 兼容忽略 SSL 证书校验的配置
         if (config.isIgnoreSsl()) {
             try {
-                javax.net.ssl.TrustManager[] trustAllCerts = new javax.net.ssl.TrustManager[]{
-                    new javax.net.ssl.X509TrustManager() {
+                TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
                         @Override
-                        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+                        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
                         @Override
-                        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) {}
+                        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
                         @Override
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new java.security.cert.X509Certificate[]{};
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return new X509Certificate[]{};
                         }
                     }
                 };
-                javax.net.ssl.SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
-                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-                clientBuilder.sslSocketFactory(sslContext.getSocketFactory(), (javax.net.ssl.X509TrustManager) trustAllCerts[0]);
+                SSLContext sslContext = SSLContext.getInstance("SSL");
+                sslContext.init(null, trustAllCerts, new SecureRandom());
+                clientBuilder.sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustAllCerts[0]);
                 clientBuilder.hostnameVerifier((hostname, session) -> true);
             } catch (Exception e) {
                 log.error("Failed to configure trust-all SSL factory", e);
@@ -559,19 +578,19 @@ public class AgentBizImpl implements IAgentBiz {
         }
 
         // 兼容代理配置
-        io.agentscope.core.model.transport.ProxyConfig proxyConfig = config.getProxyConfig();
+        ProxyConfig proxyConfig = config.getProxyConfig();
         if (proxyConfig != null) {
             if (proxyConfig.getNonProxyHosts() != null && !proxyConfig.getNonProxyHosts().isEmpty()) {
-                clientBuilder.proxySelector(new java.net.ProxySelector() {
+                clientBuilder.proxySelector(new ProxySelector() {
                     @Override
-                    public java.util.List<java.net.Proxy> select(java.net.URI uri) {
+                    public List<Proxy> select(URI uri) {
                         if (proxyConfig.getNonProxyHosts().contains(uri.getHost())) {
-                            return java.util.List.of(java.net.Proxy.NO_PROXY);
+                            return List.of(Proxy.NO_PROXY);
                         }
-                        return java.util.List.of(proxyConfig.toJavaProxy());
+                        return List.of(proxyConfig.toJavaProxy());
                     }
                     @Override
-                    public void connectFailed(java.net.URI uri, java.net.SocketAddress sa, java.io.IOException ioe) {}
+                    public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {}
                 });
             } else {
                 clientBuilder.proxy(proxyConfig.toJavaProxy());
@@ -579,7 +598,7 @@ public class AgentBizImpl implements IAgentBiz {
 
             if (proxyConfig.hasAuthentication()) {
                 clientBuilder.proxyAuthenticator((route, response) -> {
-                    String credential = okhttp3.Credentials.basic(proxyConfig.getUsername(), proxyConfig.getPassword());
+                    String credential = Credentials.basic(proxyConfig.getUsername(), proxyConfig.getPassword());
                     return response.request().newBuilder()
                             .header("Proxy-Authorization", credential)
                             .build();
@@ -587,7 +606,7 @@ public class AgentBizImpl implements IAgentBiz {
             }
         }
 
-        okhttp3.OkHttpClient okHttpClient = clientBuilder.build();
+        OkHttpClient okHttpClient = clientBuilder.build();
 
         // 使用 OkHttp 传输层实例替代 JDK HttpClient，并注入我们自定义的 HTTP/1.1 OkHttpClient
         HttpTransport transport = OkHttpTransport.builder()

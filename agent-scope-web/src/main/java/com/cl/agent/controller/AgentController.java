@@ -1,5 +1,6 @@
 package com.cl.agent.controller;
 
+import com.cl.agent.exception.BizException;
 import com.cl.agent.dto.AgentResponse;
 import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
@@ -80,7 +81,7 @@ public class AgentController {
      *
      * @param id 智能体唯一 ID，非空，通过查询参数 {@code ?id=} 传入
      * @return {@link ResponseEntity} 包含智能体详情响应，HTTP 状态码 200
-     * @throws com.cl.agent.exception.BizException 当智能体不存在时，HTTP 404
+     * @throws BizException 当智能体不存在时，HTTP 404
      */
     @GetMapping("/detail")
     public ResponseEntity<AgentResponse> getAgent(@RequestParam("id") String id) {

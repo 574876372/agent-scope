@@ -4,7 +4,9 @@ import com.cl.agent.model.AgentKbRel;
 import com.cl.agent.model.KnowledgeBase;
 import com.cl.agent.model.KnowledgeChunk;
 import com.cl.agent.model.KnowledgeDocument;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 知识库、文档、分片及 Agent 关系持久化数据服务层核心接口。
@@ -128,7 +130,7 @@ public interface IKnowledgeService {
      * @param docIndexes 文档 ID 到切片序号集合的映射，为空时返回空列表
      * @return 命中的切片，顺序不保证；向量库中存在而切片表缺失的不返回
      */
-    List<KnowledgeChunk> listChunksByDocIndexes(java.util.Map<String, ? extends java.util.Collection<Integer>> docIndexes);
+    List<KnowledgeChunk> listChunksByDocIndexes(Map<String, ? extends Collection<Integer>> docIndexes);
 
     /**
      * 查询文档内序号在 [fromIndex, toIndex] 区间的切片。
@@ -157,7 +159,7 @@ public interface IKnowledgeService {
      * @param ids 文档 ID 集合，为空时返回空列表
      * @return 文档列表；已删除或不存在的 ID 不返回
      */
-    List<KnowledgeDocument> listDocumentsByIds(java.util.Collection<String> ids);
+    List<KnowledgeDocument> listDocumentsByIds(Collection<String> ids);
 
     /**
      * 按 ID 批量查询知识库。
@@ -165,7 +167,7 @@ public interface IKnowledgeService {
      * @param ids 知识库 ID 集合，为空时返回空列表
      * @return 知识库列表；已删除或不存在的 ID 不返回
      */
-    List<KnowledgeBase> listBasesByIds(java.util.Collection<String> ids);
+    List<KnowledgeBase> listBasesByIds(Collection<String> ids);
 
     /**
      * 级联删除指定文档下的所有文本切片实体。

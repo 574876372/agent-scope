@@ -1,5 +1,6 @@
 package com.cl.agent.service;
 
+import com.cl.agent.exception.BizException;
 import com.cl.agent.dto.model.ModelConnection;
 import com.cl.agent.dto.model.ModelInfoRequest;
 import com.cl.agent.dto.model.ModelProviderRequest;
@@ -156,7 +157,7 @@ public interface IModelConfigService {
      *
      * @param modelId 重排模型 ID；为空时取默认重排模型（{@code t_model.model_type=RERANK 且 is_default=1}）
      * @return 连接参数；未指定且无默认重排模型，或所选模型 / 厂商已停用时返回 null
-     * @throws com.cl.agent.exception.BizException 显式指定的模型不存在、不是重排模型或厂商缺少 API Key 时抛出
+     * @throws BizException 显式指定的模型不存在、不是重排模型或厂商缺少 API Key 时抛出
      */
     ModelConnection resolveRerankConnection(String modelId);
 
@@ -165,7 +166,7 @@ public interface IModelConfigService {
      * <p>使用说明：知识库演练场做查询改写、评估集生成回答等没有绑定智能体的场景使用。</p>
      *
      * @return 连接参数
-     * @throws com.cl.agent.exception.BizException 未配置默认对话模型、厂商停用或缺少 API Key 时抛出
+     * @throws BizException 未配置默认对话模型、厂商停用或缺少 API Key 时抛出
      */
     ModelConnection resolveDefaultChatConnection();
 }

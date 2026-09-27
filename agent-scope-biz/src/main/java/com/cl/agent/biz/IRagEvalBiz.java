@@ -1,5 +1,6 @@
 package com.cl.agent.biz;
 
+import com.cl.agent.exception.BizException;
 import com.cl.agent.dto.rag.RagEvalCaseRequest;
 import com.cl.agent.dto.rag.RagEvalCaseResponse;
 import com.cl.agent.dto.rag.RagEvalRunResponse;
@@ -26,7 +27,7 @@ public interface IRagEvalBiz {
      *
      * @param request 用例内容，{@code kbId}、{@code question}、{@code expectedPoints} 必填
      * @return 保存后的用例
-     * @throws com.cl.agent.exception.BizException 必填项缺失（400）或知识库 / 用例不存在（404）时抛出
+     * @throws BizException 必填项缺失（400）或知识库 / 用例不存在（404）时抛出
      */
     RagEvalCaseResponse saveCase(RagEvalCaseRequest request);
 
@@ -46,7 +47,7 @@ public interface IRagEvalBiz {
      * @param kbId       知识库 ID，非空
      * @param withAnswer 是否用默认对话模型生成回答并统计答案完整度
      * @return 汇总指标与各用例结果；无用例时 total 为 0
-     * @throws com.cl.agent.exception.BizException 知识库不存在，或需要生成回答但未配置默认对话模型时抛出
+     * @throws BizException 知识库不存在，或需要生成回答但未配置默认对话模型时抛出
      */
     RagEvalRunResponse run(String kbId, boolean withAnswer);
 }

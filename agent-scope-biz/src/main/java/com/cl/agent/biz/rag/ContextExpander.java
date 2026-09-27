@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * 上下文扩展器：把排好序的命中切片扩展、合并为若干段连续原文（检索流水线第 ⑤ 步）。
  * <p>规则（见方案第四节）：</p>
  * <ul>
- *   <li>技术 / 接口文档：命中切片所在章节总长不超过上限时整章带入，否则前后各 N 片；</li>
+ *   <li>技术 / 接口文档：命中切片所在章节总长不超过上限时整章带入；超过时在章节内以命中位置为中心尽量取满上限（章节节选）；</li>
  *   <li>通用文档、表格数据：前后各 N 片；FAQ：不扩展；N 取知识库级配置或类型预设；</li>
  *   <li>同一文档中重叠或相邻的范围合并为一段，相邻切片之间的重叠文字与重复表头去重；</li>
  *   <li>最多保留 Top-K 段，总长超过上限时按融合排名从低到高舍弃，排名最高的一段过长时截断。</li>
@@ -37,6 +37,9 @@ public class ContextExpander {
 
     /** 查找相邻切片重叠文字的最大长度 */
     private static final int MAX_OVERLAP = 400;
+
+    /** 扩展方式由弱到强的顺序，合并段时取更强者 */
+    private static final List<String> MODE_ORDER = List.of("none", "window", "section-partial", "section");
 
     /** 截断时附加的提示 */
     private static final String TRUNCATED_MARK = "\n……（内容过长，已截断）";
@@ -54,7 +57,7 @@ public class ContextExpander {
      * @param kbMap           知识库 ID 到实体的映射，用于读取类型与扩展窗口；缺失的知识库按通用文档处理
      * @param finalTopK       最多保留的段数，正数
      * @param maxChars        所有段原文总字符数上限，正数
-     * @param sectionMaxChars 整章带入时单个章节的字符数上限
+     * @param sectionMaxChars 整章带入时单个章节的字符数上限；≤0 表示与 maxChars 一致
      * @return 最终来源段，已按「文档首次出现的排名 → 文档内切片顺序」排列并分配引用编号；无命中时返回空列表
      */
     public List<RetrievalSegment> expand(List<RetrievalHit> rankedHits, Map<String, KnowledgeBase> kbMap,
@@ -95,12 +98,23 @@ public class ContextExpander {
             if (kbConfigResolver.wholeSection(kb) && hit.getSectionPath() != null && !hit.getSectionPath().isBlank()) {
                 List<KnowledgeChunk> section = sectionCache.computeIfAbsent(hit.getDocId() + "|" + hit.getSectionPath(),
                         k -> knowledgeService.listChunksBySection(hit.getDocId(), hit.getSectionPath()));
-                int total = section.stream().mapToInt(c -> c.getContent() == null ? 0 : c.getContent().length()).sum();
-                if (!section.isEmpty() && total <= Math.min(sectionMaxChars, maxChars)) {
+                // 整章上限：未单独配置（≤0）时与上下文总长上限一致，保证大参数表能整章带入
+                int limit = sectionMaxChars > 0 ? Math.min(sectionMaxChars, maxChars) : maxChars;
+                int total = section.stream().mapToInt(ContextExpander::length).sum();
+                if (!section.isEmpty() && total <= limit) {
                     lo = Math.min(idx, section.get(0).getChunkIndex());
                     hi = Math.max(idx, section.get(section.size() - 1).getChunkIndex());
                     mode = "section";
                     sectionApplied = true;
+                } else if (!section.isEmpty()) {
+                    // 章节超过上限：在章节内以命中切片为中心向两侧扩展，尽量取满上限，而不是只补前后几片
+                    int[] range = sectionExcerpt(section, idx, limit);
+                    if (range != null) {
+                        lo = range[0];
+                        hi = range[1];
+                        mode = "section-partial";
+                        sectionApplied = true;
+                    }
                 }
             }
             if (!sectionApplied) {
@@ -140,13 +154,68 @@ public class ContextExpander {
                     target.getHitIndexes().add(idx);
                 }
                 target.setScore(Math.max(target.getScore(), score));
-                if ("section".equals(mode)) {
-                    target.setExpandMode(mode);
-                }
+                target.setExpandMode(strongerMode(target.getExpandMode(), mode));
                 absorbOverlapping(segments, target);
             }
         }
         return segments;
+    }
+
+    /**
+     * 章节节选：从命中切片开始，交替向后、向前纳入同章节的相邻切片，直到再加一片就超过上限。
+     * <p>先向后扩展，因为参数表、步骤说明等内容通常从命中位置往后延续。</p>
+     *
+     * @param section 章节全部切片，按序号升序，非空
+     * @param idx     命中切片序号
+     * @param limit   字符数上限
+     * @return {起始序号, 结束序号}；命中切片不在该章节内时返回 null
+     */
+    static int[] sectionExcerpt(List<KnowledgeChunk> section, int idx, int limit) {
+        int pos = -1;
+        for (int i = 0; i < section.size(); i++) {
+            if (section.get(i).getChunkIndex() == idx) {
+                pos = i;
+                break;
+            }
+        }
+        if (pos < 0) {
+            return null;
+        }
+        int lo = pos;
+        int hi = pos;
+        int total = length(section.get(pos));
+        boolean forward = true;
+        while (lo > 0 || hi < section.size() - 1) {
+            boolean canForward = hi < section.size() - 1 && total + length(section.get(hi + 1)) <= limit;
+            boolean canBackward = lo > 0 && total + length(section.get(lo - 1)) <= limit;
+            if (!canForward && !canBackward) {
+                break;
+            }
+            if ((forward && canForward) || !canBackward) {
+                hi++;
+                total += length(section.get(hi));
+            } else {
+                lo--;
+                total += length(section.get(lo));
+            }
+            forward = !forward;
+        }
+        return new int[]{section.get(lo).getChunkIndex(), section.get(hi).getChunkIndex()};
+    }
+
+    /**
+     * 合并两个段时取覆盖范围更大的扩展方式：整章 > 章节节选 > 相邻切片 > 不扩展。
+     *
+     * @param a 扩展方式，可为 null
+     * @param b 扩展方式，可为 null
+     * @return 两者中更强的扩展方式
+     */
+    static String strongerMode(String a, String b) {
+        return MODE_ORDER.indexOf(a == null ? "none" : a) >= MODE_ORDER.indexOf(b == null ? "none" : b) ? a : b;
+    }
+
+    private static int length(KnowledgeChunk c) {
+        return c.getContent() == null ? 0 : c.getContent().length();
     }
 
     /**
@@ -179,9 +248,7 @@ public class ContextExpander {
                             .forEach(i -> target.getHitIndexes().add(i));
                     target.setBestRank(Math.min(target.getBestRank(), s.getBestRank()));
                     target.setScore(Math.max(target.getScore(), s.getScore()));
-                    if ("section".equals(s.getExpandMode())) {
-                        target.setExpandMode("section");
-                    }
+                    target.setExpandMode(strongerMode(target.getExpandMode(), s.getExpandMode()));
                     segments.remove(s);
                     merged = true;
                 }

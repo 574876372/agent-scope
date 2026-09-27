@@ -1,5 +1,6 @@
 package com.cl.agent.controller;
 
+import com.cl.agent.exception.BizException;
 import com.cl.agent.biz.IKnowledgeBiz;
 import com.cl.agent.dto.*;
 import com.cl.agent.dto.rag.KbTypeOptionResponse;
@@ -69,7 +70,7 @@ public class KnowledgeController {
      *
      * @param id 知识库的唯一 ID，非空，通过查询参数 {@code ?id=} 传入
      * @return {@link ResponseEntity} 包含知识库详情响应，HTTP 状态码 200
-     * @throws com.cl.agent.exception.BizException 当知识库不存在时，HTTP 404
+     * @throws BizException 当知识库不存在时，HTTP 404
      */
     @GetMapping("/detail")
     public ResponseEntity<KbResponse> getKb(@RequestParam("id") String id) {

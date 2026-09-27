@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * 通用人机协同（HITL）审批执行的业务逻辑编排层实现类。
@@ -117,7 +118,7 @@ public class GenericHitlBizImpl implements IGenericHitlBiz {
         }
 
         // 消费 Token
-        java.util.Optional<ApprovalContext> ctxOpt = genericApprovalTokenStore.take(token);
+        Optional<ApprovalContext> ctxOpt = genericApprovalTokenStore.take(token);
         if (ctxOpt.isEmpty()) {
             sink.next(new ChatStreamEvent("message", "审批 Token 不存在或已过期，请重新发起。"));
             sink.next(new ChatStreamEvent(null, "[DONE]"));

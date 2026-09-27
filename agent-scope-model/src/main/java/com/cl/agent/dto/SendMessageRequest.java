@@ -4,6 +4,7 @@ import com.cl.agent.enums.SqlAction;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * 发送消息请求参数。
@@ -52,5 +53,5 @@ public class SendMessageRequest implements Serializable {
     private String hitlToken;
 
     /** 用户在审批卡片中编辑后的工具入参 Map，仅在 hitlAction=EDIT 时生效 */
-    private java.util.Map<String, Object> editedParameters;
+    private Map<String, Object> editedParameters;
 }

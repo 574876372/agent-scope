@@ -1,5 +1,6 @@
 package com.cl.agent.hitl.core;
 
+import com.cl.agent.hitl.autoconfigure.HitlAutoConfiguration;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ public class GenericApprovalTokenStore {
 
     /**
      * 构造令牌存储器。
-     * <p>使用说明：由 {@link com.cl.agent.hitl.autoconfigure.HitlAutoConfiguration} 自动创建并注入配置属性对象。</p>
+     * <p>使用说明：由 {@link HitlAutoConfiguration} 自动创建并注入配置属性对象。</p>
      *
      * @param props HITL 全局配置属性，非空
      */
