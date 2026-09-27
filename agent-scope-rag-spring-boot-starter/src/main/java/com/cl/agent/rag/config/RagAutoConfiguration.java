@@ -1,5 +1,8 @@
 package com.cl.agent.rag.config;
 
+import com.cl.agent.rag.chunk.DocumentStructureReader;
+import com.cl.agent.rag.chunk.StructuredChunker;
+import com.cl.agent.rag.core.BatchEmbeddingClient;
 import com.cl.agent.rag.core.DocumentReaderFactory;
 import com.cl.agent.rag.core.EmbeddingStoreFactory;
 import com.cl.agent.rag.properties.AgentRagProperties;
@@ -46,5 +49,35 @@ public class RagAutoConfiguration {
     public EmbeddingStoreFactory embeddingStoreFactory(AgentRagProperties properties) {
         log.info("[RAG-AutoConfig] 成功装配官方向量库路由工厂 EmbeddingStoreFactory, 配置类型: {}", properties.getStoreType());
         return new EmbeddingStoreFactory(properties);
+    }
+
+    /**
+     * 注册文档结构还原器：把各格式文件解析为标题 / 段落 / 表格结构块。
+     *
+     * @return {@link DocumentStructureReader} 实例，无状态
+     */
+    @Bean
+    public DocumentStructureReader documentStructureReader() {
+        return new DocumentStructureReader();
+    }
+
+    /**
+     * 注册结构化切片器：按章节、问答对或表格行切片。
+     *
+     * @return {@link StructuredChunker} 实例，无状态
+     */
+    @Bean
+    public StructuredChunker structuredChunker() {
+        return new StructuredChunker();
+    }
+
+    /**
+     * 注册批量向量化客户端：入库时按批调用 Embedding 接口。
+     *
+     * @return {@link BatchEmbeddingClient} 实例，无状态
+     */
+    @Bean
+    public BatchEmbeddingClient batchEmbeddingClient() {
+        return new BatchEmbeddingClient();
     }
 }

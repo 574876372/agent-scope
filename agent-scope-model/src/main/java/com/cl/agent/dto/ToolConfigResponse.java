@@ -29,4 +29,7 @@ public class ToolConfigResponse implements Serializable {
 
     /** 是否启用 */
     private Boolean enabled;
+
+    /** 创建 Agent 时是否默认勾选；由 {@code agent.tool.default-enabled} 配置决定 */
+    private Boolean defaultSelected;
 }

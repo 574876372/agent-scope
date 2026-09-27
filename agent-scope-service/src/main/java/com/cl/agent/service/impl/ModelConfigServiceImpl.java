@@ -321,6 +321,42 @@ public class ModelConfigServiceImpl implements IModelConfigService {
         return buildConnection(provider, model, model.getModelName());
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public ModelConnection resolveRerankConnection(String modelId) {
+        ModelInfo model = isBlank(modelId) ? findDefaultModel(ModelTypeEnum.RERANK) : modelMapper.selectById(modelId);
+        if (model == null) {
+            if (isBlank(modelId)) {
+                return null;
+            }
+            throw new BizException(400, "重排模型不存在: " + modelId);
+        }
+        if (!ModelTypeEnum.RERANK.name().equals(model.getModelType())) {
+            throw new BizException(400, "所选模型不是重排模型: " + model.getModelName());
+        }
+        ModelProvider provider = requireProvider(model.getProviderId());
+        // 重排是可选增强，模型或厂商停用时直接跳过重排，不影响检索主流程
+        if (!Objects.equals(model.getEnabled(), ENABLED) || !Objects.equals(provider.getEnabled(), ENABLED)) {
+            return null;
+        }
+        return buildConnection(provider, model, model.getModelName());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ModelConnection resolveDefaultChatConnection() {
+        ModelInfo model = findDefaultModel(ModelTypeEnum.CHAT);
+        if (model == null) {
+            throw new BizException(400, "尚未配置默认对话模型，请在模型管理中将一个对话模型设为默认");
+        }
+        if (!Objects.equals(model.getEnabled(), ENABLED)) {
+            throw new BizException(400, "默认对话模型已停用: " + model.getModelName());
+        }
+        ModelProvider provider = requireProvider(model.getProviderId());
+        ensureProviderEnabled(provider);
+        return buildConnection(provider, model, model.getModelName());
+    }
+
     // ======================== 私有方法 ========================
 
     /**

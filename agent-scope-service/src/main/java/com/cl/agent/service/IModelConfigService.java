@@ -149,4 +149,23 @@ public interface IModelConfigService {
      * @return 连接参数
      */
     ModelConnection resolveConnection(String modelId);
+
+    /**
+     * 解析重排模型的完整连接参数（含解密后的 API Key）。
+     * <p>使用说明：检索流水线在融合之后调用；重排为可选步骤，未配置时返回 null 而不是抛异常。</p>
+     *
+     * @param modelId 重排模型 ID；为空时取默认重排模型（{@code t_model.model_type=RERANK 且 is_default=1}）
+     * @return 连接参数；未指定且无默认重排模型，或所选模型 / 厂商已停用时返回 null
+     * @throws com.cl.agent.exception.BizException 显式指定的模型不存在、不是重排模型或厂商缺少 API Key 时抛出
+     */
+    ModelConnection resolveRerankConnection(String modelId);
+
+    /**
+     * 解析默认对话模型（{@code model_type=CHAT 且 is_default=1}）的连接参数。
+     * <p>使用说明：知识库演练场做查询改写、评估集生成回答等没有绑定智能体的场景使用。</p>
+     *
+     * @return 连接参数
+     * @throws com.cl.agent.exception.BizException 未配置默认对话模型、厂商停用或缺少 API Key 时抛出
+     */
+    ModelConnection resolveDefaultChatConnection();
 }

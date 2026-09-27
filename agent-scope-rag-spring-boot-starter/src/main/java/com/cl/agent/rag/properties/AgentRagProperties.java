@@ -26,28 +26,34 @@ public class AgentRagProperties {
     private String storeType = "IN_MEMORY";
 
     /**
-     * 默认单次检索召回的最大文本分片数量（Top-K）。
-     * <p>默认为 3 片，可由特定 Agent 配置单独覆盖。</p>
-     */
-    private int defaultRowLimit = 3;
-
-    /**
-     * 默认检索相似度得分最低过滤阈值。
-     * <p>取值范围 0.0 ~ 1.0，默认为 0.3，仅召回大于或等于该分数的片段。</p>
+     * 默认向量召回相似度预过滤阈值。
+     * <p>取值范围 0.0 ~ 1.0，默认为 0.3；低于该分数的向量结果不参与融合，关键词召回不受影响。
+     * 不同向量模型的分数分布不同，最终排序按融合排名而非原始分数。可由 Agent 配置单独覆盖。</p>
      */
     private double defaultScoreThreshold = 0.3;
 
     /**
-     * 文档切片分割的最大字数/字符尺寸。
-     * <p>默认为 512，控制物理文档解析切块的大小。</p>
+     * 文档切片的最大字符数。
+     * <p>默认为 512；知识库级配置与类型预设均未指定时使用。</p>
      */
     private int chunkSize = 512;
 
     /**
-     * 相邻文档切片之间的重叠字符数。
-     * <p>默认为 80，防止段落边界信息断层，保持上下文连续性。</p>
+     * 超长段落按句拆分时相邻切片的重叠字符数。
+     * <p>默认为 80；结构化切片只在单个段落超过切片上限时才产生重叠。</p>
      */
     private int chunkOverlap = 80;
+
+    /**
+     * 入库时每次 Embedding 请求携带的切片数。
+     * <p>默认为 10（通义 text-embedding-v3 的上限，v2 可调到 25）；厂商不支持数组输入时自动退化为逐条请求。</p>
+     */
+    private int embeddingBatchSize = 10;
+
+    /**
+     * 检索流水线全局默认参数（召回数、融合、上下文扩展、查询改写等）。
+     */
+    private final RetrievalProperties retrieval = new RetrievalProperties();
 
     /**
      * 知识库上传文档的本地存储根目录。

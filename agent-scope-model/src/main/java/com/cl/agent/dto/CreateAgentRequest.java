@@ -47,16 +47,31 @@ public class CreateAgentRequest implements Serializable {
     private String ragMode;
 
     /**
-     * 单 Agent 专属检索最大召回数量（分片数）。
-     * <p>null 时使用系统默认配置。</p>
+     * 最终交给模型的段数（Top-K）。
+     * <p>null 时使用 agent.rag.retrieval.final-top-k。</p>
      */
     private Integer recallLimit;
 
     /**
-     * 单 Agent 专属检索最低相似度得分过滤阈值。
-     * <p>取值范围 0.0 ~ 1.0，null 时使用系统默认配置。</p>
+     * 向量召回预过滤阈值，取值范围 0.0 ~ 1.0。
+     * <p>null 时使用 agent.rag.default-score-threshold。</p>
      */
     private Double scoreThreshold;
+
+    /**
+     * 是否结合对话历史改写检索词；null 时使用全局默认。
+     */
+    private Boolean queryRewrite;
+
+    /**
+     * 注入上下文总字符数上限；null 时使用全局默认。
+     */
+    private Integer contextMaxChars;
+
+    /**
+     * 重排模型 ID（RERANK 类型）；null 或空串时使用默认重排模型，未配置则不重排。
+     */
+    private String rerankModelId;
 
     /**
      * 绑定的关联知识库唯一标识符 ID 列表。

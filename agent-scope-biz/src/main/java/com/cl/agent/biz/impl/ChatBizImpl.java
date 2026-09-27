@@ -3,7 +3,12 @@ package com.cl.agent.biz.impl;
 import com.cl.agent.biz.IAgentBiz;
 import com.cl.agent.biz.IChatBiz;
 import com.cl.agent.biz.IGenericHitlBiz;
+import com.alibaba.fastjson2.JSONObject;
 import com.cl.agent.biz.memory.MemoryManager;
+import com.cl.agent.biz.rag.RetrievalPipeline;
+import com.cl.agent.dto.rag.RetrievalOptions;
+import com.cl.agent.dto.rag.RetrievalTrace;
+import com.cl.agent.service.IKnowledgeService;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.*;
 import com.cl.agent.model.AgentInfo;
@@ -68,6 +73,14 @@ public class ChatBizImpl implements IChatBiz {
     @Autowired
     private IGenericHitlBiz genericHitlBiz;
 
+    /** 检索流水线，GENERIC 模式在调用 Agent 前由此完成检索 */
+    @Autowired
+    private RetrievalPipeline retrievalPipeline;
+
+    /** 知识库服务，查询 Agent 绑定的知识库 */
+    @Autowired
+    private IKnowledgeService knowledgeService;
+
     @Override
     public ConversationResponse createConversation(CreateConversationRequest request) {
         Conversation conv = new Conversation();
@@ -107,6 +120,9 @@ public class ChatBizImpl implements IChatBiz {
         if (conv == null) {
             throw new BizException(404, "会话不存在: " + conversationId);
         }
+        if (conv.getAgentId() != null) {
+            requireAgentOfConversation(conv);
+        }
 
         LocalDateTime now = LocalDateTime.now();
         ChatMessage userMsg = new ChatMessage();
@@ -125,8 +141,17 @@ public class ChatBizImpl implements IChatBiz {
             ChatRequest chatRequest = new ChatRequest();
             chatRequest.setContent(request.getContent());
             chatRequest.setHistory(contextMessages);
+            // GENERIC 模式前置检索：上下文交给 Agent，来源随回复一起持久化
+            RetrievalTrace trace = retrieveForGeneric(conv, request.getContent());
+            String retrievalBlock = "";
+            if (trace != null) {
+                chatRequest.setKnowledgeContext(trace.getContextText());
+                if (!trace.getSegments().isEmpty() || !trace.getWarnings().isEmpty()) {
+                    retrievalBlock = StreamAccumulator.wrapRetrieval(toRetrievalJson(trace));
+                }
+            }
             ChatResponse chatResponse = agentBiz.chat(conv.getAgentId(), chatRequest);
-            aiContent = chatResponse.getContent();
+            aiContent = retrievalBlock + chatResponse.getContent();
         }
 
         ChatMessage aiMsg = new ChatMessage();
@@ -185,6 +210,8 @@ public class ChatBizImpl implements IChatBiz {
         if (conv == null) {
             throw new BizException(404, "会话不存在: " + conversationId);
         }
+        // 关联的 Agent 已被删除时直接拒绝，且不落库本次提问，避免产生无法回复的孤立消息
+        AgentInfo agentInfo = conv.getAgentId() != null ? requireAgentOfConversation(conv) : null;
 
         // 记录当前时间作为用户消息的时间戳，保证同一请求中时间一致
         LocalDateTime now = LocalDateTime.now();
@@ -201,8 +228,7 @@ public class ChatBizImpl implements IChatBiz {
 
         // 通过 MemoryManager 处理历史上下文（FULL / WINDOW / SUMMARY 三路分支）
         List<ChatMessage> contextMessages = null;
-        if (conv.getAgentId() != null) {
-            AgentInfo agentInfo = agentService.getById(conv.getAgentId());
+        if (agentInfo != null) {
             contextMessages = memoryManager.resolveContext(conv, agentInfo);
             log.debug("[Memory] 上下文已处理, conversationId={}, contextSize={}",
                     conversationId, contextMessages.size());
@@ -248,6 +274,17 @@ public class ChatBizImpl implements IChatBiz {
                 // 最终在流结束后一次性存入数据库，避免存到一半数据不完整
                 StreamAccumulator accumulator = new StreamAccumulator();
 
+                // ── 第 3.5 步：GENERIC 模式前置检索，推送引用来源并把检索上下文交给 Agent ──
+                RetrievalTrace trace = retrieveForGeneric(ctx.getConversation(), ctx.getUserContent());
+                if (trace != null) {
+                    chatRequest.setKnowledgeContext(trace.getContextText());
+                    if (!trace.getSegments().isEmpty() || !trace.getWarnings().isEmpty()) {
+                        String json = toRetrievalJson(trace);
+                        accumulator.setRetrieval(json);
+                        sink.next(new ChatStreamEvent("retrieval", json));
+                    }
+                }
+
                 // ── 第 4 步：订阅 Agent 流式事件，注册三个回调 ───────────────────
                 agentBiz.chatStream(ctx.getConversation().getAgentId(), chatRequest).subscribe(
                         // 回调 A（onNext）：每当 Agent 推来一个事件片段时执行。
@@ -284,10 +321,10 @@ public class ChatBizImpl implements IChatBiz {
      */
     private void finishAgentStream(StreamContext ctx, StreamAccumulator accumulator, FluxSink<ChatStreamEvent> sink) {
         try {
-            String persistContent = accumulator.buildPersistContent();
-            if (persistContent.isEmpty()) {
-                persistContent = PLACEHOLDER_NO_AGENT;
+            if (accumulator.hasNoModelOutput()) {
+                accumulator.appendMessage(PLACEHOLDER_NO_AGENT);
             }
+            String persistContent = accumulator.buildPersistContent();
             persistAssistantMessage(ctx.getConversation(), persistContent);
             sink.next(doneEvent());
             sink.complete();
@@ -409,6 +446,92 @@ public class ChatBizImpl implements IChatBiz {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * GENERIC 模式前置检索：使用与演练场、AGENTIC 工具相同的检索流水线。
+     * <p>使用说明：调用 Agent 前执行，同步阻塞（含 Embedding、查询改写等模型调用）。未启用 GENERIC 或未绑定知识库时返回 null；
+     * 检索异常时记录日志并返回 null，对话照常进行（不带知识库上下文）。</p>
+     *
+     * @param conv     会话实体（含历史消息，最后一条为本轮用户消息），{@code agentId} 非空
+     * @param question 用户本轮问题，非空
+     * @return 检索过程记录；不需要检索或检索失败时返回 null
+     */
+    private RetrievalTrace retrieveForGeneric(Conversation conv, String question) {
+        if (conv.getAgentId() == null || question == null || question.isBlank()) {
+            return null;
+        }
+        AgentInfo info = agentService.getById(conv.getAgentId());
+        if (info == null || !"GENERIC".equalsIgnoreCase(info.getRagMode())) {
+            return null;
+        }
+        List<String> kbIds = knowledgeService.getKbIdsByAgentId(info.getId());
+        if (kbIds.isEmpty()) {
+            return null;
+        }
+        try {
+            RetrievalOptions options = retrievalPipeline.agentOptions(info, kbIds);
+            options.setQuery(question);
+            options.setHistory(previousTurns(conv));
+            return retrievalPipeline.run(options);
+        } catch (Exception e) {
+            log.error("[RAG-Generic] 前置检索失败，本轮不注入知识库上下文: conversationId={}, agentId={}",
+                    conv.getId(), info.getId(), e);
+            return null;
+        }
+    }
+
+    /**
+     * 取本轮之前的对话（user / assistant），供查询改写参考；本轮用户消息已追加在末尾，需排除。
+     *
+     * @param conv 会话实体，消息按时间升序
+     * @return 元素为 {role, content} 的列表，按时间升序；无历史时为空列表
+     */
+    private static List<String[]> previousTurns(Conversation conv) {
+        List<ChatMessage> messages = conv.getMessages() == null ? List.of() : conv.getMessages();
+        int end = messages.size() - 1;
+        List<String[]> history = new ArrayList<>();
+        for (int i = 0; i < end; i++) {
+            ChatMessage m = messages.get(i);
+            if (("user".equals(m.getRole()) || "assistant".equals(m.getRole())) && m.getContent() != null) {
+                history.add(new String[]{m.getRole(), m.getContent()});
+            }
+        }
+        return history;
+    }
+
+    /**
+     * 生成 retrieval 事件载荷：检索词与来源段，不含各阶段中间结果与完整上下文，控制推送与持久化体积。
+     *
+     * @param trace 检索过程记录，非空
+     * @return JSON 字符串（单行）
+     */
+    private static String toRetrievalJson(RetrievalTrace trace) {
+        JSONObject obj = new JSONObject();
+        obj.put("query", trace.getQuery());
+        obj.put("rewrittenQuery", trace.getRewrittenQuery());
+        obj.put("rewriteApplied", trace.isRewriteApplied());
+        obj.put("reranked", trace.isReranked());
+        obj.put("segments", trace.getSegments());
+        obj.put("warnings", trace.getWarnings());
+        obj.put("costMs", trace.getCostMs());
+        return obj.toJSONString();
+    }
+
+    /**
+     * 查询会话关联的 Agent，不存在时抛出业务异常。
+     * <p>使用说明：发送消息前调用；Agent 被删除后其会话通常已级联删除，此处兜底处理删除前遗留的旧会话。</p>
+     *
+     * @param conv 会话实体，{@code agentId} 非空
+     * @return 会话关联的 Agent 配置实体，非空
+     * @throws BizException Agent 已删除时抛出，code=410，前端据此提示用户新建对话
+     */
+    private AgentInfo requireAgentOfConversation(Conversation conv) {
+        AgentInfo agentInfo = agentService.getById(conv.getAgentId());
+        if (agentInfo == null) {
+            throw new BizException(410, "该对话关联的智能体已被删除，无法继续对话，请新建对话");
+        }
+        return agentInfo;
+    }
+
     private String generateTitle(String message) {
         return message.length() > 20 ? message.substring(0, 20) + "..." : message;
     }
@@ -417,6 +540,7 @@ public class ChatBizImpl implements IChatBiz {
         ConversationResponse resp = new ConversationResponse();
         resp.setId(conv.getId());
         resp.setTitle(conv.getTitle());
+        resp.setAgentId(conv.getAgentId());
         resp.setCreateTime(conv.getCreateTime());
         resp.setUpdateTime(conv.getUpdateTime());
         return resp;

@@ -135,10 +135,20 @@ agent:
   rag:
     enabled: true                                            # 是否启用 RAG Starter 模块。控制配置类及核心 RAG 基础设施 Bean 是否自动注入
     store-type: ELASTICSEARCH                                    # 向量数据库介质类型。可选值：IN_MEMORY（本地内存库）、MILVUS（企业级高可用）、ELASTICSEARCH（基于 ES 索引）、QDRANT
-    default-row-limit: 3                                     # 默认单次检索召回的最大文本分片数量（Top-K）
-    default-score-threshold: 0.3                             # 默认检索相似度得分最低过滤阈值，取值范围 0.0 ~ 1.0，仅召回大于或等于该分数的片段
-    chunk-size: 512                                          # 文档切片分割的最大字数/字符尺寸
-    chunk-overlap: 80                                        # 相邻文档切片之间的重叠字符数（保持上下文连续性）
+    default-score-threshold: 0.3                             # 向量召回预过滤阈值（0.0 ~ 1.0）；低于该相似度的向量结果不参与融合，关键词结果不受影响；智能体可单独覆盖
+    chunk-size: 512                                          # 切片最大字符数；知识库级配置与类型预设均未指定时的兜底
+    chunk-overlap: 80                                        # 超长段落按句拆分时相邻切片的重叠字符数
+    embedding-batch-size: 10                                 # 入库时每次 Embedding 请求携带的切片数（通义 text-embedding-v3 上限 10，v2 为 25）；厂商不支持数组输入时自动逐条请求
+    retrieval:                                               # 检索流水线全局默认（智能体未单独配置时使用）
+      vector-top-n: 20                                       # 每个知识库向量召回数
+      keyword-top-n: 20                                      # 关键词（全文索引）召回数
+      rrf-k: 60                                              # RRF 融合常数：得分 = Σ 1 / (rrf-k + 排名)
+      final-top-k: 5                                         # 最终交给模型的段数（上下文扩展、合并后的连续原文段）
+      context-max-chars: 8000                                # 注入上下文总长上限（字符），超出时按融合排名从低到高舍弃
+      section-max-chars: 4000                                # 技术文档整章带入时单个章节的字符数上限，超过则改为按相邻切片扩展
+      query-rewrite: true                                    # 是否默认开启查询改写（结合对话历史把追问改写为独立检索词）
+      history-turns: 3                                       # 查询改写参考的最近对话轮数
+      rerank-candidates: 30                                  # 进入重排的融合候选数上限（配置了重排模型时生效）
     upload-dir: ./data/uploads                               # 上传文档存储根目录，实际路径为 {upload-dir}/{知识库ID}/年/月/日/；相对路径以启动目录为基准，生产环境建议配置绝对路径
     # 向量模型不在此配置：由「模型管理」页面维护（t_model_provider / t_model），每个知识库创建时绑定一个向量模型
     in-memory:

@@ -4,7 +4,9 @@ import com.cl.agent.dto.model.ModelConnection;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.KnowledgeBase;
 import com.cl.agent.model.KnowledgeChunk;
+import com.cl.agent.model.KnowledgeDocument;
 import com.cl.agent.model.ModelInfo;
+import com.cl.agent.rag.core.BatchEmbeddingClient;
 import com.cl.agent.rag.core.EmbeddingModelSpec;
 import com.cl.agent.rag.core.EmbeddingStoreFactory;
 import com.cl.agent.rag.properties.AgentRagProperties;
@@ -20,7 +22,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -52,17 +56,46 @@ public class RagKnowledgeProvider {
     @Autowired
     private IModelConfigService modelConfigService;
 
-    /** 系统默认召回上限，配置缺失时的兜底值 */
-    private static final int FALLBACK_RECALL_LIMIT = 3;
+    /** 批量向量化客户端；RAG 未启用时为 null */
+    @Autowired(required = false)
+    private BatchEmbeddingClient batchEmbeddingClient;
 
-    /** 系统默认相似度阈值，配置缺失时的兜底值 */
-    private static final double FALLBACK_SCORE_THRESHOLD = 0.3;
+    /** 配置缺失时每批向量化的切片数 */
+    private static final int FALLBACK_EMBEDDING_BATCH = 10;
 
     /**
      * RAG 基础设施是否可用。
+     *
+     * @return true 表示 RAG 模块已启用、向量存储工厂已装配
      */
     public boolean isEnabled() {
         return embeddingStoreFactory != null;
+    }
+
+    /**
+     * 解析知识库绑定向量模型的参数，供入库流水线批量向量化使用。
+     *
+     * @param kbId 知识库 ID，非空
+     * @return 向量模型参数（含解密后的 API Key）
+     * @throws BizException RAG 未启用、知识库不存在或向量模型不可用时抛出
+     */
+    public EmbeddingModelSpec resolveEmbeddingSpec(String kbId) {
+        ensureEnabled();
+        return toSpec(modelConfigService.resolveEmbeddingConnection(requireKnowledgeBase(kbId).getEmbeddingModelId()));
+    }
+
+    /**
+     * 批量计算文本向量（按 {@code agent.rag.embedding-batch-size} 分批请求）。
+     *
+     * @param spec  向量模型参数，非空
+     * @param texts 待向量化文本，可为空列表
+     * @return 与入参一一对应的向量
+     * @throws IllegalStateException 调用失败或维度不一致时抛出
+     */
+    public List<double[]> embedAll(EmbeddingModelSpec spec, List<String> texts) {
+        ensureEnabled();
+        int batch = ragProperties != null ? ragProperties.getEmbeddingBatchSize() : FALLBACK_EMBEDDING_BATCH;
+        return batchEmbeddingClient.embedAll(spec, texts, batch);
     }
 
     /**
@@ -83,23 +116,9 @@ public class RagKnowledgeProvider {
                 .embeddingStore(store)
                 .build();
         if (store instanceof InMemoryStore) {
-            warmUpInMemoryStore(kbId, knowledge, (InMemoryStore) store);
+            warmUpInMemoryStore(kbId, toSpec(conn), (InMemoryStore) store);
         }
         return knowledge;
-    }
-
-    /**
-     * 全局默认召回上限（Top-K），来自 {@code agent.rag.default-row-limit}。
-     */
-    public int getDefaultRecallLimit() {
-        return ragProperties != null ? ragProperties.getDefaultRowLimit() : FALLBACK_RECALL_LIMIT;
-    }
-
-    /**
-     * 全局默认相似度过滤阈值，来自 {@code agent.rag.default-score-threshold}。
-     */
-    public double getDefaultScoreThreshold() {
-        return ragProperties != null ? ragProperties.getDefaultScoreThreshold() : FALLBACK_SCORE_THRESHOLD;
     }
 
     /**
@@ -200,9 +219,10 @@ public class RagKnowledgeProvider {
 
     /**
      * IN_MEMORY 专用：首次访问某知识库时，从 MySQL 切片表重建内存向量。
-     * <p>以内存库是否为空作为判据，加锁避免并发重复预热。ES / Milvus 不走此路径。</p>
+     * <p>以内存库是否为空作为判据，加锁避免并发重复预热。ES / Milvus 不走此路径。
+     * 向量化文本与入库时一致（文档名 › 章节路径 + 正文），并按批请求 Embedding。</p>
      */
-    private synchronized void warmUpInMemoryStore(String kbId, SimpleKnowledge knowledge, InMemoryStore store) {
+    private synchronized void warmUpInMemoryStore(String kbId, EmbeddingModelSpec spec, InMemoryStore store) {
         if (!store.isEmpty()) {
             return;
         }
@@ -211,15 +231,27 @@ public class RagKnowledgeProvider {
             return;
         }
         log.info("[RAG-Warmup] 内存向量库为空，从 MySQL 回灌切片: kbId={}, 切片数={}", kbId, dbChunks.size());
-        List<Document> docs = dbChunks.stream().map(c -> {
+        // 文档 ID 到文件名，用于构建与入库一致的向量化文本
+        Map<String, String> docNames = knowledgeService.listDocumentsByIds(
+                        dbChunks.stream().map(KnowledgeChunk::getDocId).collect(Collectors.toSet())).stream()
+                .collect(Collectors.toMap(KnowledgeDocument::getId, KnowledgeDocument::getName, (a, b) -> a));
+        List<String> texts = dbChunks.stream()
+                .map(c -> EmbeddingTextBuilder.build(docNames.get(c.getDocId()), c.getSectionPath(), c.getContent()))
+                .collect(Collectors.toList());
+        List<double[]> vectors = embedAll(spec, texts);
+        List<Document> docs = new ArrayList<>(dbChunks.size());
+        for (int i = 0; i < dbChunks.size(); i++) {
+            KnowledgeChunk c = dbChunks.get(i);
             DocumentMetadata meta = DocumentMetadata.builder()
                     .docId(c.getDocId())
                     .chunkId(String.valueOf(c.getChunkIndex()))
                     .content(TextBlock.builder().text(c.getContent()).build())
                     .build();
-            return new Document(meta);
-        }).collect(Collectors.toList());
-        knowledge.addDocuments(docs).block();
+            Document doc = new Document(meta);
+            doc.setEmbedding(vectors.get(i));
+            docs.add(doc);
+        }
+        store.add(docs).block();
         log.info("[RAG-Warmup] 内存向量库预热完成: kbId={}, 装载切片数={}", kbId, docs.size());
     }
 }

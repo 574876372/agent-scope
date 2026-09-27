@@ -2,6 +2,7 @@ package com.cl.agent.biz.impl;
 
 import com.cl.agent.biz.IModelConfigBiz;
 import com.cl.agent.biz.event.ModelConfigChangedEvent;
+import com.cl.agent.biz.rag.Reranker;
 import com.cl.agent.dto.model.*;
 import com.cl.agent.enums.ModelTypeEnum;
 import com.cl.agent.exception.BizException;
@@ -47,6 +48,10 @@ public class ModelConfigBizImpl implements IModelConfigBiz {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    /** 重排实现，用于测试重排模型连通性 */
+    @Autowired
+    private Reranker reranker;
 
     // ======================== 厂商 ========================
 
@@ -116,9 +121,13 @@ public class ModelConfigBizImpl implements IModelConfigBiz {
         // 缺少密钥等配置问题直接以 BizException 返回给前端
         ModelConnection conn = modelConfigService.resolveConnection(id);
         try {
-            return ModelTypeEnum.EMBEDDING.name().equals(model.getModelType())
-                    ? testEmbedding(conn)
-                    : testChat(conn);
+            if (ModelTypeEnum.EMBEDDING.name().equals(model.getModelType())) {
+                return testEmbedding(conn);
+            }
+            if (ModelTypeEnum.RERANK.name().equals(model.getModelType())) {
+                return testRerank(conn);
+            }
+            return testChat(conn);
         } catch (Exception e) {
             // 客户端的重试包装异常（如 "Retries exhausted"）信息量很少，取最底层原因展示给用户
             String reason = rootCauseMessage(e);
@@ -150,6 +159,17 @@ public class ModelConfigBizImpl implements IModelConfigBiz {
     }
 
     // ======================== 私有方法 ========================
+
+    /**
+     * 重排模型测试：对两段候选文本打分，校验接口返回了与候选数一致的相关度。
+     *
+     * @param conn 重排模型连接参数
+     * @return 测试结果，{@code success} 与 {@code message}
+     */
+    private Map<String, Object> testRerank(ModelConnection conn) {
+        List<Double> scores = reranker.score(conn, TEST_TEXT, List.of("这是一段关于连通性测试的说明", "今天天气晴朗"));
+        return result(true, String.format("连接成功，测试相关度: %.3f / %.3f", scores.get(0), scores.get(1)));
+    }
 
     /**
      * 向量模型测试：实际向量化一段文本，并校验返回维度与配置一致。

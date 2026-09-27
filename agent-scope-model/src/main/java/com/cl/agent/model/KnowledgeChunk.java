@@ -43,4 +43,16 @@ public class KnowledgeChunk extends BaseEntity {
     /** 预估消耗/占用的 LLM Token 数量 */
     @TableField("token_count")
     private Integer tokenCount;
+
+    /** 章节路径，如「三、独立代发 › 请求参数」；存量切片（结构化切片上线前入库）为 null */
+    @TableField("section_path")
+    private String sectionPath;
+
+    /** 切片类型：text=正文 / table=表格 / qa=问答对 */
+    @TableField("chunk_type")
+    private String chunkType;
+
+    /** 关键词检索的全文索引相关度得分，仅关键词召回结果携带，非表字段 */
+    @TableField(exist = false)
+    private Double keywordScore;
 }

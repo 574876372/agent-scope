@@ -23,4 +23,19 @@ public class CreateKbRequest implements Serializable {
 
     /** 绑定的向量模型 ID，选填；为空时使用默认向量模型，创建后不可更换 */
     private String embeddingModelId;
+
+    /** 知识库类型：GENERAL / TECH_DOC / FAQ / TABLE，选填；为空时为 GENERAL */
+    private String kbType;
+
+    /** 切片策略：SECTION / QA / TABLE_ROW，选填；为空时使用类型预设 */
+    private String chunkStrategy;
+
+    /** 单个切片最大字符数，选填（100 ~ 4000）；为空时使用类型预设或全局默认 */
+    private Integer chunkSize;
+
+    /** 超长段落拆分时的重叠字符数，选填（0 ~ chunkSize/2）；为空时使用全局默认 */
+    private Integer chunkOverlap;
+
+    /** 检索命中后前后各补充的相邻切片数，选填（0 ~ 5）；为空时使用类型预设 */
+    private Integer contextWindow;
 }

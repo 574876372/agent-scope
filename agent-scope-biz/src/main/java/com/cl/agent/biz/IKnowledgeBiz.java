@@ -88,4 +88,49 @@ public interface IKnowledgeBiz {
      * @return {@link SearchChunkResponse} 召回的文本片段与相似度得分列表；未检索到时返回空列表
      */
     List<SearchChunkResponse> searchKnowledge(String kbId, String query, Integer limit);
+
+    /**
+     * 更新知识库名称、描述、类型与切片 / 扩展参数（向量模型不可更换）。
+     * <p>使用说明：切片参数变更只对之后入库的文档生效，已入库文档需重新解析；上下文扩展窗口在下次检索时立即生效。</p>
+     *
+     * @param id      知识库 ID，非空
+     * @param request 更新内容；名称为空时保留原名称，切片参数为空表示恢复类型预设
+     * @return 更新后的知识库详情
+     * @throws com.cl.agent.exception.BizException 知识库不存在（404）或参数超出范围（400）时抛出
+     */
+    KbResponse updateKnowledgeBase(String id, CreateKbRequest request);
+
+    /**
+     * 列出知识库类型预设及其生效的默认参数。
+     *
+     * @return 类型选项列表，非空
+     */
+    List<com.cl.agent.dto.rag.KbTypeOptionResponse> listKbTypes();
+
+    /**
+     * 按知识库当前配置重新解析单个文档，原文件无需重新上传；异步执行。
+     *
+     * @param docId 文档 ID，非空
+     * @return 置为解析中的文档信息
+     * @throws com.cl.agent.exception.BizException RAG 未启用、文档不存在（404）或正在解析中（409）时抛出
+     */
+    UploadDocResponse reparseDocument(String docId);
+
+    /**
+     * 按知识库当前配置依次重新解析其全部文档（跳过正在解析中的文档）；异步执行。
+     *
+     * @param kbId 知识库 ID，非空
+     * @return 本次提交重新解析的文档数量
+     * @throws com.cl.agent.exception.BizException RAG 未启用或知识库不存在时抛出
+     */
+    int reparseKnowledgeBase(String kbId);
+
+    /**
+     * 知识库演练场检索：调用与智能体完全相同的检索流水线，返回各阶段中间结果。
+     *
+     * @param request 演练场请求，{@code kbId} 与 {@code query} 必填
+     * @return 完整检索过程记录
+     * @throws com.cl.agent.exception.BizException RAG 未启用、参数缺失或知识库不存在时抛出
+     */
+    com.cl.agent.dto.rag.RetrievalTrace retrievalTest(com.cl.agent.dto.rag.RetrievalTestRequest request);
 }

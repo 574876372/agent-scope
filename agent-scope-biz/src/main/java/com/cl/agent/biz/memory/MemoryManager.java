@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MemoryManager {
 
+    /** 助手消息中持久化的检索来源块（{@code <retrieval>…</retrieval>}），生成摘要前去除 */
+    private static final java.util.regex.Pattern RETRIEVAL_BLOCK = java.util.regex.Pattern.compile("(?s)<retrieval>.*?</retrieval>");
+
     @Autowired
     private AgentMemoryProperties memoryProperties;
 
@@ -201,7 +204,9 @@ public class MemoryManager {
             String role = "user".equals(msg.getRole()) ? "用户" : "助手";
             // 摘要时跳过已有摘要注入的 system 消息
             if ("system".equals(msg.getRole())) continue;
-            sb.append(role).append(": ").append(msg.getContent()).append("\n");
+            // 检索来源块仅用于界面展示，摘要时去除，避免大段原文挤占摘要提示词
+            String content = msg.getContent() == null ? "" : RETRIEVAL_BLOCK.matcher(msg.getContent()).replaceAll("");
+            sb.append(role).append(": ").append(content).append("\n");
         }
 
         sb.append("\n请输出一段简洁的摘要（不超过 300 字）：");

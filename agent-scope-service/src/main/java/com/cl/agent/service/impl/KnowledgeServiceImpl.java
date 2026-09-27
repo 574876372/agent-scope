@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -237,6 +239,65 @@ public class KnowledgeServiceImpl implements IKnowledgeService {
         return list != null ? list : List.of();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public List<KnowledgeChunk> listChunksByDocIndexes(Map<String, ? extends Collection<Integer>> docIndexes) {
+        if (docIndexes == null || docIndexes.isEmpty()) {
+            return List.of();
+        }
+        LambdaQueryWrapper<KnowledgeChunk> wrapper = new LambdaQueryWrapper<>();
+        // (doc_id = ? AND chunk_index IN (...)) OR (...) —— 每个文档一组条件
+        wrapper.and(w -> docIndexes.forEach((docId, indexes) -> {
+            if (indexes != null && !indexes.isEmpty()) {
+                w.or(g -> g.eq(KnowledgeChunk::getDocId, docId).in(KnowledgeChunk::getChunkIndex, indexes));
+            }
+        }));
+        List<KnowledgeChunk> list = knowledgeChunkMapper.selectList(wrapper);
+        return list != null ? list : List.of();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<KnowledgeChunk> listChunksInRange(String docId, int fromIndex, int toIndex) {
+        LambdaQueryWrapper<KnowledgeChunk> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(KnowledgeChunk::getDocId, docId)
+               .between(KnowledgeChunk::getChunkIndex, Math.max(0, fromIndex), toIndex)
+               .orderByAsc(KnowledgeChunk::getChunkIndex);
+        List<KnowledgeChunk> list = knowledgeChunkMapper.selectList(wrapper);
+        return list != null ? list : List.of();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<KnowledgeChunk> listChunksBySection(String docId, String sectionPath) {
+        LambdaQueryWrapper<KnowledgeChunk> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(KnowledgeChunk::getDocId, docId)
+               .eq(KnowledgeChunk::getSectionPath, sectionPath)
+               .orderByAsc(KnowledgeChunk::getChunkIndex);
+        List<KnowledgeChunk> list = knowledgeChunkMapper.selectList(wrapper);
+        return list != null ? list : List.of();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<KnowledgeDocument> listDocumentsByIds(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<KnowledgeDocument> list = knowledgeDocumentMapper.selectByIds(ids);
+        return list != null ? list : List.of();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<KnowledgeBase> listBasesByIds(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
+        List<KnowledgeBase> list = knowledgeBaseMapper.selectByIds(ids);
+        return list != null ? list : List.of();
+    }
+
     /**
      * 级联删除指定文档下的所有文本切片实体。
      *
@@ -250,6 +311,15 @@ public class KnowledgeServiceImpl implements IKnowledgeService {
         LambdaQueryWrapper<KnowledgeChunk> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(KnowledgeChunk::getDocId, docId);
         knowledgeChunkMapper.delete(wrapper);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int purgeChunksByDocId(String docId) {
+        int rows = knowledgeChunkMapper.purgeByDocId(docId);
+        log.debug("[Service-Chunk] 物理删除文档切片: docId={}, rows={}", docId, rows);
+        return rows;
     }
 
     /**
@@ -316,6 +386,24 @@ public class KnowledgeServiceImpl implements IKnowledgeService {
             return new ArrayList<>();
         }
         return list.stream().map(AgentKbRel::getKbId).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取绑定了指定知识库的全部 Agent ID。
+     * <p>使用说明：知识库删除或配置变更前调用，据此让这些 Agent 的运行时缓存失效；须在解除绑定之前调用。</p>
+     *
+     * @param kbId 知识库 ID，非空
+     * @return 绑定该知识库的 Agent ID 列表；无绑定时返回空列表
+     */
+    @Override
+    public List<String> getAgentIdsByKbId(String kbId) {
+        LambdaQueryWrapper<AgentKbRel> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AgentKbRel::getKbId, kbId);
+        List<AgentKbRel> list = agentKbRelMapper.selectList(wrapper);
+        if (list == null || list.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return list.stream().map(AgentKbRel::getAgentId).distinct().collect(Collectors.toList());
     }
 
     /**

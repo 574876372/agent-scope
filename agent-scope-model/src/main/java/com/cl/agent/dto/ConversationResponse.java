@@ -20,6 +20,9 @@ public class ConversationResponse implements Serializable {
     /** 会话标题 */
     private String title;
 
+    /** 会话关联的 Agent ID；为空表示未关联智能体 */
+    private String agentId;
+
     /** 会话创建时间 */
     private LocalDateTime createTime;
 

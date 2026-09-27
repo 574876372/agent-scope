@@ -122,12 +122,68 @@ public interface IKnowledgeService {
     List<KnowledgeChunk> listChunksByKbId(String kbId);
 
     /**
+     * 按「文档 ID → 切片序号集合」批量查询切片。
+     * <p>使用说明：检索流水线把向量召回结果（向量库只保存文档 ID 与序号）还原为 MySQL 切片，以取得章节路径等字段。</p>
+     *
+     * @param docIndexes 文档 ID 到切片序号集合的映射，为空时返回空列表
+     * @return 命中的切片，顺序不保证；向量库中存在而切片表缺失的不返回
+     */
+    List<KnowledgeChunk> listChunksByDocIndexes(java.util.Map<String, ? extends java.util.Collection<Integer>> docIndexes);
+
+    /**
+     * 查询文档内序号在 [fromIndex, toIndex] 区间的切片。
+     * <p>使用说明：上下文扩展时补充命中切片的相邻切片。</p>
+     *
+     * @param docId     文档 ID，非空
+     * @param fromIndex 起始序号（含），小于 0 时按 0 处理
+     * @param toIndex   结束序号（含）
+     * @return 区间内切片，按序号升序；无数据时返回空列表
+     */
+    List<KnowledgeChunk> listChunksInRange(String docId, int fromIndex, int toIndex);
+
+    /**
+     * 查询文档内章节路径等于指定值的全部切片。
+     * <p>使用说明：技术文档类型整章带入时调用。</p>
+     *
+     * @param docId       文档 ID，非空
+     * @param sectionPath 章节路径，非空
+     * @return 该章节的切片，按序号升序；无数据时返回空列表
+     */
+    List<KnowledgeChunk> listChunksBySection(String docId, String sectionPath);
+
+    /**
+     * 按 ID 批量查询文档元数据。
+     *
+     * @param ids 文档 ID 集合，为空时返回空列表
+     * @return 文档列表；已删除或不存在的 ID 不返回
+     */
+    List<KnowledgeDocument> listDocumentsByIds(java.util.Collection<String> ids);
+
+    /**
+     * 按 ID 批量查询知识库。
+     *
+     * @param ids 知识库 ID 集合，为空时返回空列表
+     * @return 知识库列表；已删除或不存在的 ID 不返回
+     */
+    List<KnowledgeBase> listBasesByIds(java.util.Collection<String> ids);
+
+    /**
      * 级联删除指定文档下的所有文本切片实体。
      *
      * @param docId 文档唯一 ID，非空
      * @return 无
      */
     void deleteChunksByDocId(String docId);
+
+    /**
+     * 物理删除文档的全部切片（含已逻辑删除的行）。
+     * <p>使用说明：重新解析前调用。切片主键由内容派生，逻辑删除后重新入库会主键冲突，因此必须物理删除；
+     * 须在清理向量之后调用（清理向量需要按切片 ID 定位）。</p>
+     *
+     * @param docId 文档 ID，非空
+     * @return 删除的行数
+     */
+    int purgeChunksByDocId(String docId);
 
     /**
      * 级联删除指定知识库下的所有文本切片实体。
@@ -158,6 +214,15 @@ public interface IKnowledgeService {
      * @return 绑定的知识库 ID 列表；未绑定时返回空列表
      */
     List<String> getKbIdsByAgentId(String agentId);
+
+    /**
+     * 获取绑定了指定知识库的全部 Agent ID。
+     * <p>使用说明：知识库删除或配置变更前调用，据此让这些 Agent 的运行时缓存失效；须在解除绑定之前调用。</p>
+     *
+     * @param kbId 知识库 ID，非空
+     * @return 绑定该知识库的 Agent ID 列表；无绑定时返回空列表
+     */
+    List<String> getAgentIdsByKbId(String kbId);
 
     /**
      * 级联清除指定 Agent 的所有绑定映射关系。

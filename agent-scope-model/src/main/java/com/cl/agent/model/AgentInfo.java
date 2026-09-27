@@ -1,5 +1,6 @@
 package com.cl.agent.model;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -68,16 +69,37 @@ public class AgentInfo extends BaseEntity {
     private String ragMode;
 
     /**
-     * 单 Agent 专属检索最大召回数量（分片数）。
-     * <p>null 时使用系统默认配置（在 agent.rag.defaultRowLimit 中）。</p>
+     * 最终交给模型的段数（Top-K，上下文扩展与合并后的连续原文段）。
+     * <p>null 时使用 agent.rag.retrieval.final-top-k。</p>
      */
-    @TableField("recall_limit")
+    @TableField(value = "recall_limit", updateStrategy = FieldStrategy.ALWAYS)
     private Integer recallLimit;
 
     /**
-     * 单 Agent 专属检索最低相似度得分过滤阈值。
-     * <p>取值范围 0.0 ~ 1.0，null 时使用系统默认配置（在 agent.rag.defaultScoreThreshold 中）。</p>
+     * 向量召回预过滤阈值：低于该相似度的向量结果不参与融合。
+     * <p>取值范围 0.0 ~ 1.0，null 时使用 agent.rag.default-score-threshold。</p>
      */
-    @TableField("score_threshold")
+    @TableField(value = "score_threshold", updateStrategy = FieldStrategy.ALWAYS)
     private Double scoreThreshold;
+
+    /**
+     * 是否结合对话历史改写检索词。
+     * <p>null 时使用 agent.rag.retrieval.query-rewrite。</p>
+     */
+    @TableField(value = "query_rewrite", updateStrategy = FieldStrategy.ALWAYS)
+    private Boolean queryRewrite;
+
+    /**
+     * 注入上下文总字符数上限。
+     * <p>null 时使用 agent.rag.retrieval.context-max-chars。</p>
+     */
+    @TableField(value = "context_max_chars", updateStrategy = FieldStrategy.ALWAYS)
+    private Integer contextMaxChars;
+
+    /**
+     * 重排模型 ID，关联 t_model.id（RERANK 类型）。
+     * <p>null 时使用默认重排模型；未配置默认重排模型则不重排。</p>
+     */
+    @TableField(value = "rerank_model_id", updateStrategy = FieldStrategy.ALWAYS)
+    private String rerankModelId;
 }

@@ -2,6 +2,9 @@ package com.cl.agent.controller;
 
 import com.cl.agent.biz.IKnowledgeBiz;
 import com.cl.agent.dto.*;
+import com.cl.agent.dto.rag.KbTypeOptionResponse;
+import com.cl.agent.dto.rag.RetrievalTestRequest;
+import com.cl.agent.dto.rag.RetrievalTrace;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 知识库及文档解析管理 REST 控制器层。
@@ -144,5 +148,68 @@ public class KnowledgeController {
             @RequestParam("query") String query,
             @RequestParam(value = "limit", required = false) Integer limit) {
         return ResponseEntity.ok(knowledgeBiz.searchKnowledge(kbId, query, limit));
+    }
+
+    /**
+     * 更新知识库名称、描述、类型与切片 / 扩展参数。
+     * <p>使用说明：PUT {@code /api/knowledge-base/update?id=}，请求体同创建接口（向量模型字段被忽略，不可更换）；
+     * 切片参数变更后已入库文档需调用重新解析接口才会生效。</p>
+     *
+     * @param id      知识库 ID，非空，通过查询参数 {@code ?id=} 传入
+     * @param request 更新内容，切片参数为空表示恢复类型预设
+     * @return {@link ResponseEntity} 更新后的知识库详情，HTTP 200；知识库不存在时 404，参数越界时 400
+     */
+    @PutMapping("/update")
+    public ResponseEntity<KbResponse> updateKb(@RequestParam("id") String id, @RequestBody CreateKbRequest request) {
+        return ResponseEntity.ok(knowledgeBiz.updateKnowledgeBase(id, request));
+    }
+
+    /**
+     * 列出知识库类型预设（通用文档 / 技术接口文档 / 问答 FAQ / 表格数据）及其默认切片与扩展参数。
+     * <p>使用说明：GET {@code /api/knowledge-base/types}，前端创建 / 编辑知识库时用于类型选择与参数占位提示。</p>
+     *
+     * @return {@link ResponseEntity} 类型选项列表，HTTP 200
+     */
+    @GetMapping("/types")
+    public ResponseEntity<List<KbTypeOptionResponse>> listTypes() {
+        return ResponseEntity.ok(knowledgeBiz.listKbTypes());
+    }
+
+    /**
+     * 按知识库当前配置重新解析单个文档。
+     * <p>使用说明：POST {@code /api/knowledge-base/document/reparse?docId=}；异步执行，立即返回，
+     * 文档状态变为 parsing，前端轮询文档列表查看结果。</p>
+     *
+     * @param docId 文档 ID，非空，通过查询参数 {@code ?docId=} 传入
+     * @return {@link ResponseEntity} 置为解析中的文档信息，HTTP 200；文档不存在 404，正在解析中 409
+     */
+    @PostMapping("/document/reparse")
+    public ResponseEntity<UploadDocResponse> reparseDoc(@RequestParam("docId") String docId) {
+        return ResponseEntity.ok(knowledgeBiz.reparseDocument(docId));
+    }
+
+    /**
+     * 按知识库当前配置重新解析其全部文档。
+     * <p>使用说明：POST {@code /api/knowledge-base/reparse?kbId=}；异步执行，跳过正在解析中的文档。</p>
+     *
+     * @param kbId 知识库 ID，非空，通过查询参数 {@code ?kbId=} 传入
+     * @return {@link ResponseEntity} {@code {"submitted": N}}，N 为提交重新解析的文档数，HTTP 200
+     */
+    @PostMapping("/reparse")
+    public ResponseEntity<Map<String, Integer>> reparseKb(@RequestParam("kbId") String kbId) {
+        return ResponseEntity.ok(Map.of("submitted", knowledgeBiz.reparseKnowledgeBase(kbId)));
+    }
+
+    /**
+     * 知识库演练场：调用与智能体完全相同的检索流水线，分步返回中间结果。
+     * <p>使用说明：POST {@code /api/knowledge-base/retrieval/test}，请求体为 {@link RetrievalTestRequest}；
+     * 会实时调用 Embedding（开启查询改写时还会调用对话模型、配置重排模型时调用重排模型）。</p>
+     *
+     * @param request 演练场请求，{@code kbId} 与 {@code query} 必填
+     * @return {@link ResponseEntity} 检索过程记录（改写检索词、向量命中、关键词命中、融合结果、最终上下文），HTTP 200
+     */
+    @PostMapping("/retrieval/test")
+    public ResponseEntity<RetrievalTrace> retrievalTest(@RequestBody RetrievalTestRequest request) {
+        return ResponseEntity.ok(knowledgeBiz.retrievalTest(request));
     }
 }

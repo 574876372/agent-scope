@@ -12,7 +12,10 @@ public enum ModelTypeEnum {
     CHAT("对话模型"),
 
     /** 向量化模型，供知识库入库与检索使用 */
-    EMBEDDING("向量模型");
+    EMBEDDING("向量模型"),
+
+    /** 重排模型，对检索融合结果按问题相关度重新排序；采用 Cohere / Jina 兼容的 /v1/rerank 接口 */
+    RERANK("重排模型");
 
     /** 类型描述 */
     private final String desc;

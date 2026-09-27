@@ -7,7 +7,9 @@ import com.cl.agent.dto.AgentResponse;
 import com.cl.agent.dto.ChatRequest;
 import com.cl.agent.dto.ChatResponse;
 import com.cl.agent.dto.CreateAgentRequest;
+import com.cl.agent.biz.event.AgentCacheEvictEvent;
 import com.cl.agent.biz.event.ModelConfigChangedEvent;
+import com.cl.agent.service.IChatService;
 import com.cl.agent.dto.model.ModelConnection;
 import com.cl.agent.exception.BizException;
 import com.cl.agent.model.AgentInfo;
@@ -37,7 +39,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import com.cl.agent.service.IKnowledgeService;
+import com.cl.agent.biz.rag.EnhancedKnowledge;
 import com.cl.agent.biz.rag.RagKnowledgeProvider;
+import com.cl.agent.biz.rag.RetrievalPipeline;
+import com.cl.agent.dto.rag.RetrievalOptions;
 import io.agentscope.core.rag.Knowledge;
 import io.agentscope.core.rag.RAGMode;
 import io.agentscope.core.rag.model.RetrieveConfig;
@@ -71,6 +76,20 @@ public class AgentBizImpl implements IAgentBiz {
     @Autowired
     private IModelConfigService modelConfigService;
 
+    /** 会话数据服务，删除 Agent 时级联删除其会话 */
+    @Autowired
+    private IChatService chatService;
+
+    /** 检索流水线，AGENTIC 模式的增强检索器由其驱动 */
+    @Autowired
+    private RetrievalPipeline retrievalPipeline;
+
+    /** AGENTIC 检索工具在智能体未配置段数时的默认段数 */
+    private static final int DEFAULT_TOOL_TOP_K = 5;
+
+    /** 持久化到助手消息中的检索来源块，送入模型记忆前需去除 */
+    private static final java.util.regex.Pattern RETRIEVAL_BLOCK = java.util.regex.Pattern.compile("(?s)<retrieval>.*?</retrieval>");
+
 
     /** 运行时 Agent 实例缓存 (不持久化，仅存放在内存中) */
     private final ConcurrentHashMap<String, Agent> agentInstanceCache = new ConcurrentHashMap<>();
@@ -86,6 +105,23 @@ public class AgentBizImpl implements IAgentBiz {
         int size = agentInstanceCache.size();
         agentInstanceCache.clear();
         log.info("[Agent] 模型配置已变更，清空运行时 Agent 缓存: count={}", size);
+    }
+
+    /**
+     * 按 Agent ID 精确失效运行时缓存。
+     * <p>使用说明：知识库删除或检索配置变更后由发布方同步触发；被移除的 Agent 下次对话时按最新知识库绑定重建，
+     * 不会继续查询已删除的知识库。</p>
+     *
+     * @param event 缓存失效事件，携带需要失效的 Agent ID 列表
+     * @return 无返回值；方法返回时对应缓存已移除
+     */
+    @EventListener
+    public void onAgentCacheEvict(AgentCacheEvictEvent event) {
+        if (event.getAgentIds().isEmpty()) {
+            return;
+        }
+        event.getAgentIds().forEach(agentInstanceCache::remove);
+        log.info("[Agent] 运行时 Agent 缓存已失效: agentIds={}, reason={}", event.getAgentIds(), event.getReason());
     }
 
     /**
@@ -115,8 +151,7 @@ public class AgentBizImpl implements IAgentBiz {
         info.setMaxTurns(request.getMaxTurns());
         // RAG 检索参数绑定配置
         info.setRagMode(request.getRagMode() != null ? request.getRagMode() : "DISABLED");
-        info.setRecallLimit(request.getRecallLimit());
-        info.setScoreThreshold(request.getScoreThreshold());
+        applyRetrievalConfig(info, request);
         agentService.save(info);
 
         // 2. 保存 Agent-工具关联关系
@@ -180,16 +215,21 @@ public class AgentBizImpl implements IAgentBiz {
     }
 
     /**
-     * 删除指定 ID 的 Agent，并自动级联清理该 Agent 的工具关联和内存缓存。
+     * 删除指定 ID 的 Agent，并级联清理其工具关联、知识库绑定、全部会话与内存缓存。
+     * <p>使用说明：会话随 Agent 一并删除（其消息与摘要同时逻辑删除），避免残留无法继续对话的会话。</p>
      *
-     * @param id 待删除 of Agent 唯一标识符 ID
+     * @param id 待删除 Agent 唯一标识符 ID，非空
+     * @return 无返回值；方法返回时数据库与缓存均已清理
      */
     @Override
+    @org.springframework.transaction.annotation.Transactional(rollbackFor = Exception.class)
     public void deleteAgent(String id) {
         agentService.deleteById(id);
         agentToolRelService.deleteByAgentId(id);
+        knowledgeService.deleteBindsByAgentId(id);
+        int convCount = chatService.deleteByAgentId(id);
         agentInstanceCache.remove(id);
-        log.info("删除 Agent: ID={}，已级联清理工具关联", id);
+        log.info("删除 Agent: ID={}，已级联清理工具关联、知识库绑定与 {} 个会话", id, convCount);
     }
 
     /**
@@ -229,15 +269,10 @@ public class AgentBizImpl implements IAgentBiz {
         if (request.getMaxTurns() != null) {
             info.setMaxTurns(request.getMaxTurns());
         }
-        // 允许更新 RAG 配置
+        // 允许更新 RAG 配置：携带 ragMode 时视为完整的检索配置，各项为空表示恢复全局默认
         if (request.getRagMode() != null) {
             info.setRagMode(request.getRagMode());
-        }
-        if (request.getRecallLimit() != null) {
-            info.setRecallLimit(request.getRecallLimit());
-        }
-        if (request.getScoreThreshold() != null) {
-            info.setScoreThreshold(request.getScoreThreshold());
+            applyRetrievalConfig(info, request);
         }
         agentService.save(info);
 
@@ -284,10 +319,7 @@ public class AgentBizImpl implements IAgentBiz {
         Msg reply;
         try {
             String userId = UserContext.getUserId();
-            reactor.core.publisher.Mono<Msg> callMono = agent.call(Msg.builder()
-                            .textContent(request.getContent())
-                            .role(MsgRole.USER)
-                            .build());
+            reactor.core.publisher.Mono<Msg> callMono = agent.call(buildInputMessages(request));
             if (userId != null) {
                 callMono = callMono.contextWrite(context -> context.put("userId", userId));
             }
@@ -325,10 +357,7 @@ public class AgentBizImpl implements IAgentBiz {
         Agent agent = resolveAgent(id, info);
         prepareAgentMemory(agent, request.getHistory());
 
-        Msg userMsg = Msg.builder()
-                .textContent(request.getContent())
-                .role(MsgRole.USER)
-                .build();
+        List<Msg> inputMessages = buildInputMessages(request);
 
         StreamOptions options = StreamOptions.builder()
                 .eventTypes(EventType.REASONING, EventType.TOOL_RESULT, EventType.AGENT_RESULT)
@@ -341,7 +370,7 @@ public class AgentBizImpl implements IAgentBiz {
         AtomicBoolean firstEvent = new AtomicBoolean(true);
 
         String userId = UserContext.getUserId();
-        reactor.core.publisher.Flux<Event> stream = agent.stream(List.of(userMsg), options)
+        reactor.core.publisher.Flux<Event> stream = agent.stream(inputMessages, options)
                 .doOnSubscribe(sub -> {
                     startMs.set(System.currentTimeMillis());
                     log.info("[Model] 开始调用模型(流式), agentId={}, agentName={}, model={}",
@@ -440,44 +469,36 @@ public class AgentBizImpl implements IAgentBiz {
     }
 
     /**
-     * 加载 RAG 知识库并注入 Agent 构建器。
+     * 为 AGENTIC 模式的 Agent 注入增强检索器。
+     * <p>使用说明：构建 Agent 时调用。AGENTIC 模式向 {@code ReActAgent.Builder#knowledges} 只传入一个
+     * {@link EnhancedKnowledge}（覆盖全部绑定知识库），框架将其包装为 {@code retrieve_knowledge} 工具，工具结果带来源标注。
+     * GENERIC 模式不再使用框架的 GenericRAGHook：检索由 {@code ChatBizImpl} 在调用 Agent 前完成并推送引用来源，
+     * 因此这里不注入任何知识库。单个知识库不可用（如缺 API Key）不会影响构建，检索时由流水线跳过并告警。</p>
      *
-     * @param builder   ReActAgent 构建器
-     * @param agentId   智能体 ID
-     * @param info      智能体基本配置实体
-     * @param agentName 智能体友好名称
+     * @param builder   ReActAgent 构建器，非空
+     * @param agentId   智能体 ID，非空
+     * @param info      智能体配置，非空
+     * @param agentName 智能体名称，用于日志
+     * @return 无返回值；直接修改 builder
      */
     private void loadRagKnowledge(ReActAgent.Builder builder, String agentId, AgentInfo info, String agentName) {
-        if (knowledgeService != null && ragKnowledgeProvider.isEnabled() && agentId != null) {
-            List<String> kbIds = knowledgeService.getKbIdsByAgentId(agentId);
-            String modeStr = info.getRagMode() != null ? info.getRagMode() : "DISABLED";
-
-            if (!kbIds.isEmpty() && !"DISABLED".equalsIgnoreCase(modeStr)) {
-                log.info("[RAG-Build] 检测到 Agent [{}] 开启并绑定知识库: kbIds={}, mode={}", agentName, kbIds, modeStr);
-
-                // 1. 每个绑定的知识库对应一个 Knowledge，直接复用入库时的向量存储（ES / Milvus / 缓存的内存库），
-                //    不再在 Agent 构建时重算 Embedding；多知识库聚合由 ReActAgent.Builder#knowledges 原生完成
-                List<Knowledge> knowledges = new ArrayList<>();
-                for (String kbId : kbIds) {
-                    knowledges.add(ragKnowledgeProvider.getKnowledge(kbId));
-                }
-
-                // 2. 召回上限与相似度阈值：Agent 专属配置优先，缺省回落到 agent.rag.* 全局默认值
-                int limit = info.getRecallLimit() != null
-                        ? info.getRecallLimit() : ragKnowledgeProvider.getDefaultRecallLimit();
-                double threshold = info.getScoreThreshold() != null
-                        ? info.getScoreThreshold() : ragKnowledgeProvider.getDefaultScoreThreshold();
-
-                // 3. 注入 AgentScope 官方原生支持的属性
-                builder.knowledges(knowledges)
-                       .ragMode(RAGMode.valueOf(modeStr))
-                       .retrieveConfig(RetrieveConfig.builder()
-                               .limit(limit)
-                               .scoreThreshold(threshold)
-                               .build());
-                log.info("[RAG-Build] RAG 配置装配完成: kbCount={}, limit={}, threshold={}", knowledges.size(), limit, threshold);
-            }
+        if (!ragKnowledgeProvider.isEnabled() || agentId == null || !"AGENTIC".equalsIgnoreCase(info.getRagMode())) {
+            return;
         }
+        List<String> kbIds = knowledgeService.getKbIdsByAgentId(agentId);
+        if (kbIds.isEmpty()) {
+            return;
+        }
+        RetrievalOptions template = retrievalPipeline.agentOptions(info, kbIds);
+        Knowledge knowledge = new EnhancedKnowledge(retrievalPipeline, template);
+        builder.knowledges(List.of(knowledge))
+               .ragMode(RAGMode.AGENTIC)
+               // 框架要求非空配置；实际段数、阈值由 EnhancedKnowledge 按智能体配置决定
+               .retrieveConfig(RetrieveConfig.builder()
+                       .limit(template.getFinalTopK() != null ? template.getFinalTopK() : DEFAULT_TOOL_TOP_K)
+                       .scoreThreshold(0.0)
+                       .build());
+        log.info("[RAG-Build] Agent [{}] 已注入增强检索工具: kbIds={}", agentName, kbIds);
     }
 
     /**
@@ -606,10 +627,39 @@ public class AgentBizImpl implements IAgentBiz {
         resp.setRagMode(info.getRagMode());
         resp.setRecallLimit(info.getRecallLimit());
         resp.setScoreThreshold(info.getScoreThreshold());
+        resp.setQueryRewrite(info.getQueryRewrite());
+        resp.setContextMaxChars(info.getContextMaxChars());
+        resp.setRerankModelId(info.getRerankModelId());
         if (knowledgeService != null) {
             resp.setKbIds(knowledgeService.getKbIdsByAgentId(info.getId()));
         }
         return resp;
+    }
+
+    /**
+     * 校验并写入智能体级检索参数；各项为空表示使用 {@code agent.rag.retrieval.*} 全局默认。
+     *
+     * @param info    目标实体，非空
+     * @param request 创建 / 更新请求，非空
+     * @return 无返回值；直接修改 info
+     * @throws BizException 数值超出允许范围时抛出，code=400
+     */
+    private void applyRetrievalConfig(AgentInfo info, CreateAgentRequest request) {
+        if (request.getRecallLimit() != null && (request.getRecallLimit() < 1 || request.getRecallLimit() > 20)) {
+            throw new BizException(400, "最终段数须在 1 ~ 20 之间");
+        }
+        if (request.getScoreThreshold() != null && (request.getScoreThreshold() < 0 || request.getScoreThreshold() > 1)) {
+            throw new BizException(400, "向量预过滤阈值须在 0 ~ 1 之间");
+        }
+        if (request.getContextMaxChars() != null && (request.getContextMaxChars() < 500 || request.getContextMaxChars() > 100000)) {
+            throw new BizException(400, "上下文总长上限须在 500 ~ 100000 之间");
+        }
+        info.setRecallLimit(request.getRecallLimit());
+        info.setScoreThreshold(request.getScoreThreshold());
+        info.setQueryRewrite(request.getQueryRewrite());
+        info.setContextMaxChars(request.getContextMaxChars());
+        String rerankModelId = request.getRerankModelId();
+        info.setRerankModelId(rerankModelId == null || rerankModelId.isBlank() ? null : rerankModelId.trim());
     }
 
     /**
@@ -647,13 +697,39 @@ public class AgentBizImpl implements IAgentBiz {
                 reactAgent.getMemory().clear();
                 if (history != null) {
                     for (ChatMessage m : history) {
+                        // 助手消息中持久化的检索来源块只用于界面展示，不送入模型，避免重复占用上下文
+                        String content = m.getContent() == null ? "" : RETRIEVAL_BLOCK.matcher(m.getContent()).replaceAll("");
                         reactAgent.getMemory().addMessage(Msg.builder()
                                 .role(parseRole(m.getRole()))
-                                .textContent(m.getContent())
+                                .textContent(content)
                                 .build());
                     }
                 }
             }
         }
+    }
+
+    /**
+     * 组装本轮发给 Agent 的输入消息：用户问题，以及 GENERIC 前置检索得到的知识库上下文（如有）。
+     * <p>知识库上下文作为独立的用户消息紧跟在问题之后（与框架 GenericRAGHook 的注入位置一致），
+     * 只存在于本轮调用中，不写入会话历史。</p>
+     *
+     * @param request 对话请求，{@code content} 必填，{@code knowledgeContext} 可为空
+     * @return 输入消息列表，至少包含用户问题
+     */
+    private List<Msg> buildInputMessages(ChatRequest request) {
+        List<Msg> messages = new ArrayList<>(2);
+        messages.add(Msg.builder()
+                .textContent(request.getContent())
+                .role(MsgRole.USER)
+                .build());
+        if (request.getKnowledgeContext() != null && !request.getKnowledgeContext().isBlank()) {
+            messages.add(Msg.builder()
+                    .name("user")
+                    .textContent(request.getKnowledgeContext())
+                    .role(MsgRole.USER)
+                    .build());
+        }
+        return messages;
     }
 }

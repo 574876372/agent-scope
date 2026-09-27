@@ -1,8 +1,15 @@
 package com.cl.agent.biz.impl;
 
 import com.cl.agent.biz.IKnowledgeBiz;
+import com.cl.agent.biz.event.AgentCacheEvictEvent;
 import com.cl.agent.biz.event.DocumentIndexEvent;
+import com.cl.agent.biz.rag.KbConfigResolver;
 import com.cl.agent.biz.rag.RagKnowledgeProvider;
+import com.cl.agent.biz.rag.RetrievalPipeline;
+import com.cl.agent.dto.rag.KbTypeOptionResponse;
+import com.cl.agent.dto.rag.RetrievalOptions;
+import com.cl.agent.dto.rag.RetrievalTestRequest;
+import com.cl.agent.dto.rag.RetrievalTrace;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.dto.*;
 import com.cl.agent.enums.DocumentStatusEnum;
@@ -14,6 +21,7 @@ import com.cl.agent.rag.core.DocumentReaderFactory;
 import com.cl.agent.biz.rag.KnowledgeFileStorage;
 import com.cl.agent.service.IKnowledgeService;
 import com.cl.agent.service.IModelConfigService;
+import com.cl.agent.service.IRagEvalCaseService;
 import io.agentscope.core.rag.knowledge.SimpleKnowledge;
 import io.agentscope.core.rag.model.Document;
 import io.agentscope.core.rag.model.RetrieveConfig;
@@ -63,6 +71,18 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
     /** 无法识别扩展名时的默认值 */
     private static final String DEFAULT_EXTENSION = "txt";
 
+    /** 知识库类型与切片 / 扩展参数解析 */
+    @Autowired
+    private KbConfigResolver kbConfigResolver;
+
+    /** 检索流水线，演练场与智能体共用 */
+    @Autowired
+    private RetrievalPipeline retrievalPipeline;
+
+    /** 检索评估用例服务，删除知识库时一并清理 */
+    @Autowired
+    private IRagEvalCaseService ragEvalCaseService;
+
     /**
      * 创建并持久化一个全新的私有知识库。
      * <p>使用说明：由知识库控制器在收到创建请求时调用；当前操作用户 ID 会自动从 UserContext 上下文中安全解析获取。</p>
@@ -91,6 +111,8 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
                 .userId(userId != null ? userId : "admin")
                 .embeddingModelId(embeddingModel.getId())
                 .build();
+        // 知识库类型与切片参数：为空的项使用类型预设
+        kbConfigResolver.applyConfig(kb, request);
         kb.setCreateBy(userId);
         kb.setCreateTime(LocalDateTime.now());
 
@@ -152,7 +174,8 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
             return;
         }
 
-        // 1. 级联清理绑定的 Agent 多对多映射关系
+        // 1. 级联清理绑定的 Agent 多对多映射关系；解绑前记下受影响的 Agent，稍后令其运行时缓存失效
+        List<String> boundAgentIds = knowledgeService.getAgentIdsByKbId(id);
         knowledgeService.deleteBindsByKbId(id);
 
         // 2. 获取并循环删除知识库下的所有物理及关系文档
@@ -164,8 +187,12 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
         // 3. 释放该知识库的向量存储实例（连接或内存缓存）
         ragKnowledgeProvider.releaseKnowledgeBase(id);
 
-        // 4. 逻辑删除知识库主表
+        // 4. 逻辑删除知识库主表及其检索评估用例
+        ragEvalCaseService.deleteByKbId(id);
         knowledgeService.deleteBaseById(id);
+
+        // 5. 已缓存的 Agent 仍持有该知识库的检索器，使其失效后按最新绑定重建
+        eventPublisher.publishEvent(new AgentCacheEvictEvent(this, boundAgentIds, "知识库删除: kbId=" + id));
         log.info("[Biz-KB] 知识库物理级联与逻辑删除完成: id={}", id);
     }
 
@@ -298,7 +325,7 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
         SimpleKnowledge knowledge = ragKnowledgeProvider.getKnowledge(kbId);
 
         // 2. 执行官方原生的语义检索召回
-        int rowLimit = (limit != null) ? limit : ragKnowledgeProvider.getDefaultRecallLimit();
+        int rowLimit = (limit != null) ? limit : kbConfigResolver.retrieval().getFinalTopK();
         RetrieveConfig config = RetrieveConfig.builder()
                 .limit(rowLimit)
                 .scoreThreshold(0.1) // Playground 放宽过滤阈值以方便调试
@@ -335,6 +362,153 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
     }
 
     /**
+     * 更新知识库名称、描述、类型与切片 / 扩展参数（向量模型不可更换）。
+     * <p>使用说明：切片参数变更只对之后入库的文档生效，已入库文档需重新解析；上下文扩展窗口在下次检索时立即生效。</p>
+     *
+     * @param id      知识库 ID，非空
+     * @param request 更新内容；名称为空时保留原名称，切片参数为空表示恢复类型预设
+     * @return 更新后的知识库详情
+     * @throws BizException 知识库不存在（404）或参数超出范围（400）时抛出
+     */
+    @Override
+    public KbResponse updateKnowledgeBase(String id, CreateKbRequest request) {
+        KnowledgeBase kb = knowledgeService.getBaseById(id);
+        if (kb == null) {
+            throw new BizException(404, "知识库不存在: " + id);
+        }
+        KnowledgeBase before = KnowledgeBase.builder()
+                .kbType(kb.getKbType()).chunkStrategy(kb.getChunkStrategy())
+                .chunkSize(kb.getChunkSize()).chunkOverlap(kb.getChunkOverlap()).build();
+        if (request.getName() != null && !request.getName().isBlank()) {
+            kb.setName(request.getName().trim());
+        }
+        if (request.getDescription() != null) {
+            kb.setDescription(request.getDescription());
+        }
+        kbConfigResolver.applyConfig(kb, request);
+        knowledgeService.saveBase(kb);
+        log.info("[Biz-KB] 知识库配置已更新: id={}, type={}, 切片参数变化={}", id, kb.getKbType(),
+                kbConfigResolver.chunkingChanged(before, kb));
+        return toKbResponse(kb);
+    }
+
+    /**
+     * 列出知识库类型预设及其生效的默认参数。
+     *
+     * @return 类型选项列表，非空
+     */
+    @Override
+    public List<KbTypeOptionResponse> listKbTypes() {
+        return kbConfigResolver.listTypeOptions();
+    }
+
+    /**
+     * 按知识库当前配置重新解析单个文档：清理旧切片与向量后重新入库，原文件无需重新上传。
+     * <p>使用说明：异步执行，本方法只把文档状态置为 parsing 并投递任务；前端轮询文档列表查看进度。</p>
+     *
+     * @param docId 文档 ID，非空
+     * @return 置为解析中的文档信息
+     * @throws BizException RAG 未启用、文档不存在或正在解析中时抛出
+     */
+    @Override
+    public UploadDocResponse reparseDocument(String docId) {
+        ensureRagEnabled();
+        KnowledgeDocument doc = knowledgeService.getDocumentById(docId);
+        if (doc == null) {
+            throw new BizException(404, "文档不存在: " + docId);
+        }
+        if (isInProgress(doc)) {
+            throw new BizException(409, "文档正在解析中，请稍后再试");
+        }
+        submitReparse(doc);
+        return toUploadDocResponse(doc);
+    }
+
+    /**
+     * 按知识库当前配置依次重新解析其全部文档（跳过正在解析中的文档）。
+     * <p>使用说明：异步执行，各文档状态先置为 parsing；前端据文档状态统计进度。</p>
+     *
+     * @param kbId 知识库 ID，非空
+     * @return 本次提交重新解析的文档数量
+     * @throws BizException RAG 未启用或知识库不存在时抛出
+     */
+    @Override
+    public int reparseKnowledgeBase(String kbId) {
+        ensureRagEnabled();
+        if (knowledgeService.getBaseById(kbId) == null) {
+            throw new BizException(404, "知识库不存在: " + kbId);
+        }
+        int count = 0;
+        for (KnowledgeDocument doc : knowledgeService.listDocumentsByKbId(kbId)) {
+            if (!isInProgress(doc)) {
+                submitReparse(doc);
+                count++;
+            }
+        }
+        log.info("[Biz-Doc] 知识库重新解析已提交: kbId={}, 文档数={}", kbId, count);
+        return count;
+    }
+
+    /**
+     * 知识库演练场检索：调用与智能体完全相同的检索流水线，返回各阶段中间结果。
+     *
+     * @param request 演练场请求，{@code kbId} 与 {@code query} 必填
+     * @return 完整检索过程（改写检索词 → 向量命中 → 关键词命中 → 融合结果 → 最终上下文）
+     * @throws BizException RAG 未启用、参数缺失或知识库不存在时抛出
+     */
+    @Override
+    public RetrievalTrace retrievalTest(RetrievalTestRequest request) {
+        ensureRagEnabled();
+        if (request.getKbId() == null || request.getQuery() == null || request.getQuery().isBlank()) {
+            throw new BizException(400, "知识库与测试问题不能为空");
+        }
+        if (knowledgeService.getBaseById(request.getKbId()) == null) {
+            throw new BizException(404, "知识库不存在: " + request.getKbId());
+        }
+        // 模拟的前几轮提问作为对话历史，演示追问改写
+        List<String[]> history = new ArrayList<>();
+        if (request.getPreviousQuestions() != null) {
+            request.getPreviousQuestions().stream()
+                    .filter(q -> q != null && !q.isBlank())
+                    .forEach(q -> history.add(new String[]{"user", q.trim()}));
+        }
+        RetrievalOptions options = RetrievalOptions.builder()
+                .kbIds(List.of(request.getKbId()))
+                .query(request.getQuery().trim())
+                .history(history)
+                .finalTopK(request.getFinalTopK())
+                .contextMaxChars(request.getContextMaxChars())
+                .scoreThreshold(request.getScoreThreshold())
+                .queryRewrite(request.getQueryRewrite())
+                .rerankModelId(request.getRerankModelId() == null || request.getRerankModelId().isBlank()
+                        ? null : request.getRerankModelId())
+                .keepStages(true)
+                .build();
+        return retrievalPipeline.run(options);
+    }
+
+    /**
+     * 把文档置为解析中并投递入库事件（入库流水线会先清理旧切片与向量）。
+     */
+    private void submitReparse(KnowledgeDocument doc) {
+        doc.setStatus(DocumentStatusEnum.PARSING.getCode());
+        doc.setErrorMessage(null);
+        knowledgeService.saveDocument(doc);
+        eventPublisher.publishEvent(new DocumentIndexEvent(this, doc.getId(), UserContext.getUserId()));
+    }
+
+    private static boolean isInProgress(KnowledgeDocument doc) {
+        return DocumentStatusEnum.UPLOADING.getCode().equals(doc.getStatus())
+                || DocumentStatusEnum.PARSING.getCode().equals(doc.getStatus());
+    }
+
+    private void ensureRagEnabled() {
+        if (!ragKnowledgeProvider.isEnabled()) {
+            throw new BizException(400, "RAG 模块未启用，请在 application.yml 中配置启用");
+        }
+    }
+
+    /**
      * 将物理实体映射为对外呈现的知识库 Response DTO。
      */
     private KbResponse toKbResponse(KnowledgeBase kb) {
@@ -348,6 +522,7 @@ public class KnowledgeBizImpl implements IKnowledgeBiz {
         ModelInfo model = modelConfigService.getModel(kb.getEmbeddingModelId());
         resp.setEmbeddingModelName(model != null ? model.getModelName() : null);
         resp.setCreateTime(kb.getCreateTime());
+        kbConfigResolver.fillConfig(resp, kb);
         return resp;
     }
 

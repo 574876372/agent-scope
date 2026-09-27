@@ -1,5 +1,6 @@
 package com.cl.agent.model;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -43,4 +44,24 @@ public class KnowledgeBase extends BaseEntity {
     /** 绑定的向量模型 ID，关联 t_model.id；创建时确定，之后不可更换，否则已入库向量与检索向量不在同一向量空间 */
     @TableField("embedding_model_id")
     private String embeddingModelId;
+
+    /** 知识库类型：GENERAL / TECH_DOC / FAQ / TABLE，对应枚举 KbTypePreset；决定切片与上下文扩展的默认参数 */
+    @TableField("kb_type")
+    private String kbType;
+
+    /** 切片策略：SECTION / QA / TABLE_ROW，对应枚举 ChunkStrategyEnum；null 表示使用类型预设 */
+    @TableField(value = "chunk_strategy", updateStrategy = FieldStrategy.ALWAYS)
+    private String chunkStrategy;
+
+    /** 单个切片最大字符数；null 表示使用类型预设或全局默认 */
+    @TableField(value = "chunk_size", updateStrategy = FieldStrategy.ALWAYS)
+    private Integer chunkSize;
+
+    /** 超长段落拆分时的重叠字符数；null 表示使用全局默认 */
+    @TableField(value = "chunk_overlap", updateStrategy = FieldStrategy.ALWAYS)
+    private Integer chunkOverlap;
+
+    /** 检索命中后向前、向后各补充的相邻切片数，0 表示不扩展；null 表示使用类型预设 */
+    @TableField(value = "context_window", updateStrategy = FieldStrategy.ALWAYS)
+    private Integer contextWindow;
 }

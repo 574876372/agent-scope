@@ -56,14 +56,29 @@ public class AgentResponse implements Serializable {
     private String ragMode;
 
     /**
-     * 单 Agent 专属检索最大召回数量（分片数）。
+     * 最终交给模型的段数（Top-K）；null 表示使用全局默认。
      */
     private Integer recallLimit;
 
     /**
-     * 单 Agent 专属检索最低相似度得分过滤阈值。
+     * 向量召回预过滤阈值；null 表示使用全局默认。
      */
     private Double scoreThreshold;
+
+    /**
+     * 是否结合对话历史改写检索词；null 表示使用全局默认。
+     */
+    private Boolean queryRewrite;
+
+    /**
+     * 注入上下文总字符数上限；null 表示使用全局默认。
+     */
+    private Integer contextMaxChars;
+
+    /**
+     * 重排模型 ID；null 表示使用默认重排模型。
+     */
+    private String rerankModelId;
 
     /**
      * 该 Agent 绑定的关联知识库唯一标识符 ID 列表。

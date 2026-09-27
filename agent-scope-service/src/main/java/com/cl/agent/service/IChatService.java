@@ -45,4 +45,13 @@ public interface IChatService {
      * @param id 会话 ID
      */
     void deleteById(String id);
+
+    /**
+     * 删除指定 Agent 关联的全部会话及其消息、摘要。
+     * <p>使用说明：删除 Agent 时由业务层级联调用，避免留下无法继续对话的残留会话；逻辑删除，事务内完成。</p>
+     *
+     * @param agentId 智能体 ID，非空
+     * @return 被删除的会话数量；无关联会话时为 0
+     */
+    int deleteByAgentId(String agentId);
 }

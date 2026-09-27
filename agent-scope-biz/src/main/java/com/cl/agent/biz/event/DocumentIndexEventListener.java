@@ -1,33 +1,48 @@
 package com.cl.agent.biz.event;
 
+import com.cl.agent.biz.rag.EmbeddingTextBuilder;
+import com.cl.agent.biz.rag.KbConfigResolver;
 import com.cl.agent.biz.rag.KnowledgeFileStorage;
 import com.cl.agent.biz.rag.RagKnowledgeProvider;
 import com.cl.agent.commons.UserContext;
 import com.cl.agent.enums.DocumentStatusEnum;
+import com.cl.agent.model.KnowledgeBase;
 import com.cl.agent.model.KnowledgeChunk;
 import com.cl.agent.model.KnowledgeDocument;
-import com.cl.agent.rag.core.DocumentReaderFactory;
+import com.cl.agent.rag.chunk.ChunkOptions;
+import com.cl.agent.rag.chunk.ChunkPiece;
+import com.cl.agent.rag.chunk.DocBlock;
+import com.cl.agent.rag.chunk.DocumentStructureReader;
+import com.cl.agent.rag.chunk.StructuredChunker;
+import com.cl.agent.rag.core.EmbeddingModelSpec;
 import com.cl.agent.service.IKnowledgeService;
-import io.agentscope.core.rag.knowledge.SimpleKnowledge;
+import io.agentscope.core.message.TextBlock;
 import io.agentscope.core.rag.model.Document;
 import io.agentscope.core.rag.model.DocumentMetadata;
+import io.agentscope.core.rag.store.VDBStoreBase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * 文档异步解析与向量化任务事件监听器。
- * <p>使用说明：监听 {@link DocumentIndexEvent}，由 Spring 的 {@code ragExecutor} 线程池异步驱动执行，
- * 完成文件解析、切片向量化写入与 MySQL 状态流转等全流程。与发布方 {@code KnowledgeBizImpl}
- * 完全解耦——发布方仅投递事件即可立即返回响应，本监听器在后台独立消费。</p>
- * <p>UserContext 恢复策略：事件对象携带发布时的 {@code userId}，监听器在任务开始前调用
- * {@code UserContext.setUserId()} 恢复上下文，并在 {@code finally} 块中 {@code clear()}，
- * 防止线程池复用时污染后续任务。</p>
+ * 文档异步解析与向量化任务事件监听器（上传入库与重新解析共用）。
+ * <p>使用说明：监听 {@link DocumentIndexEvent}，由 {@code ragExecutor} 线程池异步执行。流水线：</p>
+ * <ol>
+ *   <li>清理该文档旧的向量与切片（新上传的文档没有旧数据，重新解析时据此覆盖）；</li>
+ *   <li>{@link DocumentStructureReader} 还原标题 / 段落 / 表格结构，{@link StructuredChunker} 按知识库类型切片，
+ *       每片记录章节路径与切片类型；</li>
+ *   <li>以「文档名 › 章节路径 + 正文」批量计算向量，直接写入向量库；</li>
+ *   <li>切片明细写入 MySQL，文档状态流转为 indexed；任一步失败流转为 failed 并记录原因。</li>
+ * </ol>
+ * <p>UserContext 恢复策略：事件携带发布时的 {@code userId}，任务开始前恢复、{@code finally} 中清理，防止线程复用污染。</p>
  */
 @Slf4j
 @Component
@@ -36,15 +51,26 @@ public class DocumentIndexEventListener {
     /** 失败时异常无 message 的兜底提示 */
     private static final String DEFAULT_ERROR_MESSAGE = "异步分片向量化失败";
 
+    /** 每次写入向量库的文档数，避免超大文档一次性 bulk 请求过大 */
+    private static final int STORE_WRITE_BATCH = 200;
+
     @Autowired
     private IKnowledgeService knowledgeService;
 
-    /** 智能注入 RAG Starter 工厂 Bean；RAG 未启用时为 null */
+    /** 文档结构还原器；RAG 未启用时为 null */
     @Autowired(required = false)
-    private DocumentReaderFactory documentReaderFactory;
+    private DocumentStructureReader structureReader;
+
+    /** 结构化切片器；RAG 未启用时为 null */
+    @Autowired(required = false)
+    private StructuredChunker structuredChunker;
 
     @Autowired
     private RagKnowledgeProvider ragKnowledgeProvider;
+
+    /** 知识库切片参数解析（知识库级 → 类型预设 → 全局默认） */
+    @Autowired
+    private KbConfigResolver kbConfigResolver;
 
     /** 上传文档的本地文件存储，把落库的相对路径解析为实际文件位置 */
     @Autowired
@@ -52,156 +78,154 @@ public class DocumentIndexEventListener {
 
     /**
      * 异步处理文档向量化流水线。
-     * <p>使用说明：由 Spring 事件总线触发，运行在名为 {@code ragExecutor} 的专属线程池中；
-     * 严格跟踪文档状态 {@code parsing} → {@code indexed} 或 {@code failed}，
-     * 失败时将错误信息落库以便前端渲染提示。</p>
+     * <p>使用说明：由 Spring 事件总线触发，运行在 {@code ragExecutor} 线程池中；
+     * 文档状态 {@code parsing} → {@code indexed} 或 {@code failed}，失败原因落库供前端展示。</p>
      *
      * @param event {@link DocumentIndexEvent}，携带 {@code fileId} 与 {@code userId}，非空
+     * @return 无返回值；结果体现在文档状态与切片表中
      */
     @Async("ragExecutor")
     @EventListener
     public void onDocumentIndexEvent(DocumentIndexEvent event) {
-        final String fileId = event.getFileId();
-        final String userId = event.getUserId();
-
-        // 恢复发布方请求线程的用户上下文，保证 MyMetaObjectHandler 等组件正常工作
         try {
-            UserContext.setUserId(userId);
-            doParseAndIndex(fileId);
+            UserContext.setUserId(event.getUserId());
+            doParseAndIndex(event.getFileId());
         } finally {
-            // 防止线程池线程复用时 ThreadLocal 污染后续任务的上下文
             UserContext.clear();
         }
     }
 
     /**
-     * 文档读取、分片、向量计算与状态更新的核心流水线。
-     * <p>使用说明：被 {@link #onDocumentIndexEvent} 调用，内部通过 try-catch 捕获所有异常并落库，
-     * 不向上层抛出，确保异步任务始终有明确的终态。</p>
+     * 文档清理、解析、切片、向量化与状态更新的核心流水线。
+     * <p>内部捕获所有异常并落库，不向上层抛出，确保异步任务始终有明确终态。</p>
      *
      * @param docId 待处理的文档 ID，非空
      */
     private void doParseAndIndex(String docId) {
-        log.info("[Async-Pipeline] 文档向量化流水线启动: docId={}", docId);
+        long start = System.currentTimeMillis();
         KnowledgeDocument doc = knowledgeService.getDocumentById(docId);
         if (doc == null) {
             log.error("[Async-Pipeline] 未查询到对应文档元数据，跳过处理: docId={}", docId);
             return;
         }
+        log.info("[Async-Pipeline] 文档入库流水线启动: docId={}, name={}", docId, doc.getName());
 
         try {
             // 1. 状态流转至 parsing（解析分片中），前端轮询可见
             updateStatus(doc, DocumentStatusEnum.PARSING);
+            KnowledgeBase kb = knowledgeService.getBaseById(doc.getKbId());
+            if (kb == null) {
+                throw new IllegalStateException("所属知识库不存在: " + doc.getKbId());
+            }
 
-            // 2. 解析文件并切片，注入业务 docId / chunkId
-            List<Document> chunkDocs = parseChunks(doc);
+            // 2. 清理旧数据（重新解析时）：先删向量（需按切片 ID 定位），再物理删除切片记录（切片主键由内容派生，逻辑删除后重建会主键冲突）。
+            //    新上传的文档没有旧切片，跳过向量清理——IN_MEMORY 模式下清理会丢弃整个知识库的内存向量并触发全量重建
+            if (!knowledgeService.listChunksByDocId(docId).isEmpty()) {
+                ragKnowledgeProvider.removeDocumentVectors(doc.getKbId(), docId);
+            }
+            knowledgeService.purgeChunksByDocId(docId);
 
-            // 3. 计算 Embedding 并写入向量库（先写向量，再写 MySQL，切片主键复用向量文档 id）
-            writeVectors(doc.getKbId(), chunkDocs);
+            // 3. 结构化切片
+            ChunkOptions options = kbConfigResolver.chunkOptions(kb);
+            List<ChunkPiece> pieces = parseChunks(doc, options);
 
-            // 4. 切片明细批量落库 MySQL，供 IN_MEMORY 预热回灌与按文档删除向量使用
-            List<KnowledgeChunk> chunks = saveChunks(doc, chunkDocs);
+            // 4. 批量向量化并写入向量库
+            List<Document> chunkDocs = writeVectors(doc, pieces);
 
-            // 5. 状态流转至终态 indexed，回写统计信息
+            // 5. 切片明细写入 MySQL
+            List<KnowledgeChunk> chunks = saveChunks(doc, pieces, chunkDocs);
+
+            // 6. 终态 indexed
             markIndexed(doc, chunks);
-            log.info("[Async-Pipeline] 文档向量化流水线执行成功: docId={}, 切片总数={}", docId, chunks.size());
+            log.info("[Async-Pipeline] 文档入库完成: docId={}, 策略={}, 切片数={}, costMs={}",
+                    docId, options.getStrategy(), chunks.size(), System.currentTimeMillis() - start);
         } catch (Exception e) {
-            // 任一步骤失败均流转至终态 failed，异常不向上抛出，保证异步任务有明确终态
-            log.error("[Async-Pipeline] 文档向量化出现严重异常: docId={}", docId, e);
+            log.error("[Async-Pipeline] 文档入库失败: docId={}", docId, e);
             markFailed(doc, e);
         }
     }
 
     /**
-     * 解析物理文件并切片，再为每个切片注入业务 docId 与序号 chunkId。
+     * 解析文件结构并按知识库配置切片。
      *
-     * @param doc 文档元数据，需包含 filePath 与 type
-     * @return 可直接写入向量库的切片列表，非空
-     * @throws RuntimeException 文件无有效内容时抛出
+     * @param doc     文档元数据，需包含 filePath 与 type
+     * @param options 切片参数
+     * @return 切片列表，非空
+     * @throws Exception 文件解析失败或无有效内容时抛出
      */
-    private List<Document> parseChunks(KnowledgeDocument doc) {
-        // 按文件后缀路由至 AgentScope 官方 Reader，完成文本抽取与段落切片
-        String filePath = fileStorage.resolve(doc.getFilePath()).toString();
-        List<Document> parsedDocs = documentReaderFactory.parseFile(filePath, doc.getType());
-        if (parsedDocs.isEmpty()) {
-            throw new RuntimeException("文件内容为空，无有效切片产生");
+    private List<ChunkPiece> parseChunks(KnowledgeDocument doc, ChunkOptions options) throws Exception {
+        if (structureReader == null || structuredChunker == null) {
+            throw new IllegalStateException("RAG 模块未启用");
         }
-
-        // 切片序号即 chunkId，与 MySQL 中的 chunkIndex 保持一致
-        List<Document> chunkDocs = new ArrayList<>(parsedDocs.size());
-        for (int i = 0; i < parsedDocs.size(); i++) {
-            chunkDocs.add(rebuildChunkDocument(parsedDocs.get(i), doc.getId(), i));
+        Path file = fileStorage.resolve(doc.getFilePath());
+        List<DocBlock> blocks = structureReader.read(file, doc.getType());
+        List<ChunkPiece> pieces = structuredChunker.chunk(blocks, options);
+        if (pieces.isEmpty()) {
+            throw new IllegalStateException("文件内容为空，无有效切片产生");
         }
-        return chunkDocs;
+        log.info("[Async-Pipeline] 结构化切片完成: docId={}, 结构块={}, 切片数={}, 表格切片={}, 带章节路径={}",
+                doc.getId(), blocks.size(), pieces.size(),
+                pieces.stream().filter(p -> ChunkPiece.TYPE_TABLE.equals(p.getChunkType())).count(),
+                pieces.stream().filter(p -> !p.getSectionPath().isEmpty()).count());
+        return pieces;
     }
 
     /**
-     * 以可变 payload 重建切片 Document，保留原切片内容与向量相关字段。
-     * <p>Reader 产出的 docId/chunkId 与业务无关，替换为真实文档 ID 与切片序号，
-     * 以便按文档删除向量并与 MySQL 切片表对应。</p>
+     * 以「文档名 › 章节路径 + 正文」批量计算向量，构造向量文档并写入该知识库的向量存储。
+     * <p>向量文档的正文仍为切片原文，docId / chunkId 为业务文档 ID 与切片序号，检索命中后据此回查切片表。</p>
+     *
+     * @return 已写入的向量文档，与 pieces 一一对应
      */
-    private Document rebuildChunkDocument(Document parsedDoc, String docId, int index) {
-        String chunkId = String.valueOf(index);
+    private List<Document> writeVectors(KnowledgeDocument doc, List<ChunkPiece> pieces) {
+        EmbeddingModelSpec spec = ragKnowledgeProvider.resolveEmbeddingSpec(doc.getKbId());
+        List<String> texts = pieces.stream()
+                .map(p -> EmbeddingTextBuilder.build(doc.getName(), p.getSectionPath(), p.getContent()))
+                .collect(Collectors.toList());
+        List<double[]> vectors = ragKnowledgeProvider.embedAll(spec, texts);
 
-        // payload 随向量一起写入向量库，检索命中时可据此反查所属文档
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("docId", docId);
-        payload.put("chunkId", chunkId);
-
-        // 仅复用原切片的文本内容，docId / chunkId 替换为业务值
-        DocumentMetadata meta = DocumentMetadata.builder()
-                .docId(docId)
-                .chunkId(chunkId)
-                .content(parsedDoc.getMetadata().getContent())
-                .payload(payload)
-                .build();
-
-        // 原切片若已携带向量等字段则一并保留；通常为空，由 addDocuments 统一计算
-        Document newDoc = new Document(meta);
-        if (parsedDoc.getEmbedding() != null) {
-            newDoc.setEmbedding(parsedDoc.getEmbedding());
+        List<Document> docs = new ArrayList<>(pieces.size());
+        for (int i = 0; i < pieces.size(); i++) {
+            ChunkPiece piece = pieces.get(i);
+            DocumentMetadata meta = DocumentMetadata.builder()
+                    .docId(doc.getId())
+                    .chunkId(String.valueOf(i))
+                    .content(TextBlock.builder().text(piece.getContent()).build())
+                    .addPayload("docId", doc.getId())
+                    .addPayload("chunkId", String.valueOf(i))
+                    .addPayload("sectionPath", piece.getSectionPath())
+                    .addPayload("chunkType", piece.getChunkType())
+                    .build();
+            Document d = new Document(meta);
+            d.setEmbedding(vectors.get(i));
+            docs.add(d);
         }
-        if (parsedDoc.getScore() != null) {
-            newDoc.setScore(parsedDoc.getScore());
+        VDBStoreBase store = ragKnowledgeProvider.getKnowledge(doc.getKbId()).getEmbeddingStore();
+        for (int from = 0; from < docs.size(); from += STORE_WRITE_BATCH) {
+            store.add(docs.subList(from, Math.min(from + STORE_WRITE_BATCH, docs.size()))).block();
         }
-        if (parsedDoc.getVectorName() != null) {
-            newDoc.setVectorName(parsedDoc.getVectorName());
-        }
-        return newDoc;
+        log.info("[Async-Pipeline] 向量写入完成: docId={}, 条数={}", doc.getId(), docs.size());
+        return docs;
     }
 
     /**
-     * 计算 Embedding 并写入该知识库的向量存储（官方 addDocuments 内部完成向量化）。
-     */
-    private void writeVectors(String kbId, List<Document> chunkDocs) {
-        // Embedding 模型 + 该知识库的向量存储实例（与检索端共享同一实例）
-        SimpleKnowledge knowledge = ragKnowledgeProvider.getKnowledge(kbId);
-        // addDocuments 为响应式接口，异步线程内 block() 同步等待写入完成
-        knowledge.addDocuments(chunkDocs).block();
-        log.info("[Async-Pipeline] SimpleKnowledge 向量化写入成功: size={}", chunkDocs.size());
-    }
-
-    /**
-     * 批量持久化切片明细到 MySQL。
-     * <p>切片主键直接使用向量文档 id（Document.getId()），删除文档时据此逐条清理远端向量。</p>
+     * 批量持久化切片明细到 MySQL；切片主键复用向量文档 id，删除文档时据此清理远端向量。
      *
      * @return 已落库的切片实体列表
      */
-    private List<KnowledgeChunk> saveChunks(KnowledgeDocument doc, List<Document> chunkDocs) {
-        List<KnowledgeChunk> chunks = new ArrayList<>(chunkDocs.size());
-        for (int i = 0; i < chunkDocs.size(); i++) {
-            Document chunkDoc = chunkDocs.get(i);
-            String contentText = chunkDoc.getMetadata().getContentText();
-
-            // id 复用向量文档 id，是 MySQL 与向量库之间的关联键
+    private List<KnowledgeChunk> saveChunks(KnowledgeDocument doc, List<ChunkPiece> pieces, List<Document> chunkDocs) {
+        List<KnowledgeChunk> chunks = new ArrayList<>(pieces.size());
+        for (int i = 0; i < pieces.size(); i++) {
+            ChunkPiece piece = pieces.get(i);
             KnowledgeChunk chunk = KnowledgeChunk.builder()
-                    .id(chunkDoc.getId())
+                    .id(chunkDocs.get(i).getId())
                     .docId(doc.getId())
                     .kbId(doc.getKbId())
-                    .content(contentText)
+                    .content(piece.getContent())
                     .chunkIndex(i)
                     // 粗略估算：约 2 个字符折合 1 个 token，非精确值
-                    .tokenCount(contentText.length() / 2)
+                    .tokenCount(piece.getContent().length() / 2)
+                    .sectionPath(truncate(piece.getSectionPath(), 512))
+                    .chunkType(piece.getChunkType())
                     .build();
             chunk.setCreateTime(LocalDateTime.now());
             chunks.add(chunk);
@@ -217,7 +241,6 @@ public class DocumentIndexEventListener {
         int charCount = chunks.stream().mapToInt(c -> c.getContent().length()).sum();
         doc.setCharCount(charCount);
         doc.setChunkCount(chunks.size());
-        // 成功时清空错误信息，避免残留旧的失败描述
         doc.setErrorMessage(null);
         updateStatus(doc, DocumentStatusEnum.INDEXED);
     }
@@ -236,5 +259,12 @@ public class DocumentIndexEventListener {
     private void updateStatus(KnowledgeDocument doc, DocumentStatusEnum status) {
         doc.setStatus(status.getCode());
         knowledgeService.saveDocument(doc);
+    }
+
+    private static String truncate(String s, int max) {
+        if (s == null) {
+            return null;
+        }
+        return s.length() > max ? s.substring(0, max) : s;
     }
 }
